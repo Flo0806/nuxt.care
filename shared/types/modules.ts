@@ -156,8 +156,53 @@ export interface HealthScore {
 }
 
 export interface SyncMeta {
-  lastSync: string
+  lastSync: string | null
+  isRunning: boolean
+  startedAt: string | null
   totalModules: number
   syncedModules: number
-  duration: number
+  duration: number | null
+  error: string | null
+}
+
+// Nuxt API response types
+export interface NuxtApiModule {
+  name: string
+  npm: string
+  repo: string
+  description: string
+  category: string
+  type: 'official' | 'community' | '3rd-party'
+  icon?: string
+  maintainers?: Array<{ name: string }>
+  compatibility?: { nuxt?: string }
+  stats?: NuxtApiStats
+}
+
+export interface NuxtApiResponse {
+  modules: NuxtApiModule[]
+}
+
+// GitHub API response types
+export interface GitHubRepoResponse {
+  full_name: string
+  default_branch: string
+  stargazers_count: number
+  forks_count: number
+  open_issues_count: number
+  archived: boolean
+  pushed_at: string
+  topics: string[]
+  license?: { spdx_id: string } | null
+}
+
+export interface GitHubReleaseResponse {
+  tag_name: string
+  published_at: string
+  name?: string
+  body?: string
+}
+
+export interface GitHubCommitResponse {
+  author?: { login: string } | null
 }

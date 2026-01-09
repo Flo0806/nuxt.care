@@ -24,6 +24,10 @@ export default defineNuxtConfig({
     experimental: {
       tasks: true,
     },
+    scheduledTasks: {
+      // Every 8 hours: 0:00, 8:00, 16:00
+      '0 */8 * * *': ['sync:modules'],
+    },
   },
 
   hub: {
