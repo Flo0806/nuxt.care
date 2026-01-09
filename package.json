@@ -20,8 +20,10 @@
     "@nuxt/image": "2.0.0",
     "@nuxt/test-utils": "3.23.0",
     "@nuxt/ui": "4.3.0",
+    "@nuxthub/core": "^0.10.4",
     "eslint": "^9.39.2",
     "nuxt": "^4.2.2",
+    "tailwindcss": "^4.1.18",
     "vue": "^3.5.26",
     "vue-router": "^4.6.4"
   },
