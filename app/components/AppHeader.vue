@@ -26,13 +26,20 @@
             href="https://github.com/Flo0806/nuxamine"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
+            class="inline-flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
           >
             <UIcon
               name="i-lucide-star"
               class="w-3 h-3"
             />
             Star on GitHub
+            <UBadge
+              color="neutral"
+              variant="subtle"
+              size="xs"
+            >
+              {{ stars }}
+            </UBadge>
           </a>
         </div>
       </div>
@@ -84,6 +91,13 @@ withDefaults(defineProps<{
 defineEmits<{
   'show-critical': []
 }>()
+
+const { data: repoData } = await useFetch<{ stargazers_count: number }>(
+  'https://api.github.com/repos/Flo0806/nuxamine',
+  { server: false },
+)
+
+const stars = computed(() => repoData.value?.stargazers_count ?? 0)
 
 function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr)
