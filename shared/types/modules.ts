@@ -114,6 +114,8 @@ export interface NpmInfo {
   peerDeps: Record<string, string> | null
   keywords: string[]
   deprecated: string | null
+  hasTypes: boolean
+  unpackedSize: number | null
 }
 
 export interface KeywordsAnalysis {

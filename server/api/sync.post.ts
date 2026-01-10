@@ -1,32 +1,32 @@
-const SYNC_INTERVAL = 8 * 60 * 60 * 1000
-const SYNC_TIMEOUT = 4 * 60 * 60 * 1000
-
 // TEST: limit to 20 modules (set to 0 for all)
 const TEST_LIMIT = 20
 
 export default defineEventHandler(async (event) => {
-  const meta = await kv.get<SyncMeta>('sync:meta') || getDefaultMeta()
+  const meta = await kv.get<SyncMetaWithServerId>('sync:meta') || getDefaultMeta()
 
-  if (meta.isRunning && meta.startedAt) {
-    const runningFor = Date.now() - new Date(meta.startedAt).getTime()
+  // Check for stale lock (crashed/restarted syncs)
+  const { stale, reason } = isStaleSync(meta)
 
-    if (runningFor < SYNC_TIMEOUT) {
-      return {
-        status: 'already_running',
-        startedAt: meta.startedAt,
-        runningForMinutes: Math.round(runningFor / 60000),
-      }
+  if (meta.isRunning && !stale) {
+    const runningFor = Date.now() - new Date(meta.startedAt!).getTime()
+    return {
+      status: 'already_running',
+      startedAt: meta.startedAt,
+      runningForMinutes: Math.round(runningFor / 60000),
     }
+  }
 
-    console.warn(`Sync running for ${Math.round(runningFor / 60000)}min, resetting lock`)
+  if (stale) {
+    console.warn(`[sync] Stale lock detected: ${reason}, resetting`)
   }
 
   const query = getQuery(event)
   const force = query.force === 'true'
 
   if (!force && meta.lastSync) {
+    const syncInterval = SYNC_INTERVAL
     const timeSinceSync = Date.now() - new Date(meta.lastSync).getTime()
-    if (timeSinceSync < SYNC_INTERVAL) {
+    if (timeSinceSync < syncInterval) {
       return {
         status: 'skipped',
         reason: 'recently_synced',
@@ -37,12 +37,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const startedAt = new Date().toISOString()
-  await kv.set('sync:meta', {
+  const newMeta = {
     ...meta,
     isRunning: true,
     startedAt,
     error: null,
-  })
+    serverId: SERVER_ID,
+  }
+  await kv.set('sync:meta', newMeta)
 
   runSync(startedAt).catch((err) => {
     console.error('Sync failed:', err)
@@ -54,23 +56,9 @@ export default defineEventHandler(async (event) => {
   }
 })
 
-function getDefaultMeta(): SyncMeta {
-  return {
-    lastSync: null,
-    isRunning: false,
-    startedAt: null,
-    totalModules: 0,
-    syncedModules: 0,
-    duration: null,
-    error: null,
-  }
-}
-
 async function runSync(startedAt: string): Promise<void> {
   const config = useRuntimeConfig()
   const githubToken = config.github?.token as string | undefined
-
-  console.log(`GitHub Token: ${githubToken ? `configured (${githubToken.substring(0, 10)}...)` : 'NOT SET'}`)
 
   try {
     const nuxtApi = await $fetch<NuxtApiResponse>('https://api.nuxt.com/modules')
@@ -100,7 +88,7 @@ async function runSync(startedAt: string): Promise<void> {
         results.push(moduleData)
       }
       catch (err) {
-        console.error(`Failed to fetch ${mod.name}:`, err)
+        console.error(`[sync] Failed ${mod.name}:`, err)
         results.push(createErrorModule(mod, err))
       }
 
@@ -142,7 +130,8 @@ async function updateProgress(startedAt: string, total: number, current: number)
     syncedModules: current,
     duration: null,
     error: null,
-  } satisfies SyncMeta)
+    serverId: SERVER_ID,
+  })
 }
 
 function createErrorModule(mod: NuxtApiModule, err: unknown): ModuleData {
@@ -238,6 +227,7 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
       data.keywords = analyzeKeywords(npmData.keywords)
     }
     data.vulnerabilities = vulns
+    // bundleSize now comes from npm.unpackedSize, not bundlephobia
   }
 
   data.health = calculateHealth(data)

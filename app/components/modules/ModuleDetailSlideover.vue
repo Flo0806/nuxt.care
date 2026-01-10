@@ -36,17 +36,64 @@
               class="text-sm"
             />
           </div>
-          <p class="text-sm text-neutral-600 dark:text-neutral-400">
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
             {{ module.description }}
           </p>
-          <div class="flex items-center gap-2 mt-3 text-xs text-neutral-500">
-            <span>{{ module.category }}</span>
-            <span>•</span>
-            <span>{{ module.type }}</span>
+          <!-- Meta Badges -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Category -->
+            <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
+              <UIcon
+                :name="getCategoryConfig(module.category).icon"
+                class="w-3 h-3"
+              />
+              {{ module.category }}
+            </div>
+            <!-- Official -->
+            <UBadge
+              v-if="module.type === 'official'"
+              color="primary"
+              variant="subtle"
+              size="xs"
+            >
+              Official
+            </UBadge>
+            <!-- TypeScript -->
+            <UBadge
+              v-if="module.npm?.hasTypes"
+              color="info"
+              variant="subtle"
+              size="xs"
+            >
+              <UIcon
+                name="i-lucide-file-code"
+                class="w-3 h-3 mr-0.5"
+              />
+              TypeScript
+            </UBadge>
+            <!-- Version -->
             <span
               v-if="module.npm?.latestVersion"
-            >• v{{ module.npm.latestVersion }}</span>
-            <span v-if="module.github?.license">• {{ module.github.license }}</span>
+              class="text-xs text-neutral-500"
+            >
+              v{{ module.npm.latestVersion }}
+            </span>
+            <!-- License -->
+            <span
+              v-if="module.github?.license"
+              class="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500"
+            >
+              {{ module.github.license }}
+            </span>
+            <!-- Package Size -->
+            <UTooltip
+              v-if="module.npm?.unpackedSize"
+              :text="`${formatBytes(module.npm.unpackedSize)} unpacked`"
+            >
+              <span class="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 cursor-help">
+                {{ formatBytes(module.npm.unpackedSize) }}
+              </span>
+            </UTooltip>
           </div>
         </div>
 
@@ -87,6 +134,42 @@
               </div>
               <div class="text-xs text-neutral-500">
                 Activity
+              </div>
+            </div>
+          </div>
+
+          <!-- Install Commands -->
+          <div class="space-y-2">
+            <p class="text-xs font-medium text-neutral-500 uppercase tracking-wide">
+              Install
+            </p>
+            <div class="space-y-1.5">
+              <div
+                v-for="cmd in installCommands"
+                :key="cmd.pm"
+                class="flex items-center gap-2"
+              >
+                <code
+                  class="flex-1 text-xs px-3 py-2 rounded font-mono"
+                  :class="cmd.recommended
+                    ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 ring-1 ring-primary-200 dark:ring-primary-800'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'"
+                >
+                  {{ cmd.command }}
+                  <span
+                    v-if="cmd.recommended"
+                    class="ml-2 text-[10px] uppercase text-primary-500"
+                  >recommended</span>
+                </code>
+                <UTooltip :text="copiedPm === cmd.pm ? 'Copied!' : 'Copy'">
+                  <UButton
+                    :color="cmd.recommended ? 'primary' : 'neutral'"
+                    variant="ghost"
+                    size="xs"
+                    :icon="copiedPm === cmd.pm ? 'i-lucide-check' : 'i-lucide-copy'"
+                    @click="copyCommand(cmd.pm, cmd.command)"
+                  />
+                </UTooltip>
               </div>
             </div>
           </div>
@@ -469,9 +552,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ModuleData } from '~~/shared/types/modules'
-import { getCompatStatus } from '~/composables/useModuleFilters'
-
 const props = defineProps<{
   module: ModuleData | null
   isFavorite: boolean
@@ -487,6 +567,28 @@ const compatStatus = computed(() => {
   if (!props.module) return 'unknown'
   return getCompatStatus(props.module)
 })
+
+// Install commands
+const installCommands = computed(() => {
+  const name = props.module?.name || ''
+  const pkg = props.module?.npmPackage || ''
+  return [
+    { pm: 'nuxt', command: `npx nuxt module add ${name}`, recommended: true },
+    { pm: 'pnpm', command: `pnpm add ${pkg}`, recommended: false },
+    { pm: 'npm', command: `npm install ${pkg}`, recommended: false },
+    { pm: 'yarn', command: `yarn add ${pkg}`, recommended: false },
+  ]
+})
+
+const copiedPm = ref<string | null>(null)
+
+async function copyCommand(pm: string, command: string) {
+  await navigator.clipboard.writeText(command)
+  copiedPm.value = pm
+  setTimeout(() => {
+    copiedPm.value = null
+  }, 2000)
+}
 
 const daysSincePush = computed(() => {
   if (!props.module?.github?.pushedAt) return null
@@ -517,6 +619,12 @@ function formatNumber(num: number | undefined | null): string {
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
   if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`
   return String(num)
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function formatDate(dateStr: string): string {

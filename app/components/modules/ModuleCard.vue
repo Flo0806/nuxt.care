@@ -29,7 +29,7 @@
     <!-- Divider -->
     <div class="border-b border-neutral-100 dark:border-neutral-800 mb-3" />
 
-    <!-- Meta: Category + Version -->
+    <!-- Meta: Category + Version + TS -->
     <div class="flex items-center justify-between text-xs mb-3">
       <div class="flex items-center gap-1.5">
         <UIcon
@@ -39,12 +39,22 @@
         />
         <span class="text-neutral-600 dark:text-neutral-400">{{ module.category }}</span>
       </div>
-      <span
-        v-if="module.npm?.latestVersion"
-        class="text-neutral-400"
-      >
-        v{{ module.npm.latestVersion }}
-      </span>
+      <div class="flex items-center gap-1.5">
+        <UTooltip
+          v-if="module.npm?.hasTypes"
+          text="TypeScript types included"
+        >
+          <span class="px-1 py-0.5 text-[10px] font-semibold rounded bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
+            TS
+          </span>
+        </UTooltip>
+        <span
+          v-if="module.npm?.latestVersion"
+          class="text-neutral-400"
+        >
+          v{{ module.npm.latestVersion }}
+        </span>
+      </div>
     </div>
 
     <!-- Stats Row -->
@@ -114,21 +124,64 @@
           </div>
         </div>
       </UTooltip>
+
+      <!-- Package Size -->
+      <UTooltip :text="sizeTooltip">
+        <div class="text-center cursor-help">
+          <div class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+            {{ sizeLabel }}
+          </div>
+          <div class="text-[10px] text-neutral-400 uppercase tracking-wide">
+            Size
+          </div>
+        </div>
+      </UTooltip>
     </div>
 
     <!-- Spacer -->
     <div class="grow" />
 
-    <!-- Footer: License + Badges -->
+    <!-- Footer: Links + License + Badges -->
     <div class="flex items-center justify-between gap-2">
-      <!-- License -->
-      <span
-        v-if="module.github?.license"
-        class="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
-      >
-        {{ module.github.license }}
-      </span>
-      <span v-else />
+      <!-- Quick Links + License -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
+          <UTooltip text="Open on GitHub">
+            <a
+              :href="`https://github.com/${module.repo}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
+              @click.stop
+            >
+              <UIcon
+                name="i-lucide-github"
+                class="w-4 h-4"
+              />
+            </a>
+          </UTooltip>
+          <UTooltip text="Open on npm">
+            <a
+              :href="`https://www.npmjs.com/package/${module.npmPackage}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-neutral-400 hover:text-red-500 transition-colors"
+              @click.stop
+            >
+              <UIcon
+                name="i-lucide-package"
+                class="w-4 h-4"
+              />
+            </a>
+          </UTooltip>
+        </div>
+        <span
+          v-if="module.github?.license"
+          class="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+        >
+          {{ module.github.license }}
+        </span>
+      </div>
 
       <!-- Status Badges (fixed order) -->
       <div class="flex flex-wrap justify-end gap-1">
@@ -147,8 +200,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ModuleData } from '~~/shared/types/modules'
-
 const props = defineProps<{
   module: ModuleData
   isFavorite: boolean
@@ -218,6 +269,24 @@ const vulnColor = computed(() => {
   if (v.high > 0) return 'text-orange-600 dark:text-orange-400'
   return 'text-yellow-600 dark:text-yellow-400'
 })
+
+const sizeLabel = computed(() => {
+  const size = props.module.npm?.unpackedSize
+  if (!size) return '-'
+  return formatBytes(size)
+})
+
+const sizeTooltip = computed(() => {
+  const size = props.module.npm?.unpackedSize
+  if (!size) return 'Package size not available'
+  return `${formatBytes(size)} unpacked (node_modules)`
+})
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 const isStale = computed(() => {
   const days = daysSincePush.value

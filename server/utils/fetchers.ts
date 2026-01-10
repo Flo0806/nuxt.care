@@ -109,7 +109,16 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
     const data = await res.json() as {
       'name': string
       'dist-tags'?: { latest?: string }
-      'versions'?: Record<string, { peerDependencies?: Record<string, string>, keywords?: string[] }>
+      'versions'?: Record<string, {
+        peerDependencies?: Record<string, string>
+        keywords?: string[]
+        types?: string
+        typings?: string
+        dist?: {
+          unpackedSize?: number
+          fileCount?: number
+        }
+      }>
       'time'?: Record<string, string>
       'deprecated'?: string
     }
@@ -117,6 +126,9 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
     const latest = data['dist-tags']?.latest
     const latestInfo = latest ? data.versions?.[latest] : null
     const time = data.time || {}
+
+    // Check for TypeScript types (types or typings field in package.json)
+    const hasTypes = !!(latestInfo?.types || latestInfo?.typings)
 
     return {
       name: data.name,
@@ -126,6 +138,8 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
       peerDeps: latestInfo?.peerDependencies || null,
       keywords: latestInfo?.keywords || [],
       deprecated: data.deprecated || null,
+      hasTypes,
+      unpackedSize: latestInfo?.dist?.unpackedSize || null,
     }
   }
   catch {
