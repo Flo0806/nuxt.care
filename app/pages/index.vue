@@ -3,56 +3,71 @@
     <div class="container mx-auto px-4 py-8">
       <AppHeader :sync-status="syncStatus" />
 
-      <ModulesModuleToolbar
-        v-model:search="search"
-        v-model:sort-by="sortBy"
-        v-model:filter-category="filterCategory"
-        v-model:filter-type="filterType"
-        v-model:filter-compat="filterCompat"
-        v-model:show-favorites-only="showFavoritesOnly"
-        :active-chips="activeChips"
-        :category-options="categoryOptions"
-        :has-active-filters="hasActiveFilters"
-        :module-count="filteredModules.length"
-        :favorites-count="favorites.length"
-        @toggle-chip="toggleChip"
-        @reset="resetFilters"
+      <!-- Dashboard Charts -->
+      <DashboardCharts
+        v-if="modules?.length"
+        :modules="modules"
       />
 
-      <!-- Loading -->
-      <div
-        v-if="pending"
-        class="text-center py-12"
-      >
-        <UIcon
-          name="i-lucide-loader-2"
-          class="w-8 h-8 animate-spin text-primary-500"
+      <!-- Sync in Progress (no data yet) -->
+      <SyncProgress
+        v-if="!modules?.length && syncStatus?.isRunning"
+        :sync-status="syncStatus"
+      />
+
+      <!-- Has modules: show toolbar + list -->
+      <template v-else-if="modules?.length">
+        <ModulesModuleToolbar
+          v-model:search="search"
+          v-model:sort-by="sortBy"
+          v-model:filter-category="filterCategory"
+          v-model:filter-type="filterType"
+          v-model:filter-compat="filterCompat"
+          v-model:show-favorites-only="showFavoritesOnly"
+          :active-chips="activeChips"
+          :category-options="categoryOptions"
+          :has-active-filters="hasActiveFilters"
+          :module-count="filteredModules.length"
+          :favorites-count="favorites.length"
+          @toggle-chip="toggleChip"
+          @reset="resetFilters"
         />
-      </div>
 
-      <!-- Modules Grid -->
-      <ModulesModuleList
-        v-else-if="filteredModules.length"
-        :modules="filteredModules"
-        :favorites="favorites"
-        @toggle-favorite="toggleFavorite"
-        @select="openModule"
-      />
+        <!-- Loading -->
+        <div
+          v-if="pending"
+          class="text-center py-12"
+        >
+          <UIcon
+            name="i-lucide-loader-2"
+            class="w-8 h-8 animate-spin text-primary-500"
+          />
+        </div>
 
-      <!-- Empty -->
-      <div
-        v-else-if="modules?.length"
-        class="text-center py-12 text-neutral-600 dark:text-neutral-400"
-      >
-        No modules match your filters.
-      </div>
+        <!-- Modules Grid -->
+        <ModulesModuleList
+          v-else-if="filteredModules.length"
+          :modules="filteredModules"
+          :favorites="favorites"
+          @toggle-favorite="toggleFavorite"
+          @select="openModule"
+        />
 
-      <!-- No Data -->
+        <!-- Empty (filters) -->
+        <div
+          v-else
+          class="text-center py-12 text-neutral-600 dark:text-neutral-400"
+        >
+          No modules match your filters.
+        </div>
+      </template>
+
+      <!-- No Data, no sync -->
       <div
         v-else
         class="text-center py-12 text-neutral-600 dark:text-neutral-400"
       >
-        No modules yet. Sync running...
+        No modules available.
       </div>
 
       <!-- Detail Slideover -->
