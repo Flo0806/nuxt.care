@@ -108,7 +108,10 @@
 <script setup lang="ts">
 import type { ModuleData, SyncMeta } from '~~/shared/types/modules'
 
-const { data: modules, pending } = await useFetch<ModuleData[]>('/api/modules')
+const { data: modules, pending, refresh: refreshModules } = await useFetch<ModuleData[]>('/api/modules', {
+  // Don't use SSR payload cache - always fetch fresh on client
+  getCachedData: () => undefined,
+})
 const { data: syncStatus } = await useFetch<SyncMeta>('/api/sync', {
   server: false,
 })
