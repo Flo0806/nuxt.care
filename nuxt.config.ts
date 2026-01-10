@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/a11y',
+    '@nuxt/content',
     '@nuxt/eslint',
     '@nuxt/image',
     '@nuxt/test-utils',
@@ -32,6 +33,7 @@ export default defineNuxtConfig({
 
   hub: {
     kv: true,
+    database: true,
   },
 
   eslint: {

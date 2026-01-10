@@ -1,6 +1,88 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* Prose styles for documentation */
+.prose h1 {
+  @apply text-2xl font-bold mb-4;
+}
+
+.prose h2 {
+  @apply text-xl font-semibold mt-8 mb-4;
+}
+
+.prose h3 {
+  @apply text-lg font-semibold mt-6 mb-3;
+}
+
+.prose p {
+  @apply mb-4 leading-relaxed;
+}
+
+.prose ul {
+  @apply list-disc pl-6 mb-4 space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal pl-6 mb-4 space-y-1;
+}
+
+.prose table {
+  @apply w-full mb-4 text-sm;
+}
+
+.prose th {
+  @apply text-left py-2 px-3 bg-neutral-100 dark:bg-neutral-800 font-semibold;
+}
+
+.prose td {
+  @apply py-2 px-3 border-b border-neutral-200 dark:border-neutral-700;
+}
+
+.prose code {
+  @apply bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-sm;
+}
+
+.prose pre {
+  @apply bg-neutral-900 dark:bg-neutral-950 p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose a {
+  @apply text-primary-600 dark:text-primary-400 underline hover:no-underline;
+}
+
+.prose strong {
+  @apply font-semibold;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary-500 pl-4 italic text-neutral-600 dark:text-neutral-400;
+}
+
+/* Callout components */
+.callout {
+  @apply p-4 rounded-lg mb-4 border;
+}
+
+.callout-info {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200;
+}
+
+.callout-warning {
+  @apply bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200;
+}
+
+.callout-error {
+  @apply bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200;
+}
+
+.callout-success {
+  @apply bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200;
+}
+
 @theme static {
   /* Nuxamine Green - Primary (derived from logo #2E7D32) */
   --color-nuxamine-50: oklch(0.97 0.02 145);

@@ -10,18 +10,31 @@
         <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">
           Nuxamine
         </h1>
-        <a
-          href="https://github.com/Flo0806/nuxamine"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
-        >
-          <UIcon
-            name="i-lucide-star"
-            class="w-3 h-3"
-          />
-          Star on GitHub
-        </a>
+        <div class="flex items-center gap-3">
+          <NuxtLink
+            to="/docs"
+            class="inline-flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
+          >
+            <UIcon
+              name="i-lucide-book-open"
+              class="w-3 h-3"
+            />
+            Docs
+          </NuxtLink>
+          <span class="text-neutral-300 dark:text-neutral-600">|</span>
+          <a
+            href="https://github.com/Flo0806/nuxamine"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
+          >
+            <UIcon
+              name="i-lucide-star"
+              class="w-3 h-3"
+            />
+            Star on GitHub
+          </a>
+        </div>
       </div>
     </div>
     <div class="flex items-center gap-4">
@@ -61,10 +74,12 @@
 <script setup lang="ts">
 import type { SyncMeta } from '~~/shared/types/modules'
 
-defineProps<{
+withDefaults(defineProps<{
   syncStatus?: SyncMeta | null
-  criticalCount: number
-}>()
+  criticalCount?: number
+}>(), {
+  criticalCount: 0,
+})
 
 defineEmits<{
   'show-critical': []
