@@ -138,6 +138,88 @@
       </UTooltip>
     </div>
 
+    <!-- Quality Row: Tests/Coverage, CI, Pending -->
+    <div class="flex items-center justify-around mb-4 py-2 px-3 rounded-md bg-neutral-50 dark:bg-neutral-800/50">
+      <!-- Tests -->
+      <UTooltip :text="testsTooltip">
+        <div class="flex items-center gap-1.5 cursor-help">
+          <UIcon
+            :name="hasTests ? 'i-lucide-check-circle' : 'i-lucide-x-circle'"
+            class="w-4 h-4"
+            :class="hasTests ? 'text-green-600' : 'text-red-600'"
+          />
+          <span class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+            Tests
+          </span>
+        </div>
+      </UTooltip>
+
+      <!-- CI Status -->
+      <UTooltip :text="ciTooltip">
+        <div class="flex items-center gap-1.5 cursor-help">
+          <UIcon
+            :name="ciIcon"
+            class="w-4 h-4"
+            :class="ciIconColor"
+          />
+          <span class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+            CI
+          </span>
+        </div>
+      </UTooltip>
+
+      <!-- Pending Commits -->
+      <UPopover mode="hover">
+        <div class="flex items-center gap-1.5 cursor-help">
+          <span
+            class="text-xs font-bold min-w-5 text-center"
+            :class="pendingIconColor"
+          >
+            {{ pendingLabel }}
+          </span>
+          <span class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+            Pending
+          </span>
+        </div>
+        <template #content>
+          <div class="p-3 max-w-xs">
+            <template v-if="!pendingCommits">
+              <p class="text-sm text-neutral-500">
+                No release data
+              </p>
+            </template>
+            <template v-else-if="pendingCommits.nonChore === 0">
+              <p class="text-sm text-green-700 dark:text-green-400">
+                No unreleased changes
+              </p>
+            </template>
+            <template v-else>
+              <p class="text-sm font-medium mb-2">
+                <span class="text-orange-700 dark:text-orange-400">{{ pendingCommits.nonChore }}</span>
+                <span class="text-neutral-500"> of {{ pendingCommits.total }} commits unreleased</span>
+              </p>
+              <ul class="space-y-1">
+                <li
+                  v-for="commit in pendingCommits.commits.slice(0, 5)"
+                  :key="commit.sha"
+                  class="text-xs flex gap-2"
+                >
+                  <code class="text-neutral-400 shrink-0">{{ commit.sha }}</code>
+                  <span class="text-neutral-600 dark:text-neutral-300 truncate">{{ commit.message }}</span>
+                </li>
+              </ul>
+              <p
+                v-if="pendingCommits.nonChore > 5"
+                class="text-xs text-neutral-400 mt-1"
+              >
+                +{{ pendingCommits.nonChore - 5 }} more...
+              </p>
+            </template>
+          </div>
+        </template>
+      </UPopover>
+    </div>
+
     <!-- Spacer -->
     <div class="grow" />
 
@@ -238,10 +320,10 @@ const activityTooltip = computed(() => {
 const activityColor = computed(() => {
   const days = daysSincePush.value
   if (days === null) return 'text-neutral-800 dark:text-neutral-200'
-  if (days < 30) return 'text-green-600 dark:text-green-400'
+  if (days < 30) return 'text-green-700 dark:text-green-400'
   if (days < 180) return 'text-neutral-800 dark:text-neutral-200'
-  if (days < 365) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-red-600 dark:text-red-400'
+  if (days < 365) return 'text-yellow-700 dark:text-yellow-400'
+  return 'text-red-700 dark:text-red-400'
 })
 
 const vulnLabel = computed(() => {
@@ -266,10 +348,10 @@ const vulnTooltip = computed(() => {
 const vulnColor = computed(() => {
   const v = props.module.vulnerabilities
   if (!v) return 'text-neutral-800 dark:text-neutral-200'
-  if (v.count === 0) return 'text-green-600 dark:text-green-400'
-  if (v.critical > 0) return 'text-red-600 dark:text-red-400'
-  if (v.high > 0) return 'text-orange-600 dark:text-orange-400'
-  return 'text-yellow-600 dark:text-yellow-400'
+  if (v.count === 0) return 'text-green-700 dark:text-green-400'
+  if (v.critical > 0) return 'text-red-700 dark:text-red-400'
+  if (v.high > 0) return 'text-orange-700 dark:text-orange-400'
+  return 'text-yellow-700 dark:text-yellow-400'
 })
 
 const sizeLabel = computed(() => {
@@ -282,6 +364,47 @@ const sizeTooltip = computed(() => {
   const size = props.module.npm?.unpackedSize
   if (!size) return 'Package size not available'
   return `${formatBytes(size)} unpacked (node_modules)`
+})
+
+// Tests
+const hasTests = computed(() => props.module.npm?.hasTests ?? false)
+const testsTooltip = computed(() => {
+  return hasTests.value
+    ? 'Test script found in package.json'
+    : 'No test script found'
+})
+
+// CI Status
+const ciStatus = computed(() => props.module.ciStatus)
+const ciIcon = computed(() => {
+  if (!ciStatus.value?.hasCI) return 'i-lucide-circle-dashed'
+  if (ciStatus.value.lastRunConclusion === 'success') return 'i-lucide-check-circle'
+  if (ciStatus.value.lastRunConclusion === 'failure') return 'i-lucide-x-circle'
+  return 'i-lucide-circle-dashed'
+})
+const ciIconColor = computed(() => {
+  if (!ciStatus.value?.hasCI) return 'text-neutral-400'
+  if (ciStatus.value.lastRunConclusion === 'success') return 'text-green-600'
+  if (ciStatus.value.lastRunConclusion === 'failure') return 'text-red-600'
+  return 'text-yellow-600'
+})
+const ciTooltip = computed(() => {
+  if (!ciStatus.value?.hasCI) return 'No CI/GitHub Actions found'
+  const status = ciStatus.value.lastRunConclusion === 'success' ? 'passing' : ciStatus.value.lastRunConclusion === 'failure' ? 'failing' : 'unknown'
+  return `CI ${status} (${ciStatus.value.workflowName})`
+})
+
+// Pending Commits
+const pendingCommits = computed(() => props.module.pendingCommits)
+const pendingLabel = computed(() => {
+  if (!pendingCommits.value) return '-'
+  return String(pendingCommits.value.nonChore)
+})
+const pendingIconColor = computed(() => {
+  if (!pendingCommits.value) return 'text-neutral-400'
+  if (pendingCommits.value.nonChore === 0) return 'text-green-600'
+  if (pendingCommits.value.nonChore <= 3) return 'text-yellow-600'
+  return 'text-orange-600'
 })
 
 function formatBytes(bytes: number): string {

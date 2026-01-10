@@ -99,6 +99,55 @@ export async function fetchContributors(repoPath: string, token?: string): Promi
 }
 
 /**
+ * Fetch GitHub Actions workflow runs (CI status)
+ */
+export async function fetchCIStatus(repoPath: string, defaultBranch: string, token?: string): Promise<CIStatusInfo | null> {
+  const runs = await ghFetch<GitHubWorkflowRunsResponse>(
+    `https://api.github.com/repos/${repoPath}/actions/runs?branch=${defaultBranch}&per_page=1`,
+    token,
+  )
+  if (!runs?.workflow_runs?.length) return null
+
+  const latest = runs.workflow_runs[0]
+  return {
+    hasCI: true,
+    lastRunConclusion: latest.conclusion as 'success' | 'failure' | 'cancelled' | null,
+    lastRunDate: latest.updated_at,
+    workflowName: latest.name,
+  }
+}
+
+/**
+ * Fetch commits since last release (pending commits)
+ */
+export async function fetchPendingCommits(repoPath: string, lastReleaseDate: string | null, token?: string): Promise<PendingCommitsInfo | null> {
+  if (!lastReleaseDate) return null
+
+  const commits = await ghFetch<GitHubCommitResponse[]>(
+    `https://api.github.com/repos/${repoPath}/commits?since=${lastReleaseDate}&per_page=100`,
+    token,
+  )
+  if (!commits?.length) return { total: 0, nonChore: 0, commits: [] }
+
+  // Filter out chore/docs/style/ci commits (conventional commit prefixes)
+  const chorePatterns = /^(chore|docs|style|ci|build|test)(\(.+\))?:/i
+  const nonChoreCommits = commits.filter((c) => {
+    const msg = c.commit?.message || ''
+    return !chorePatterns.test(msg)
+  })
+
+  return {
+    total: commits.length,
+    nonChore: nonChoreCommits.length,
+    commits: nonChoreCommits.slice(0, 5).map(c => ({
+      sha: c.sha.slice(0, 7),
+      message: (c.commit?.message || '').split('\n')[0].slice(0, 80),
+      date: c.commit?.author?.date || '',
+    })),
+  }
+}
+
+/**
  * Fetch npm package info
  */
 export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
@@ -114,6 +163,7 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
         keywords?: string[]
         types?: string
         typings?: string
+        scripts?: Record<string, string>
         dist?: {
           unpackedSize?: number
           fileCount?: number
@@ -130,6 +180,10 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
     // Check for TypeScript types (types or typings field in package.json)
     const hasTypes = !!(latestInfo?.types || latestInfo?.typings)
 
+    // Check for test script
+    const scripts = latestInfo?.scripts || {}
+    const hasTests = !!(scripts.test && scripts.test !== 'echo "Error: no test specified" && exit 1')
+
     return {
       name: data.name,
       latestVersion: latest || '',
@@ -139,6 +193,7 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
       keywords: latestInfo?.keywords || [],
       deprecated: data.deprecated || null,
       hasTypes,
+      hasTests,
       unpackedSize: latestInfo?.dist?.unpackedSize || null,
     }
   }

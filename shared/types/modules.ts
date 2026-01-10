@@ -18,6 +18,8 @@ export interface ModuleData {
   oldestIssue: OldestIssue | null
   contributors: ContributorsInfo | null
   readme: ReadmeAnalysis | null
+  ciStatus: CIStatusInfo | null
+  pendingCommits: PendingCommitsInfo | null
 
   npm: NpmInfo | null
   keywords: KeywordsAnalysis | null
@@ -115,7 +117,25 @@ export interface NpmInfo {
   keywords: string[]
   deprecated: string | null
   hasTypes: boolean
+  hasTests: boolean
   unpackedSize: number | null
+}
+
+export interface CIStatusInfo {
+  hasCI: boolean
+  lastRunConclusion: 'success' | 'failure' | 'cancelled' | null
+  lastRunDate: string
+  workflowName: string
+}
+
+export interface PendingCommitsInfo {
+  total: number
+  nonChore: number
+  commits: Array<{
+    sha: string
+    message: string
+    date: string
+  }>
 }
 
 export interface KeywordsAnalysis {
@@ -222,7 +242,20 @@ export interface GitHubReleaseResponse {
 }
 
 export interface GitHubCommitResponse {
+  sha: string
   author?: { login: string } | null
+  commit?: {
+    message?: string
+    author?: { date?: string }
+  }
+}
+
+export interface GitHubWorkflowRunsResponse {
+  workflow_runs: Array<{
+    name: string
+    conclusion: string | null
+    updated_at: string
+  }>
 }
 
 // OSV API types

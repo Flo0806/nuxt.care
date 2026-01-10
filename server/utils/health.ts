@@ -127,6 +127,37 @@ export function calculateHealth(data: ModuleData): HealthScore {
     signals.push({ type: 'warning', msg: 'Vulnerabilities: no data', points: 0, maxPoints: 10 })
   }
 
+  // 8. Has tests (info signal)
+  if (data.npm?.hasTests) {
+    signals.push({ type: 'positive', msg: 'Has tests', points: 0, maxPoints: 0 })
+  }
+  else {
+    signals.push({ type: 'warning', msg: 'No tests detected', points: 0, maxPoints: 0 })
+  }
+
+  // 9. CI status (info signal)
+  if (data.ciStatus?.hasCI) {
+    if (data.ciStatus.lastRunConclusion === 'success') {
+      signals.push({ type: 'positive', msg: 'CI passing', points: 0, maxPoints: 0 })
+    }
+    else if (data.ciStatus.lastRunConclusion === 'failure') {
+      signals.push({ type: 'negative', msg: 'CI failing', points: 0, maxPoints: 0 })
+    }
+    else {
+      signals.push({ type: 'warning', msg: 'CI: no recent runs', points: 0, maxPoints: 0 })
+    }
+  }
+
+  // 10. Pending commits (info signal)
+  if (data.pendingCommits && data.pendingCommits.nonChore > 0) {
+    signals.push({
+      type: 'warning',
+      msg: `${data.pendingCommits.nonChore} unreleased changes`,
+      points: 0,
+      maxPoints: 0,
+    })
+  }
+
   return {
     score: Math.max(0, Math.min(100, score)),
     signals,

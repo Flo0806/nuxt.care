@@ -152,6 +152,8 @@ function createErrorModule(mod: NuxtApiModule, err: unknown): ModuleData {
     oldestIssue: null,
     contributors: null,
     readme: null,
+    ciStatus: null,
+    pendingCommits: null,
     npm: null,
     keywords: null,
     nodeEngine: null,
@@ -184,6 +186,8 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
     oldestIssue: null,
     contributors: null,
     readme: null,
+    ciStatus: null,
+    pendingCommits: null,
     npm: null,
     keywords: null,
     nodeEngine: null,
@@ -205,10 +209,22 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
       if (github) {
         data.github = github
         data.topics = analyzeTopics(github.topics)
+
+        // Fetch CI status (needs default branch)
+        const ciStatus = await fetchCIStatus(repoPath, github.defaultBranch, githubToken)
+        if (ciStatus) {
+          data.ciStatus = ciStatus
+        }
       }
 
       if (releases) {
         data.release = releases
+
+        // Fetch pending commits since last release
+        const pendingCommits = await fetchPendingCommits(repoPath, releases.date, githubToken)
+        if (pendingCommits) {
+          data.pendingCommits = pendingCommits
+        }
       }
 
       if (contributors) {
