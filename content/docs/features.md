@@ -25,6 +25,7 @@ Each module card displays:
 - **Version** - Latest npm version
 - **TypeScript** - TS badge if types are included
 - **Stats** - Downloads, stars, contributors, activity, vulnerabilities, size
+- **Quality Row** - Tests status, CI status, pending commits
 - **Quick Links** - Direct links to GitHub and npm
 - **License** - SPDX license identifier
 - **Status Badges** - Official, Nuxt 4/3, Stale, Archived, Deprecated, Vulnerabilities
@@ -39,7 +40,8 @@ Click a module card to open the detail slideover with:
 - **Statistics** - Downloads, stars, forks, open issues, contributors
 - **Activity** - Last commit, last release
 - **Compatibility** - Nuxt API compat string and interpretation
-- **Health Signals** - All 7 criteria with individual scores
+- **Quality** - Tests, CI status, pending commits with details
+- **Health Signals** - All 10 criteria with individual scores
 - **External Links** - GitHub, npm
 
 ## Filtering & Sorting

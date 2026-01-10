@@ -22,13 +22,13 @@ Choosing the right Nuxt module can be challenging:
 Nuxamine answers these questions by analyzing data from multiple sources:
 
 - **Nuxt Modules API** - Official module registry
-- **GitHub API** - Repository activity, contributors, releases
-- **npm Registry** - Package info, deprecation status, TypeScript support
+- **GitHub API** - Repository activity, contributors, releases, CI status
+- **npm Registry** - Package info, deprecation status, TypeScript support, tests
 - **OSV Database** - Known security vulnerabilities
 
 ## Features
 
-- **Health Score** - Every module gets a score (0-100) based on 7 criteria
+- **Health Score** - Every module gets a score (0-100) based on 10 criteria
 - **Nuxt 4 Detection** - Multiple sources checked for compatibility
 - **Critical Alerts** - Quickly identify problematic modules
 - **Favorites** - Save modules you use or want to track
