@@ -6,6 +6,7 @@
       :module="mod"
       :is-favorite="favorites.includes(mod.name)"
       @toggle-favorite="$emit('toggle-favorite', mod.name)"
+      @select="$emit('select', mod)"
     />
   </div>
 </template>
@@ -20,5 +21,6 @@ defineProps<{
 
 defineEmits<{
   'toggle-favorite': [moduleName: string]
+  'select': [module: ModuleData]
 }>()
 </script>

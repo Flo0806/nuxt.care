@@ -34,6 +34,7 @@
         :modules="filteredModules"
         :favorites="favorites"
         @toggle-favorite="toggleFavorite"
+        @select="openModule"
       />
 
       <!-- Empty -->
@@ -51,6 +52,14 @@
       >
         No modules yet. Sync running...
       </div>
+
+      <!-- Detail Slideover -->
+      <ModulesModuleDetailSlideover
+        v-model:open="isSlideoverOpen"
+        :module="selectedModule"
+        :is-favorite="selectedModule ? favorites.includes(selectedModule.name) : false"
+        @toggle-favorite="toggleFavorite"
+      />
     </div>
   </main>
 </template>
@@ -64,6 +73,15 @@ const { data: syncStatus } = await useFetch<SyncMeta>('/api/sync', {
 })
 
 const { favorites, toggleFavorite } = useFavorites()
+
+// Slideover
+const selectedModule = ref<ModuleData | null>(null)
+const isSlideoverOpen = ref(false)
+
+function openModule(mod: ModuleData) {
+  selectedModule.value = mod
+  isSlideoverOpen.value = true
+}
 
 const {
   search,

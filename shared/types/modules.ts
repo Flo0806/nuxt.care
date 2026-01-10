@@ -25,6 +25,7 @@ export interface ModuleData {
   deps: DepsAnalysis | null
   moduleJson: ModuleJsonInfo | null
   packageKeywords?: string[]
+  vulnerabilities: VulnerabilityInfo | null
 
   health: HealthScore
 }
@@ -145,9 +146,24 @@ export interface ModuleJsonInfo {
   nuxtCompat?: CompatAnalysis
 }
 
+export interface VulnerabilityInfo {
+  count: number
+  critical: number
+  high: number
+  medium: number
+  low: number
+  vulnerabilities: Array<{
+    id: string
+    summary: string
+    severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN'
+  }>
+}
+
 export interface HealthSignal {
   type: 'positive' | 'negative' | 'warning'
   msg: string
+  points: number
+  maxPoints: number
 }
 
 export interface HealthScore {
@@ -205,4 +221,16 @@ export interface GitHubReleaseResponse {
 
 export interface GitHubCommitResponse {
   author?: { login: string } | null
+}
+
+// OSV API types
+export interface OsvVulnerability {
+  id: string
+  summary?: string
+  severity?: Array<{ type: string, score: string }>
+  database_specific?: { severity?: string }
+}
+
+export interface OsvResponse {
+  vulns?: OsvVulnerability[]
 }

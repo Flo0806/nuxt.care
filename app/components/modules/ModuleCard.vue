@@ -1,12 +1,15 @@
 <template>
-  <div class="h-full flex flex-col p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+  <article
+    class="h-full flex flex-col p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
+    @click="$emit('select')"
+  >
     <!-- Header: Favorite + Name + Score -->
     <div class="flex items-center gap-2 mb-2">
       <button
         :aria-label="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
         class="shrink-0 text-neutral-400 hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400 transition-colors"
         :class="{ 'text-red-500 dark:text-red-400': isFavorite }"
-        @click="$emit('toggle-favorite')"
+        @click.stop="$emit('toggle-favorite')"
       >
         <UIcon
           :name="isFavorite ? 'i-lucide-heart' : 'i-lucide-heart'"
@@ -17,7 +20,10 @@
       <span class="text-base font-bold text-neutral-900 dark:text-white truncate flex-1">
         {{ module.name }}
       </span>
-      <ModulesScoreBadge :score="module.health.score" />
+      <ModulesScoreBadge
+        :score="module.health.score"
+        :signals="module.health.signals"
+      />
     </div>
 
     <!-- Divider -->
@@ -83,6 +89,21 @@
           </div>
         </div>
       </UTooltip>
+
+      <!-- Vulnerabilities -->
+      <UTooltip :text="vulnTooltip">
+        <div class="text-center cursor-help">
+          <div
+            class="text-sm font-semibold"
+            :class="vulnColor"
+          >
+            {{ vulnLabel }}
+          </div>
+          <div class="text-[10px] text-neutral-400 uppercase tracking-wide">
+            Vulns
+          </div>
+        </div>
+      </UTooltip>
     </div>
 
     <!-- Spacer -->
@@ -112,7 +133,7 @@
         </UBadge>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
@@ -125,6 +146,7 @@ const props = defineProps<{
 
 defineEmits<{
   'toggle-favorite': []
+  'select': []
 }>()
 
 const daysSincePush = computed(() => {
@@ -155,6 +177,34 @@ const activityColor = computed(() => {
   if (days < 180) return 'text-neutral-800 dark:text-neutral-200'
   if (days < 365) return 'text-yellow-600 dark:text-yellow-400'
   return 'text-red-600 dark:text-red-400'
+})
+
+const vulnLabel = computed(() => {
+  const v = props.module.vulnerabilities
+  if (!v) return '-'
+  if (v.count === 0) return '0'
+  return String(v.count)
+})
+
+const vulnTooltip = computed(() => {
+  const v = props.module.vulnerabilities
+  if (!v) return 'No vulnerability data'
+  if (v.count === 0) return 'No known vulnerabilities'
+  const parts: string[] = []
+  if (v.critical > 0) parts.push(`${v.critical} critical`)
+  if (v.high > 0) parts.push(`${v.high} high`)
+  if (v.medium > 0) parts.push(`${v.medium} medium`)
+  if (v.low > 0) parts.push(`${v.low} low`)
+  return `${v.count} vulnerabilities: ${parts.join(', ')}`
+})
+
+const vulnColor = computed(() => {
+  const v = props.module.vulnerabilities
+  if (!v) return 'text-neutral-800 dark:text-neutral-200'
+  if (v.count === 0) return 'text-green-600 dark:text-green-400'
+  if (v.critical > 0) return 'text-red-600 dark:text-red-400'
+  if (v.high > 0) return 'text-orange-600 dark:text-orange-400'
+  return 'text-yellow-600 dark:text-yellow-400'
 })
 
 const isStale = computed(() => {
@@ -204,6 +254,15 @@ const badges = computed(() => {
   }
   if (props.module.npm?.deprecated) {
     list.push({ label: 'Deprecated', color: 'error' })
+  }
+
+  // Vulnerabilities
+  const v = props.module.vulnerabilities
+  if (v && v.critical > 0) {
+    list.push({ label: `${v.critical} Critical`, color: 'error' })
+  }
+  else if (v && v.high > 0) {
+    list.push({ label: `${v.high} High`, color: 'warning' })
   }
 
   return list

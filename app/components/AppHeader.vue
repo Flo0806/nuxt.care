@@ -33,7 +33,7 @@
 import type { SyncMeta } from '~~/shared/types/modules'
 
 defineProps<{
-  syncStatus: SyncMeta | null
+  syncStatus?: SyncMeta | null
 }>()
 
 function formatTimeAgo(dateStr: string): string {
