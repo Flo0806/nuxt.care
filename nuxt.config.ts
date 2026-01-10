@@ -15,7 +15,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
-    syncLimit: 0, // 0 = all modules, set NUXT_SYNC_LIMIT=20 for dev
     github: {
       token: '',
     },
