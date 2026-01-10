@@ -43,6 +43,26 @@ export const chipFilters: ChipFilter[] = [
   { id: 'score90', label: 'Score 90+', icon: 'i-lucide-heart-pulse', filter: m => m.health.score >= 90 },
 ]
 
+export function isCriticalModule(mod: ModuleData): boolean {
+  // Critical vulnerabilities
+  if ((mod.vulnerabilities?.critical || 0) > 0) return true
+  if ((mod.vulnerabilities?.high || 0) > 0) return true
+
+  // Deprecated or archived
+  if (mod.npm?.deprecated) return true
+  if (mod.github?.archived) return true
+
+  // Abandoned (>1 year no commits)
+  if (mod.github?.pushedAt) {
+    const daysSincePush = Math.floor(
+      (Date.now() - new Date(mod.github.pushedAt).getTime()) / (1000 * 60 * 60 * 24),
+    )
+    if (daysSincePush > 365) return true
+  }
+
+  return false
+}
+
 export function getCompatStatus(mod: ModuleData): 'nuxt4' | 'nuxt3' | 'unknown' {
   const hasNuxt4 = mod.nuxtApiCompat?.supports4
     || mod.topics?.hasNuxt4
@@ -64,11 +84,16 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
   const filterType = ref('all')
   const filterCompat = ref('all')
   const showFavoritesOnly = ref(false)
+  const showCriticalOnly = ref(false)
   const activeChips = ref<Set<string>>(new Set())
 
   const categoryOptions = computed(() => {
     const categoriesFromData = modules.value?.map(m => m.category) || []
     return buildCategoryOptions(categoriesFromData, true)
+  })
+
+  const criticalCount = computed(() => {
+    return (modules.value || []).filter(isCriticalModule).length
   })
 
   const hasActiveFilters = computed(() => {
@@ -77,6 +102,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
       || filterType.value !== 'all'
       || filterCompat.value !== 'all'
       || showFavoritesOnly.value
+      || showCriticalOnly.value
       || activeChips.value.size > 0
   })
 
@@ -97,6 +123,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
     filterType.value = 'all'
     filterCompat.value = 'all'
     showFavoritesOnly.value = false
+    showCriticalOnly.value = false
     activeChips.value = new Set()
   }
 
@@ -125,6 +152,10 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
 
     if (showFavoritesOnly.value) {
       result = result.filter(m => favorites.value.includes(m.name))
+    }
+
+    if (showCriticalOnly.value) {
+      result = result.filter(isCriticalModule)
     }
 
     // Apply chip filters (AND logic - all active chips must match)
@@ -163,9 +194,11 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
     filterType,
     filterCompat,
     showFavoritesOnly,
+    showCriticalOnly,
     activeChips,
     toggleChip,
     categoryOptions,
+    criticalCount,
     hasActiveFilters,
     resetFilters,
     filteredModules,

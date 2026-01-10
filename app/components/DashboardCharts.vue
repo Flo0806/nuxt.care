@@ -2,39 +2,42 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <!-- Nuxt 4 Readiness -->
     <div class="p-4 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-      <h3 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
+      <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
         Nuxt 4 Readiness
-      </h3>
+      </p>
       <div class="h-40">
         <Doughnut
           :data="nuxt4Data"
           :options="doughnutOptions"
+          aria-label="Chart showing Nuxt 4 readiness distribution"
         />
       </div>
     </div>
 
     <!-- Security Status -->
     <div class="p-4 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-      <h3 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
+      <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
         Security Status
-      </h3>
+      </p>
       <div class="h-40">
         <Doughnut
           :data="securityData"
           :options="doughnutOptions"
+          aria-label="Chart showing security vulnerability distribution"
         />
       </div>
     </div>
 
     <!-- Health Distribution -->
     <div class="p-4 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-      <h3 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
+      <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
         Health Distribution
-      </h3>
+      </p>
       <div class="h-40">
         <Bar
           :data="healthData"
           :options="barOptions"
+          aria-label="Chart showing module health score distribution"
         />
       </div>
     </div>

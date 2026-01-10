@@ -1,7 +1,11 @@
 <template>
   <main class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
     <div class="container mx-auto px-4 py-8">
-      <AppHeader :sync-status="syncStatus" />
+      <AppHeader
+        :sync-status="syncStatus"
+        :critical-count="criticalCount"
+        @show-critical="showCriticalOnly = true"
+      />
 
       <!-- Dashboard Charts -->
       <DashboardCharts
@@ -24,11 +28,13 @@
           v-model:filter-type="filterType"
           v-model:filter-compat="filterCompat"
           v-model:show-favorites-only="showFavoritesOnly"
+          v-model:show-critical-only="showCriticalOnly"
           :active-chips="activeChips"
           :category-options="categoryOptions"
           :has-active-filters="hasActiveFilters"
           :module-count="filteredModules.length"
           :favorites-count="favorites.length"
+          :critical-count="criticalCount"
           @toggle-chip="toggleChip"
           @reset="resetFilters"
         />
@@ -109,9 +115,11 @@ const {
   filterType,
   filterCompat,
   showFavoritesOnly,
+  showCriticalOnly,
   activeChips,
   toggleChip,
   categoryOptions,
+  criticalCount,
   hasActiveFilters,
   resetFilters,
   filteredModules,

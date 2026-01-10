@@ -53,6 +53,27 @@
       />
 
       <UButton
+        :color="showCriticalOnly ? 'error' : 'neutral'"
+        :variant="showCriticalOnly ? 'soft' : 'ghost'"
+        size="sm"
+        @click="$emit('update:showCriticalOnly', !showCriticalOnly)"
+      >
+        <UIcon
+          name="i-lucide-alert-triangle"
+          class="w-4 h-4"
+        />
+        Critical
+        <UBadge
+          v-if="criticalCount"
+          color="error"
+          variant="subtle"
+          size="xs"
+        >
+          {{ criticalCount }}
+        </UBadge>
+      </UButton>
+
+      <UButton
         :color="showFavoritesOnly ? 'primary' : 'neutral'"
         :variant="showFavoritesOnly ? 'soft' : 'ghost'"
         size="sm"
@@ -103,11 +124,13 @@ defineProps<{
   filterType: string
   filterCompat: string
   showFavoritesOnly: boolean
+  showCriticalOnly: boolean
   activeChips: Set<string>
   categoryOptions: Array<{ label: string, value: string, icon?: string }>
   hasActiveFilters: boolean
   moduleCount: number
   favoritesCount: number
+  criticalCount: number
 }>()
 
 defineEmits<{
@@ -117,6 +140,7 @@ defineEmits<{
   'update:filterType': [value: string]
   'update:filterCompat': [value: string]
   'update:showFavoritesOnly': [value: boolean]
+  'update:showCriticalOnly': [value: boolean]
   'toggle-chip': [chipId: string]
   'reset': []
 }>()

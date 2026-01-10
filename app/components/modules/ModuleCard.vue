@@ -151,6 +151,7 @@
               :href="`https://github.com/${module.repo}`"
               target="_blank"
               rel="noopener noreferrer"
+              :aria-label="`Open ${module.name} on GitHub`"
               class="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
               @click.stop
             >
@@ -165,6 +166,7 @@
               :href="`https://www.npmjs.com/package/${module.npmPackage}`"
               target="_blank"
               rel="noopener noreferrer"
+              :aria-label="`Open ${module.name} on npm`"
               class="text-neutral-400 hover:text-red-500 transition-colors"
               @click.stop
             >
