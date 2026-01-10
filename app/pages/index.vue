@@ -51,13 +51,29 @@
         </div>
 
         <!-- Modules Grid -->
-        <ModulesModuleList
-          v-else-if="filteredModules.length"
-          :modules="filteredModules"
-          :favorites="favorites"
-          @toggle-favorite="toggleFavorite"
-          @select="openModule"
-        />
+        <template v-else-if="filteredModules.length">
+          <ModulesModuleList
+            :modules="paginatedModules"
+            :favorites="favorites"
+            @toggle-favorite="toggleFavorite"
+            @select="openModule"
+          />
+
+          <!-- Pagination -->
+          <div
+            v-if="totalPages > 1"
+            class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+          >
+            <div class="text-sm text-neutral-500 dark:text-neutral-400">
+              Showing {{ paginationStart }}-{{ paginationEnd }} of {{ filteredModules.length }} modules
+            </div>
+            <UPagination
+              v-model:page="currentPage"
+              :items-per-page="itemsPerPage"
+              :total="filteredModules.length"
+            />
+          </div>
+        </template>
 
         <!-- Empty (filters) -->
         <div
@@ -124,6 +140,32 @@ const {
   resetFilters,
   filteredModules,
 } = useModuleFilters(modules, favorites)
+
+// Pagination
+const itemsPerPage = 12
+const currentPage = ref(1)
+
+const totalPages = computed(() => Math.ceil(filteredModules.value.length / itemsPerPage))
+
+const paginatedModules = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredModules.value.slice(start, end)
+})
+
+const paginationStart = computed(() => {
+  if (filteredModules.value.length === 0) return 0
+  return (currentPage.value - 1) * itemsPerPage + 1
+})
+
+const paginationEnd = computed(() => {
+  return Math.min(currentPage.value * itemsPerPage, filteredModules.value.length)
+})
+
+// Reset page when filters change
+watch([search, sortBy, filterCategory, filterType, filterCompat, showFavoritesOnly, showCriticalOnly, activeChips], () => {
+  currentPage.value = 1
+})
 
 // Refetch every 5s while syncing
 const interval = setInterval(async () => {

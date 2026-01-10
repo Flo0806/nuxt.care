@@ -160,6 +160,7 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
       'dist-tags'?: { latest?: string }
       'versions'?: Record<string, {
         peerDependencies?: Record<string, string>
+        devDependencies?: Record<string, string>
         keywords?: string[]
         types?: string
         typings?: string
@@ -177,8 +178,16 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
     const latestInfo = latest ? data.versions?.[latest] : null
     const time = data.time || {}
 
-    // Check for TypeScript types (types or typings field in package.json)
-    const hasTypes = !!(latestInfo?.types || latestInfo?.typings)
+    // Check for TypeScript support
+    // - types/typings field = exports type declarations
+    // - typescript in devDeps = written in TypeScript (common for Nuxt modules using module-builder)
+    const devDeps = latestInfo?.devDependencies || {}
+    const hasTypes = !!(
+      latestInfo?.types
+      || latestInfo?.typings
+      || devDeps.typescript
+      || devDeps['@types/node']
+    )
 
     // Check for test script
     const scripts = latestInfo?.scripts || {}

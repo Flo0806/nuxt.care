@@ -31,29 +31,33 @@ export interface ChipFilter {
 }
 
 export const chipFilters: ChipFilter[] = [
+  { id: 'hasTests', label: 'Has Tests', icon: 'i-lucide-test-tube', filter: m => m.npm?.hasTests === true },
+  { id: 'hasTypes', label: 'TypeScript', icon: 'i-lucide-file-code', filter: m => m.npm?.hasTypes === true },
+  { id: 'ciPassing', label: 'CI Passing', icon: 'i-lucide-check-circle', filter: m => m.ciStatus?.lastRunConclusion === 'success' },
+  { id: 'noVulns', label: 'No Vulns', icon: 'i-lucide-shield-check', filter: m => m.vulnerabilities?.count === 0 },
+  { id: 'noCritical', label: 'No Critical', icon: 'i-lucide-shield', filter: m => (m.vulnerabilities?.critical || 0) === 0 },
   { id: 'stars100', label: '100+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 100 },
-  { id: 'stars500', label: '500+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 500 },
   { id: 'stars1k', label: '1K+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 1000 },
   { id: 'dl10k', label: '10K+ DL', icon: 'i-lucide-download', filter: m => (m.nuxtApiStats?.downloads || 0) >= 10000 },
   { id: 'dl100k', label: '100K+ DL', icon: 'i-lucide-download', filter: m => (m.nuxtApiStats?.downloads || 0) >= 100000 },
-  { id: 'devs3', label: '3+ Devs', icon: 'i-lucide-users', filter: m => (m.contributors?.uniqueContributors || 0) >= 3 },
-  { id: 'noVulns', label: 'No Vulns', icon: 'i-lucide-shield-check', filter: m => m.vulnerabilities?.count === 0 },
-  { id: 'noCritical', label: 'No Critical', icon: 'i-lucide-shield', filter: m => (m.vulnerabilities?.critical || 0) === 0 },
   { id: 'score70', label: 'Score 70+', icon: 'i-lucide-heart-pulse', filter: m => m.health.score >= 70 },
   { id: 'score90', label: 'Score 90+', icon: 'i-lucide-heart-pulse', filter: m => m.health.score >= 90 },
 ]
 
 export function isCriticalModule(mod: ModuleData): boolean {
-  // Critical vulnerabilities
+  // Critical/high vulnerabilities = always critical
   if ((mod.vulnerabilities?.critical || 0) > 0) return true
   if ((mod.vulnerabilities?.high || 0) > 0) return true
 
-  // Deprecated or archived
+  // Deprecated = critical (shouldn't use)
   if (mod.npm?.deprecated) return true
-  if (mod.github?.archived) return true
 
-  // Abandoned (>1 year no commits)
-  if (mod.github?.pushedAt) {
+  // Archived alone = NOT critical (just a warning, module might still work fine)
+  // Abandoned alone = NOT critical if stable (all changes released)
+
+  // Abandoned WITH pending commits = critical (dead with unfinished work)
+  const pendingCount = mod.pendingCommits?.nonChore ?? 0
+  if (pendingCount > 0 && mod.github?.pushedAt) {
     const daysSincePush = Math.floor(
       (Date.now() - new Date(mod.github.pushedAt).getTime()) / (1000 * 60 * 60 * 24),
     )
@@ -134,7 +138,9 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
       const q = search.value.toLowerCase()
       result = result.filter(m =>
         m.name.toLowerCase().includes(q)
-        || m.description?.toLowerCase().includes(q),
+        || m.description?.toLowerCase().includes(q)
+        || m.npmPackage?.toLowerCase().includes(q)
+        || m.repo?.toLowerCase().includes(q),
       )
     }
 

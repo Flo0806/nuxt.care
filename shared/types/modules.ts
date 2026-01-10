@@ -182,7 +182,7 @@ export interface VulnerabilityInfo {
 }
 
 export interface HealthSignal {
-  type: 'positive' | 'negative' | 'warning'
+  type: 'positive' | 'negative' | 'warning' | 'info'
   msg: string
   points: number
   maxPoints: number

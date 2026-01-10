@@ -5,6 +5,12 @@
 const STARTUP_COOLDOWN = 5 * 60 * 1000
 
 export default defineNitroPlugin(async () => {
+  const config = useRuntimeConfig()
+  if (!config.github?.token) {
+    console.log('[startup] No GitHub token configured, skipping sync')
+    return
+  }
+
   await new Promise(r => setTimeout(r, 2000))
 
   const meta = await kv.get<SyncMetaWithServerId>('sync:meta')

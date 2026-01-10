@@ -1,219 +1,96 @@
 import { daysSince } from './fetchers'
 
 /**
- * Health Score Calculation for Nuxt Modules
- * ==========================================
+ * Risk/Quality Score for Nuxt Modules (max 100)
  *
- * The health score evaluates the quality and maintainability of a Nuxt module
- * on a scale from 0-100 points, based on 10 criteria:
- *
- * | #  | Signal            | Max | Description                                     |
- * |----|-------------------|-----|-------------------------------------------------|
- * | 1  | Activity          | 15  | Time since last commit                          |
- * |    |                   |     | <30d = 15p, <180d = 8p, <365d = 4p              |
- * | 2  | Not Archived      | 10  | Repository is not archived                      |
- * | 3  | Contributors      | 10  | Active contributors in last year                |
- * |    |                   |     | 3+ = 10p, 2 = 5p, 1 = 0p                        |
- * | 4  | Nuxt 4 Compatible | 15  | Compatibility from 4 sources:                   |
- * |    |                   |     | - nuxt.com API compat string                    |
- * |    |                   |     | - GitHub Topics (nuxt4, nuxt-4)                 |
- * |    |                   |     | - npm Keywords                                  |
- * |    |                   |     | - Release Notes Mentions                        |
- * |    |                   |     | 2+ signals = 15p, 1 = 8p, 0 = 0p                |
- * | 5  | Recent Release    | 10  | Time since last release                         |
- * |    |                   |     | <90d = 10p, <365d = 5p                          |
- * | 6  | Not Deprecated    | 15  | Package is not marked as deprecated             |
- * | 7  | No Vulnerabilities| 10  | No known security issues (OSV API)              |
- * |    |                   |     | 0 = 10p, low/med = 5p, high = 3p, critical = 0p |
- * | 8  | Has Tests         | 5   | `scripts.test` exists in package.json           |
- * | 9  | CI Passing        | 5   | GitHub Actions status on default branch         |
- * |    |                   |     | success = 5p, unknown = 2p, failure = 0p        |
- * | 10 | Pending Commits   | 5   | Unreleased changes (excl. chore/docs/style/ci)  |
- * |    |                   |     | 0 = 5p, 1-5 = 3p, 6-15 = 1p, 16+ = 0p           |
- * |----|-------------------|-----|                                                 |
- * |    | TOTAL             | 100 |                                                 |
- *
- * Score Interpretation:
- * - 80-100: Excellent - Well maintained, Nuxt 4 ready
- * - 60-79:  Good - Actively maintained, minor issues possible
- * - 40-59:  Fair - Limited maintenance, use with caution
- * - 0-39:   Poor - Outdated or abandoned, seek alternatives
+ * PENALTIES: Deprecated(-50), Archived(-30), Critical vulns(-40), High vulns(-20)
+ * SECURITY(15): No vulnerabilities
+ * TRUST(5): Official=5, Community=3, 3rd-party=0
+ * QUALITY(30): Tests=12, TypeScript=10, License=5, CI=3
+ * MAINTENANCE(35): Freshness=20, Release status=15
+ * NUXT4(15): 2+ signals=15, 1 signal=10, Official=5
  */
 export function calculateHealth(data: ModuleData): HealthScore {
   let score = 0
   const signals: HealthSignal[] = []
 
-  // 1. Activity (max 15 points)
-  const activityDays = data.github?.pushedAt ? daysSince(data.github.pushedAt) : null
-  if (activityDays !== null) {
-    if (activityDays < 30) {
-      score += 15
-      signals.push({ type: 'positive', msg: 'Active: commit within 30 days', points: 15, maxPoints: 15 })
-    }
-    else if (activityDays < 180) {
-      score += 8
-      signals.push({ type: 'warning', msg: `Inactive: ${Math.floor(activityDays / 30)} months since commit`, points: 8, maxPoints: 15 })
-    }
-    else if (activityDays < 365) {
-      score += 4
-      signals.push({ type: 'warning', msg: `Stale: ${Math.floor(activityDays / 30)} months since commit`, points: 4, maxPoints: 15 })
-    }
-    else {
-      signals.push({ type: 'negative', msg: `Abandoned: ${Math.floor(activityDays / 365)}+ years since commit`, points: 0, maxPoints: 15 })
-    }
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'Activity: no data', points: 0, maxPoints: 15 })
+  const add = (type: HealthSignal['type'], msg: string, points: number, maxPoints: number) => {
+    score += points
+    signals.push({ type, msg, points, maxPoints })
   }
 
-  // 2. Not archived (10 points)
-  if (data.github?.archived) {
-    signals.push({ type: 'negative', msg: 'Archived repository', points: 0, maxPoints: 10 })
-  }
-  else {
-    score += 10
-    signals.push({ type: 'positive', msg: 'Active repository', points: 10, maxPoints: 10 })
-  }
+  const info = (msg: string) => signals.push({ type: 'info', msg, points: 0, maxPoints: 0 })
 
-  // 3. Multiple contributors (10 points)
-  const contributors = data.contributors?.uniqueContributors || 0
-  if (contributors >= 3) {
-    score += 10
-    signals.push({ type: 'positive', msg: `${contributors} contributors`, points: 10, maxPoints: 10 })
-  }
-  else if (contributors >= 2) {
-    score += 5
-    signals.push({ type: 'warning', msg: `Only ${contributors} contributors`, points: 5, maxPoints: 10 })
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'Single maintainer', points: 0, maxPoints: 10 })
-  }
+  // Penalties
+  if (data.npm?.deprecated) add('negative', 'Deprecated', -50, 0)
+  if (data.github?.archived) add('negative', 'Archived', -30, 0)
 
-  // 4. Nuxt 4 compatible (15 points)
-  const nuxt4Signals = [
-    data.nuxtApiCompat?.supports4,
-    data.topics?.hasNuxt4,
-    data.keywords?.hasNuxt4,
-    data.release?.nuxt4Mentioned,
-  ].filter(Boolean).length
+  const { critical = 0, high = 0 } = data.vulnerabilities || {}
+  if (critical > 0) add('negative', `${critical} critical vulnerabilities`, -40, 0)
+  else if (high > 0) add('negative', `${high} high vulnerabilities`, -20, 0)
 
-  if (nuxt4Signals >= 2) {
-    score += 15
-    signals.push({ type: 'positive', msg: 'Nuxt 4 compatible', points: 15, maxPoints: 15 })
-  }
-  else if (nuxt4Signals === 1) {
-    score += 8
-    signals.push({ type: 'warning', msg: 'Nuxt 4 partially confirmed', points: 8, maxPoints: 15 })
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'Nuxt 4 not confirmed', points: 0, maxPoints: 15 })
-  }
+  // Security (15)
+  if (data.vulnerabilities?.count === 0) add('positive', 'No vulnerabilities', 15, 15)
+  else if (data.vulnerabilities) add('warning', 'Has vulnerabilities', 0, 15)
+  else add('info', 'Vulnerability status unknown', 0, 15)
 
-  // 5. Recent release (10 points)
-  const releaseDays = data.release?.daysSince
-  if (releaseDays !== undefined) {
-    if (releaseDays < 90) {
-      score += 10
-      signals.push({ type: 'positive', msg: `Released ${releaseDays}d ago`, points: 10, maxPoints: 10 })
-    }
-    else if (releaseDays < 365) {
-      score += 5
-      signals.push({ type: 'warning', msg: `Released ${Math.floor(releaseDays / 30)}mo ago`, points: 5, maxPoints: 10 })
-    }
-    else {
-      signals.push({ type: 'warning', msg: `Released ${Math.floor(releaseDays / 365)}y+ ago`, points: 0, maxPoints: 10 })
-    }
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'No releases', points: 0, maxPoints: 10 })
-  }
+  // Trust (5)
+  const trustMap = { 'official': [5, 'Official Nuxt module'], 'community': [3, 'Community module'], '3rd-party': [0, '3rd-party module'] } as const
+  const [trustPts, trustMsg] = trustMap[data.type] || [0, '3rd-party module']
+  add(trustPts === 5 ? 'positive' : 'info', trustMsg, trustPts, 5)
 
-  // 6. Not deprecated (15 points)
-  if (data.npm?.deprecated) {
-    signals.push({ type: 'negative', msg: 'Deprecated on npm', points: 0, maxPoints: 15 })
-  }
-  else {
-    score += 15
-    signals.push({ type: 'positive', msg: 'Not deprecated', points: 15, maxPoints: 15 })
-  }
+  // Quality (30)
+  add(data.npm?.hasTests ? 'positive' : 'warning', data.npm?.hasTests ? 'Has tests' : 'No tests', data.npm?.hasTests ? 12 : 0, 12)
+  add(data.npm?.hasTypes ? 'positive' : 'warning', data.npm?.hasTypes ? 'TypeScript support' : 'No TypeScript', data.npm?.hasTypes ? 10 : 0, 10)
+  add(data.github?.license ? 'positive' : 'warning', data.github?.license ? `License: ${data.github.license}` : 'No license', data.github?.license ? 5 : 0, 5)
 
-  // 7. No vulnerabilities (10 points)
-  if (data.vulnerabilities) {
-    if (data.vulnerabilities.count === 0) {
-      score += 10
-      signals.push({ type: 'positive', msg: 'No vulnerabilities', points: 10, maxPoints: 10 })
-    }
-    else {
-      const { critical, high, count } = data.vulnerabilities
-      if (critical > 0) {
-        signals.push({ type: 'negative', msg: `${count} vulns (${critical} critical)`, points: 0, maxPoints: 10 })
-      }
-      else if (high > 0) {
-        score += 3
-        signals.push({ type: 'negative', msg: `${count} vulns (${high} high)`, points: 3, maxPoints: 10 })
-      }
-      else {
-        score += 5
-        signals.push({ type: 'warning', msg: `${count} vulns (low/medium)`, points: 5, maxPoints: 10 })
-      }
-    }
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'Vulnerabilities: no data', points: 0, maxPoints: 10 })
-  }
+  const ci = data.ciStatus
+  if (ci?.hasCI && ci.lastRunConclusion === 'success') add('positive', 'CI passing', 3, 3)
+  else if (ci?.hasCI && ci.lastRunConclusion === 'failure') add('negative', 'CI failing', 0, 3)
+  else add('info', 'No CI', 0, 3)
 
-  // 8. Has tests (5 points)
-  if (data.npm?.hasTests) {
-    score += 5
-    signals.push({ type: 'positive', msg: 'Has tests', points: 5, maxPoints: 5 })
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'No tests detected', points: 0, maxPoints: 5 })
-  }
+  // Maintenance (35)
+  const days = data.npm?.daysSincePublish
+  const pending = data.pendingCommits?.nonChore ?? null
+  const activity = data.github?.pushedAt ? daysSince(data.github.pushedAt) : null
 
-  // 9. CI status (5 points)
-  if (data.ciStatus?.hasCI) {
-    if (data.ciStatus.lastRunConclusion === 'success') {
-      score += 5
-      signals.push({ type: 'positive', msg: 'CI passing', points: 5, maxPoints: 5 })
-    }
-    else if (data.ciStatus.lastRunConclusion === 'failure') {
-      signals.push({ type: 'negative', msg: 'CI failing', points: 0, maxPoints: 5 })
-    }
-    else {
-      score += 2
-      signals.push({ type: 'warning', msg: 'CI: no recent runs', points: 2, maxPoints: 5 })
-    }
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'No CI detected', points: 0, maxPoints: 5 })
-  }
+  // Stable & Done exception
+  const isStable = days != null && days > 365 && pending === 0
+    && (data.github?.openIssues ?? 0) < 10
+    && data.vulnerabilities?.count === 0
+    && (!ci?.hasCI || ci.lastRunConclusion === 'success')
 
-  // 10. Pending commits (5 points)
-  if (data.pendingCommits) {
-    const pending = data.pendingCommits.nonChore
-    if (pending === 0) {
-      score += 5
-      signals.push({ type: 'positive', msg: 'All changes released', points: 5, maxPoints: 5 })
-    }
-    else if (pending <= 5) {
-      score += 3
-      signals.push({ type: 'warning', msg: `${pending} unreleased changes`, points: 3, maxPoints: 5 })
-    }
-    else if (pending <= 15) {
-      score += 1
-      signals.push({ type: 'warning', msg: `${pending} unreleased changes`, points: 1, maxPoints: 5 })
-    }
-    else {
-      signals.push({ type: 'negative', msg: `${pending} unreleased changes`, points: 0, maxPoints: 5 })
-    }
-  }
-  else {
-    signals.push({ type: 'warning', msg: 'Pending: no release data', points: 0, maxPoints: 5 })
-  }
+  // Freshness (20)
+  if (days == null) add('warning', 'Publish date unknown', 0, 20)
+  else if (days < 90) add('positive', `Published ${days}d ago`, 20, 20)
+  else if (days < 365) add('info', `Published ${Math.floor(days / 30)}mo ago`, 12, 20)
+  else if (isStable) add('info', `Stable (${Math.floor(days / 365)}y, mature)`, 15, 20)
+  else add('warning', `Published ${Math.floor(days / 365)}y ago`, 5, 20)
 
-  return {
-    score: Math.max(0, Math.min(100, score)),
-    signals,
-  }
+  // Pending commits (15)
+  if (pending === 0) add('positive', 'All changes released', 15, 15)
+  else if (pending == null) add('info', 'Release status unknown', 0, 15)
+  else if (activity != null && activity < 90) add('info', `${pending} pending (active)`, 8, 15)
+  else if (activity != null && activity > 365) add('negative', `${pending} pending (abandoned)`, 0, 15)
+  else add('warning', `${pending} pending`, 3, 15)
+
+  // NUXT 4 (15)
+  const n4 = [data.nuxtApiCompat?.supports4, data.topics?.hasNuxt4, data.keywords?.hasNuxt4, data.release?.nuxt4Mentioned].filter(Boolean).length
+  if (n4 >= 2) add('positive', 'Nuxt 4 compatible', 15, 15)
+  else if (n4 === 1) add('info', 'Nuxt 4 partially confirmed', 10, 15)
+  else if (data.type === 'official') add('info', 'Nuxt 4: official module', 5, 15)
+  else add('warning', 'Nuxt 4 not confirmed', 0, 15)
+
+  // Info only
+  const dl = data.nuxtApiStats?.downloads || 0
+  const stars = data.github?.stars || 0
+  const contribs = data.contributors?.uniqueContributors || 0
+
+  info(`${fmt(dl)} downloads`)
+  info(`${fmt(stars)} stars`)
+  if (contribs > 0) info(`${contribs} contributor${contribs > 1 ? 's' : ''}`)
+
+  return { score: Math.max(0, Math.min(100, score)), signals }
 }
+
+const fmt = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n)

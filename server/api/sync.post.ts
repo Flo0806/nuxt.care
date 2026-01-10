@@ -56,17 +56,15 @@ export default defineEventHandler(async (event) => {
 async function runSync(startedAt: string): Promise<void> {
   const config = useRuntimeConfig()
   const githubToken = config.github?.token as string | undefined
-  const syncLimit = config.syncLimit as number
+
+  if (!githubToken) {
+    throw new Error('No GitHub token configured (NUXT_GITHUB_TOKEN)')
+  }
 
   try {
     const nuxtApi = await $fetch<NuxtApiResponse>('https://api.nuxt.com/modules')
-    let allModules = nuxtApi.modules
-
-    // Limit modules (NUXT_SYNC_LIMIT env, 0 = all)
-    if (syncLimit > 0 && allModules.length > syncLimit) {
-      const step = Math.floor(allModules.length / syncLimit)
-      allModules = allModules.filter((_, i) => i % step === 0).slice(0, syncLimit)
-    }
+    const syncLimit = Number(process.env.NUXT_SYNC_LIMIT) || 0
+    const allModules = syncLimit > 0 ? nuxtApi.modules.slice(0, syncLimit) : nuxtApi.modules
 
     const totalModules = allModules.length
 
@@ -93,8 +91,7 @@ async function runSync(startedAt: string): Promise<void> {
       await sleep(200)
     }
 
-    results.sort((a, b) => b.health.score - a.health.score)
-
+    // Sorting happens in modules.get.ts (score calculated on-the-fly)
     const duration = Date.now() - new Date(startedAt).getTime()
 
     await kv.set('modules:all', results)
@@ -244,7 +241,9 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
     // bundleSize now comes from npm.unpackedSize, not bundlephobia
   }
 
-  data.health = calculateHealth(data)
+  // Health score is calculated on-the-fly in modules.get.ts, not during sync
+  // This allows changing scoring logic without re-syncing all modules
+  data.health = { score: 0, signals: [] }
 
   return data
 }

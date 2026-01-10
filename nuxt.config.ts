@@ -15,7 +15,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
-    syncLimit: 0,
     github: {
       token: '',
     },
@@ -29,6 +28,10 @@ export default defineNuxtConfig({
     scheduledTasks: {
       // Every 8 hours: 0:00, 8:00, 16:00
       '0 */8 * * *': ['sync:modules'],
+    },
+    prerender: {
+      crawlLinks: true,
+      routes: ['/docs'],
     },
   },
 

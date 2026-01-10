@@ -1,8 +1,21 @@
 <template>
   <article
-    class="h-full flex flex-col p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
+    class="relative h-full flex flex-col p-4 rounded-lg border cursor-pointer transition-colors overflow-hidden"
+    :class="module.github?.archived
+      ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 hover:border-red-300 dark:hover:border-red-800'
+      : 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 hover:border-primary-300 dark:hover:border-primary-700'"
     @click="$emit('select')"
   >
+    <!-- Archived Watermark (diagonal background text) -->
+    <div
+      v-if="module.github?.archived"
+      class="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden"
+    >
+      <span class="text-red-200 dark:text-red-900/50 text-4xl font-black uppercase tracking-widest -rotate-12">
+        Archived
+      </span>
+    </div>
+
     <!-- Header: Favorite + Name + Score -->
     <div class="flex items-center gap-2 mb-2">
       <button
@@ -455,9 +468,7 @@ const badges = computed(() => {
   if (isStale.value) {
     list.push({ label: 'Stale', color: 'warning' })
   }
-  if (props.module.github?.archived) {
-    list.push({ label: 'Archived', color: 'error' })
-  }
+
   if (props.module.npm?.deprecated) {
     list.push({ label: 'Deprecated', color: 'error' })
   }
