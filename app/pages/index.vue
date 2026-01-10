@@ -77,6 +77,8 @@
         :is-favorite="selectedModule ? favorites.includes(selectedModule.name) : false"
         @toggle-favorite="toggleFavorite"
       />
+
+      <AppFooter />
     </div>
   </main>
 </template>
