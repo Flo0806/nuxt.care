@@ -15,6 +15,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
+    syncLimit: 0,
     github: {
       token: '',
     },

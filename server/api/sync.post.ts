@@ -1,6 +1,3 @@
-// TEST: limit to 20 modules (set to 0 for all)
-const TEST_LIMIT = 20
-
 export default defineEventHandler(async (event) => {
   const meta = await kv.get<SyncMetaWithServerId>('sync:meta') || getDefaultMeta()
 
@@ -59,15 +56,16 @@ export default defineEventHandler(async (event) => {
 async function runSync(startedAt: string): Promise<void> {
   const config = useRuntimeConfig()
   const githubToken = config.github?.token as string | undefined
+  const syncLimit = config.syncLimit as number
 
   try {
     const nuxtApi = await $fetch<NuxtApiResponse>('https://api.nuxt.com/modules')
     let allModules = nuxtApi.modules
 
-    // TEST: pick every Nth module to get variety
-    if (TEST_LIMIT > 0 && allModules.length > TEST_LIMIT) {
-      const step = Math.floor(allModules.length / TEST_LIMIT)
-      allModules = allModules.filter((_, i) => i % step === 0).slice(0, TEST_LIMIT)
+    // Limit modules (NUXT_SYNC_LIMIT env, 0 = all)
+    if (syncLimit > 0 && allModules.length > syncLimit) {
+      const step = Math.floor(allModules.length / syncLimit)
+      allModules = allModules.filter((_, i) => i % step === 0).slice(0, syncLimit)
     }
 
     const totalModules = allModules.length
