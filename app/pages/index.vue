@@ -10,10 +10,12 @@
         v-model:filter-type="filterType"
         v-model:filter-compat="filterCompat"
         v-model:show-favorites-only="showFavoritesOnly"
+        :active-chips="activeChips"
         :category-options="categoryOptions"
         :has-active-filters="hasActiveFilters"
         :module-count="filteredModules.length"
         :favorites-count="favorites.length"
+        @toggle-chip="toggleChip"
         @reset="resetFilters"
       />
 
@@ -90,6 +92,8 @@ const {
   filterType,
   filterCompat,
   showFavoritesOnly,
+  activeChips,
+  toggleChip,
   categoryOptions,
   hasActiveFilters,
   resetFilters,

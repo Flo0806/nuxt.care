@@ -30,9 +30,19 @@
     <div class="border-b border-neutral-100 dark:border-neutral-800 mb-3" />
 
     <!-- Meta: Category + Version -->
-    <div class="flex items-center justify-between text-xs text-neutral-400 mb-3">
-      <span>{{ module.category }}</span>
-      <span v-if="module.npm?.latestVersion">
+    <div class="flex items-center justify-between text-xs mb-3">
+      <div class="flex items-center gap-1.5">
+        <UIcon
+          :name="categoryConfig.icon"
+          class="w-3.5 h-3.5"
+          :class="`text-${categoryConfig.color}-500`"
+        />
+        <span class="text-neutral-600 dark:text-neutral-400">{{ module.category }}</span>
+      </div>
+      <span
+        v-if="module.npm?.latestVersion"
+        class="text-neutral-400"
+      >
         v{{ module.npm.latestVersion }}
       </span>
     </div>
@@ -148,6 +158,8 @@ defineEmits<{
   'toggle-favorite': []
   'select': []
 }>()
+
+const categoryConfig = computed(() => getCategoryConfig(props.module.category))
 
 const daysSincePush = computed(() => {
   if (!props.module.github?.pushedAt) return null

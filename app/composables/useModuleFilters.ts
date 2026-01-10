@@ -22,6 +22,27 @@ export const compatOptions = [
   { label: 'Unknown', value: 'unknown' },
 ]
 
+// Chip filter definitions
+export interface ChipFilter {
+  id: string
+  label: string
+  icon: string
+  filter: (m: ModuleData) => boolean
+}
+
+export const chipFilters: ChipFilter[] = [
+  { id: 'stars100', label: '100+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 100 },
+  { id: 'stars500', label: '500+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 500 },
+  { id: 'stars1k', label: '1K+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 1000 },
+  { id: 'dl10k', label: '10K+ DL', icon: 'i-lucide-download', filter: m => (m.nuxtApiStats?.downloads || 0) >= 10000 },
+  { id: 'dl100k', label: '100K+ DL', icon: 'i-lucide-download', filter: m => (m.nuxtApiStats?.downloads || 0) >= 100000 },
+  { id: 'devs3', label: '3+ Devs', icon: 'i-lucide-users', filter: m => (m.contributors?.uniqueContributors || 0) >= 3 },
+  { id: 'noVulns', label: 'No Vulns', icon: 'i-lucide-shield-check', filter: m => m.vulnerabilities?.count === 0 },
+  { id: 'noCritical', label: 'No Critical', icon: 'i-lucide-shield', filter: m => (m.vulnerabilities?.critical || 0) === 0 },
+  { id: 'score70', label: 'Score 70+', icon: 'i-lucide-heart-pulse', filter: m => m.health.score >= 70 },
+  { id: 'score90', label: 'Score 90+', icon: 'i-lucide-heart-pulse', filter: m => m.health.score >= 90 },
+]
+
 export function getCompatStatus(mod: ModuleData): 'nuxt4' | 'nuxt3' | 'unknown' {
   const hasNuxt4 = mod.nuxtApiCompat?.supports4
     || mod.topics?.hasNuxt4
@@ -43,13 +64,11 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
   const filterType = ref('all')
   const filterCompat = ref('all')
   const showFavoritesOnly = ref(false)
+  const activeChips = ref<Set<string>>(new Set())
 
   const categoryOptions = computed(() => {
-    const categories = new Set(modules.value?.map(m => m.category) || [])
-    return [
-      { label: 'All Categories', value: 'all' },
-      ...Array.from(categories).sort().map(c => ({ label: c, value: c })),
-    ]
+    const categoriesFromData = modules.value?.map(m => m.category) || []
+    return buildCategoryOptions(categoriesFromData, true)
   })
 
   const hasActiveFilters = computed(() => {
@@ -58,7 +77,19 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
       || filterType.value !== 'all'
       || filterCompat.value !== 'all'
       || showFavoritesOnly.value
+      || activeChips.value.size > 0
   })
+
+  function toggleChip(chipId: string) {
+    const newSet = new Set(activeChips.value)
+    if (newSet.has(chipId)) {
+      newSet.delete(chipId)
+    }
+    else {
+      newSet.add(chipId)
+    }
+    activeChips.value = newSet
+  }
 
   function resetFilters() {
     search.value = ''
@@ -66,6 +97,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
     filterType.value = 'all'
     filterCompat.value = 'all'
     showFavoritesOnly.value = false
+    activeChips.value = new Set()
   }
 
   const filteredModules = computed(() => {
@@ -93,6 +125,12 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
 
     if (showFavoritesOnly.value) {
       result = result.filter(m => favorites.value.includes(m.name))
+    }
+
+    // Apply chip filters (AND logic - all active chips must match)
+    if (activeChips.value.size > 0) {
+      const activeFilters = chipFilters.filter(c => activeChips.value.has(c.id))
+      result = result.filter(m => activeFilters.every(f => f.filter(m)))
     }
 
     result = [...result].sort((a, b) => {
@@ -125,6 +163,8 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
     filterType,
     filterCompat,
     showFavoritesOnly,
+    activeChips,
+    toggleChip,
     categoryOptions,
     hasActiveFilters,
     resetFilters,

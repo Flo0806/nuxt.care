@@ -83,6 +83,13 @@
         Reset
       </UButton>
     </div>
+
+    <!-- Chip Filters -->
+    <ModulesFilterChips
+      :active-chips="activeChips"
+      class="mb-4"
+      @toggle="$emit('toggle-chip', $event)"
+    />
   </div>
 </template>
 
@@ -96,7 +103,8 @@ defineProps<{
   filterType: string
   filterCompat: string
   showFavoritesOnly: boolean
-  categoryOptions: Array<{ label: string, value: string }>
+  activeChips: Set<string>
+  categoryOptions: Array<{ label: string, value: string, icon?: string }>
   hasActiveFilters: boolean
   moduleCount: number
   favoritesCount: number
@@ -109,6 +117,7 @@ defineEmits<{
   'update:filterType': [value: string]
   'update:filterCompat': [value: string]
   'update:showFavoritesOnly': [value: boolean]
+  'toggle-chip': [chipId: string]
   'reset': []
 }>()
 </script>
