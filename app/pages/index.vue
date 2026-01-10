@@ -27,10 +27,14 @@
           v-model:filter-category="filterCategory"
           v-model:filter-type="filterType"
           v-model:filter-compat="filterCompat"
+          v-model:filter-maintainer="filterMaintainer"
           v-model:show-favorites-only="showFavoritesOnly"
           v-model:show-critical-only="showCriticalOnly"
           :active-chips="activeChips"
           :category-options="categoryOptions"
+          :type-options="typeOptions"
+          :compat-options="compatOptions"
+          :maintainer-options="maintainerOptions"
           :has-active-filters="hasActiveFilters"
           :module-count="filteredModules.length"
           :favorites-count="favorites.length"
@@ -108,9 +112,9 @@
 <script setup lang="ts">
 import type { ModuleData, SyncMeta } from '~~/shared/types/modules'
 
-const { data: modules, pending, refresh: refreshModules } = await useFetch<ModuleData[]>('/api/modules', {
-  // Don't use SSR payload cache - always fetch fresh on client
-  getCachedData: () => undefined,
+const { data: modules, pending } = await useFetch<ModuleData[]>('/api/modules', {
+  // Client-only fetch - avoids SSR/hydration mismatches, always fresh data
+  server: false,
 })
 const { data: syncStatus } = await useFetch<SyncMeta>('/api/sync', {
   server: false,
@@ -133,11 +137,15 @@ const {
   filterCategory,
   filterType,
   filterCompat,
+  filterMaintainer,
   showFavoritesOnly,
   showCriticalOnly,
   activeChips,
   toggleChip,
   categoryOptions,
+  typeOptions,
+  compatOptions,
+  maintainerOptions,
   criticalCount,
   hasActiveFilters,
   resetFilters,
@@ -166,7 +174,7 @@ const paginationEnd = computed(() => {
 })
 
 // Reset page when filters change
-watch([search, sortBy, filterCategory, filterType, filterCompat, showFavoritesOnly, showCriticalOnly, activeChips], () => {
+watch([search, sortBy, filterCategory, filterType, filterCompat, filterMaintainer, showFavoritesOnly, showCriticalOnly, activeChips], () => {
   currentPage.value = 1
 })
 

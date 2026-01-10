@@ -41,18 +41,19 @@ Click a module card to open the detail slideover with:
 - **Activity** - Last commit, last release
 - **Compatibility** - Nuxt API compat string and interpretation
 - **Quality** - Tests, CI status, pending commits with details
-- **Health Signals** - All 10 criteria with individual scores
+- **Health Signals** - All scoring criteria with individual points
 - **External Links** - GitHub, npm
 
 ## Filtering & Sorting
 
 ### Search
 
-Type to filter by module name or description.
+Type to filter by module name, description, npm package name, or repo.
 
 ### Sort Options
 
-- **Score** - Health score (default)
+- **Score (High)** - Health score descending (default)
+- **Score (Low)** - Health score ascending (find modules that need attention)
 - **Downloads** - npm download count
 - **Stars** - GitHub stars
 - **Activity** - Most recently updated
@@ -60,28 +61,48 @@ Type to filter by module name or description.
 
 ### Dropdown Filters
 
-- **Category** - Filter by module category
+- **Category** - Filter by module category (e.g., UI, Database, Auth)
 - **Type** - Official, Community, 3rd Party
 - **Compatibility** - Nuxt 4, Nuxt 3 only, Unknown
+- **Maintainer** - Filter by repo owner/org (searchable dropdown with all owners)
 
 ### Toggle Filters
 
-- **Critical** - Show only critical modules
+- **Critical** - Show only critical modules (vulnerabilities, deprecated, abandoned)
 - **Favorites** - Show only favorited modules
 
 ### Chip Filters
 
 Quick filters for common criteria:
 
-- Star count (100+, 500+, 1K+)
-- Download count (10K+, 100K+)
-- Contributors (3+)
-- Vulnerability status (No Vulns, No Critical)
-- Score thresholds (70+, 90+)
+**Quality - Positive:**
+- Has Tests
+- TypeScript
+- CI Passing
+- No Vulns
+
+**Quality - Needs Attention:**
+- No Tests
+- No TypeScript
+- CI Failing
+- Has Vulns
+
+**Popularity:**
+- 100+ Stars
+- 1K+ Stars
+- 10K+ Downloads
+
+**Score:**
+- Score 70+
+- Score < 50
 
 ## Favorites
 
 Click the heart icon on any module to save it as a favorite. Favorites are stored in your browser's local storage.
+
+## Pagination
+
+Modules are displayed 12 per page with pagination controls at the bottom.
 
 ## Data Sync
 
@@ -93,5 +114,5 @@ Module data is synced from various APIs:
 
 The sync status is shown in the header, including:
 
-- Last sync time
-- Sync in progress indicator
+- Last sync time (e.g., "Updated 2h ago")
+- Sync in progress indicator with count

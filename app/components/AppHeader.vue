@@ -7,8 +7,15 @@
         class="h-12 w-12"
       >
       <div>
-        <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">
+        <h1 class="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
           Nuxamine
+          <UBadge
+            color="primary"
+            variant="subtle"
+            size="xs"
+          >
+            v{{ version }}
+          </UBadge>
         </h1>
         <div class="flex items-center gap-3">
           <NuxtLink
@@ -91,6 +98,8 @@ withDefaults(defineProps<{
 defineEmits<{
   'show-critical': []
 }>()
+
+const { public: { version } } = useRuntimeConfig()
 
 const { data: repoData } = await useFetch<{ stargazers_count: number }>(
   'https://api.github.com/repos/Flo0806/nuxamine',

@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#features">Features</a> •
-  <a href="#scoring">Scoring</a> •
+  <a href="#how-scoring-works">Scoring</a> •
   <a href="#setup">Setup</a> •
   <a href="#tech-stack">Tech Stack</a>
 </p>
@@ -28,34 +28,103 @@
 - **Favorites** - Track modules you care about
 - **Auto-Sync** - Automatic data refresh every 8 hours
 
-## Scoring
+## How Scoring Works
 
-Nuxamine calculates a **Risk/Quality Score** (not a popularity contest). 85% of the score comes from reliable data.
+Nuxamine calculates a **Risk/Quality Score** from 0-100. This is **not** a popularity contest - we focus on reliability, maintenance, and compatibility.
 
-| Category | Max Points | What we check |
-|----------|------------|---------------|
-| **Security** | 15 | No known vulnerabilities |
-| **Trust** | 5 | Official (5), Community (3), 3rd-party (0) |
-| **Quality** | 30 | Tests (12), TypeScript (10), License (5), CI (3) |
-| **Maintenance** | 35 | Publish freshness (20), Release status (15) |
-| **Nuxt 4** | 15 | Compatibility signals from multiple sources |
+### Philosophy
+
+- **85% of the score** comes from **reliable, verifiable data** (tests, types, CI, vulnerabilities)
+- **15%** comes from weaker signals (Nuxt 4 compatibility indicators)
+- Downloads and stars are shown but **don't affect the score** - a solo dev can build great modules
+
+### Score Breakdown
+
+| Category | Points | How it's calculated |
+|----------|--------|---------------------|
+| **Security** | 15 | No known vulnerabilities = 15 points |
+| **Trust** | 5 | Official module = 5, Community = 3, 3rd-party = 0 |
+| **Quality** | 30 | Tests (12) + TypeScript (10) + License (5) + CI passing (3) |
+| **Maintenance** | 35 | Publish freshness (20) + All changes released (15) |
+| **Nuxt 4** | 15 | Multiple compatibility signals = 15, one signal = 10 |
+
+**Total: 100 points maximum**
+
+### Quality Details
+
+| Check | Points | What we look for |
+|-------|--------|------------------|
+| Has tests | 12 | `test` script in package.json |
+| TypeScript | 10 | `types`/`typings` field or `typescript` in devDeps |
+| License | 5 | License file in repo |
+| CI passing | 3 | GitHub Actions with successful last run |
+
+### Maintenance Details
+
+| Check | Points | Criteria |
+|-------|--------|----------|
+| **Freshness** | 0-20 | |
+| Published < 90 days | 20 | Very active |
+| Published < 1 year | 12 | Active |
+| Published > 1 year | 5 | Stale (but see "Stable & Done") |
+| **Release Status** | 0-15 | |
+| All changes released | 15 | No unreleased commits since last tag |
+| Pending but active | 8 | Has pending commits, but recent activity |
+| Pending commits | 3 | Has unreleased changes |
+| Abandoned | 0 | Pending commits + no activity > 1 year |
+
+### Nuxt 4 Compatibility
+
+We check multiple sources for Nuxt 4 compatibility:
+- Nuxt API compatibility string (`>=3.x <5`)
+- GitHub topics (`nuxt4`, `nuxt-4`)
+- npm keywords
+- Release notes mentioning Nuxt 4
+
+| Signals found | Points |
+|---------------|--------|
+| 2+ signals | 15 (confirmed) |
+| 1 signal | 10 (partial) |
+| Official module, 0 signals | 5 (benefit of doubt) |
+| 0 signals | 0 (unconfirmed) |
 
 ### Penalties (Deal Breakers)
 
-| Issue | Penalty |
-|-------|---------|
-| Deprecated | -50 |
-| Critical vulnerabilities | -40 |
-| Archived | -30 |
-| High vulnerabilities | -20 |
+These subtract from your score and can push it below zero:
+
+| Issue | Penalty | Why |
+|-------|---------|-----|
+| Deprecated | -50 | Package author says don't use it |
+| Critical vulnerabilities | -40 | Known security issues |
+| Archived | -30 | No longer maintained |
+| High vulnerabilities | -20 | Serious security concerns |
 
 ### Stable & Done Exception
 
-Old modules that are mature get a bonus if they have:
-- All changes released
-- < 10 open issues
-- No vulnerabilities
-- CI passing
+Some modules are "done" - they work perfectly and don't need updates. Old doesn't mean bad!
+
+A module gets the **Stable & Done** bonus (15 instead of 5 for freshness) if:
+- Published > 1 year ago, **but**:
+  - All changes released (no pending commits)
+  - < 10 open issues
+  - No known vulnerabilities
+  - CI passing (or no CI)
+
+### Score Interpretation
+
+| Score | Meaning |
+|-------|---------|
+| 90-100 | Excellent - well maintained, high quality |
+| 70-89 | Good - safe to use, minor concerns |
+| 50-69 | Caution - review the signals before using |
+| < 50 | Warning - significant issues, consider alternatives |
+
+### What's NOT in the Score
+
+These are shown as info but don't affect scoring:
+- **Downloads** - Popular ≠ Good
+- **Stars** - GitHub stars don't mean quality
+- **Contributors** - One person can build great things
 
 ## Setup
 
@@ -91,10 +160,10 @@ pnpm dev
 
 ## Data Sources
 
-- [Nuxt Modules API](https://api.nuxt.com/modules)
-- [npm Registry](https://registry.npmjs.org)
-- [GitHub API](https://api.github.com)
-- [OSV Database](https://osv.dev) (vulnerabilities)
+- [Nuxt Modules API](https://api.nuxt.com/modules) - Module list & metadata
+- [npm Registry](https://registry.npmjs.org) - Package info, publish dates
+- [GitHub API](https://api.github.com) - Repo stats, CI status, releases
+- [OSV Database](https://osv.dev) - Known vulnerabilities
 
 ## License
 

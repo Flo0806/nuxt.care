@@ -52,6 +52,17 @@
         @update:model-value="$emit('update:filterCompat', $event)"
       />
 
+      <!-- Maintainer/Org Filter -->
+      <USelectMenu
+        :model-value="filterMaintainer"
+        :items="maintainerOptions"
+        value-key="value"
+        searchable
+        searchable-placeholder="Search owner..."
+        class="w-48"
+        @update:model-value="$emit('update:filterMaintainer', $event)"
+      />
+
       <UButton
         :color="showCriticalOnly ? 'error' : 'neutral'"
         :variant="showCriticalOnly ? 'soft' : 'ghost'"
@@ -115,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { sortOptions, typeOptions, compatOptions } from '~/composables/useModuleFilters'
+import { sortOptions } from '~/composables/useModuleFilters'
 
 defineProps<{
   search: string
@@ -123,10 +134,14 @@ defineProps<{
   filterCategory: string
   filterType: string
   filterCompat: string
+  filterMaintainer: string
   showFavoritesOnly: boolean
   showCriticalOnly: boolean
   activeChips: Set<string>
   categoryOptions: Array<{ label: string, value: string, icon?: string }>
+  typeOptions: Array<{ label: string, value: string }>
+  compatOptions: Array<{ label: string, value: string }>
+  maintainerOptions: Array<{ label: string, value: string }>
   hasActiveFilters: boolean
   moduleCount: number
   favoritesCount: number
@@ -139,6 +154,7 @@ defineEmits<{
   'update:filterCategory': [value: string]
   'update:filterType': [value: string]
   'update:filterCompat': [value: string]
+  'update:filterMaintainer': [value: string]
   'update:showFavoritesOnly': [value: boolean]
   'update:showCriticalOnly': [value: boolean]
   'toggle-chip': [chipId: string]

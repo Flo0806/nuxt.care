@@ -6,104 +6,124 @@ navigation:
 
 # Health Score
 
-Every module receives a health score from 0 to 100 points. The score is calculated based on 10 criteria that indicate how well-maintained and safe a module is.
+Every module receives a health score from 0 to 100 points. This score is **not** a popularity contest - it focuses on reliability, maintenance, and compatibility.
 
-## Scoring Criteria
+## Philosophy
 
-| Criteria | Max Points | Description |
-|----------|------------|-------------|
-| Activity | 15 | Recent commit activity |
-| Not Archived | 10 | Repository is not archived |
-| Contributors | 10 | Multiple active contributors |
-| Nuxt 4 Compatible | 15 | Works with Nuxt 4 |
-| Recent Release | 10 | Published within 90 days |
-| Not Deprecated | 15 | Not marked as deprecated on npm |
-| No Vulnerabilities | 10 | No known security issues |
-| Has Tests | 5 | Test script in package.json |
-| CI Passing | 5 | GitHub Actions status |
-| Pending Commits | 5 | Unreleased changes |
+- **85% of the score** comes from reliable, verifiable data (tests, types, CI, vulnerabilities)
+- **15%** comes from weaker signals (Nuxt 4 compatibility indicators)
+- Downloads and stars are shown but **don't affect the score** - a solo dev can build great modules
 
-## Activity (15 points)
+## Score Breakdown
 
-Measures how recently the repository was updated:
+| Category | Max Points | What it measures |
+|----------|------------|------------------|
+| **Security** | 15 | No known vulnerabilities |
+| **Trust** | 5 | Official / Community / 3rd-party |
+| **Quality** | 30 | Tests, TypeScript, License, CI |
+| **Maintenance** | 35 | Publish freshness, release status |
+| **Nuxt 4** | 15 | Compatibility signals |
 
-- **15 points** - Commit within the last 30 days
-- **8 points** - Commit within the last 180 days
-- **4 points** - Commit within the last year
-- **0 points** - No commits for over a year
+**Total: 100 points maximum**
 
-## Not Archived (10 points)
+## Security (15 points)
 
-- **10 points** - Repository is active
-- **0 points** - Repository is archived on GitHub
+Based on the [OSV database](https://osv.dev/):
 
-## Contributors (10 points)
+- **15 points** - No known vulnerabilities
+- **0 points** - Has vulnerabilities (also applies penalties, see below)
 
-Number of unique contributors in the last year:
+## Trust (5 points)
 
-- **10 points** - 3 or more contributors
-- **5 points** - 2 contributors
-- **0 points** - Single contributor (bus factor risk)
+Based on module type:
 
-## Nuxt 4 Compatible (15 points)
+- **5 points** - Official Nuxt module
+- **3 points** - Community module (nuxt-community org)
+- **0 points** - 3rd-party module
 
-See [Nuxt 4 Detection](/docs/nuxt4-detection) for details on how compatibility is determined.
+## Quality (30 points)
 
-- **15 points** - Confirmed Nuxt 4 support (2+ signals)
-- **8 points** - Partially confirmed (1 signal)
-- **0 points** - Nuxt 3 only or unknown
+| Check | Points | What we look for |
+|-------|--------|------------------|
+| Has Tests | 12 | `test` script in package.json |
+| TypeScript | 10 | `types`/`typings` field or `typescript` in devDeps |
+| License | 5 | License file in repo |
+| CI Passing | 3 | GitHub Actions with successful last run |
 
-## Recent Release (10 points)
+## Maintenance (35 points)
 
-How recently a new version was published:
+### Publish Freshness (0-20 points)
 
-- **10 points** - Release within 90 days
-- **5 points** - Release within 1 year
-- **0 points** - No release for over a year
+| Criteria | Points |
+|----------|--------|
+| Published < 90 days | 20 |
+| Published < 1 year | 12 |
+| Published > 1 year | 5 |
+| Published > 1 year + "Stable & Done" | 15 |
 
-## Not Deprecated (15 points)
+### Release Status (0-15 points)
 
-- **15 points** - Package is active
-- **0 points** - Package is deprecated on npm
+| Criteria | Points |
+|----------|--------|
+| All changes released | 15 |
+| Pending commits but active | 8 |
+| Has pending commits | 3 |
+| Abandoned (pending + no activity > 1 year) | 0 |
 
-## No Vulnerabilities (10 points)
+## Nuxt 4 Compatibility (15 points)
 
-Based on the OSV (Open Source Vulnerabilities) database:
+We check multiple sources:
 
-- **10 points** - No known vulnerabilities
-- **5 points** - Only low/medium severity issues
-- **3 points** - High severity vulnerabilities
-- **0 points** - Critical vulnerabilities
+- Nuxt API compatibility string (`>=3.x <5`)
+- GitHub topics (`nuxt4`, `nuxt-4`)
+- npm keywords
+- Release notes mentioning Nuxt 4
 
-## Has Tests (5 points)
+| Signals found | Points |
+|---------------|--------|
+| 2+ signals | 15 (confirmed) |
+| 1 signal | 10 (partial) |
+| Official module, 0 signals | 5 (benefit of doubt) |
+| 0 signals | 0 (unconfirmed) |
 
-Checks if the module has a test script defined in `package.json`:
+See [Nuxt 4 Detection](/docs/nuxt4-detection) for more details.
 
-- **5 points** - `scripts.test` exists and is not the default npm placeholder
-- **0 points** - No test script found
+## Penalties (Deal Breakers)
 
-## CI Passing (5 points)
+These subtract from the score and can push it below zero:
 
-GitHub Actions workflow status on the default branch:
+| Issue | Penalty | Why |
+|-------|---------|-----|
+| Deprecated | -50 | Package author says don't use it |
+| Critical vulnerabilities | -40 | Known security issues |
+| Archived | -30 | No longer maintained |
+| High vulnerabilities | -20 | Serious security concerns |
 
-- **5 points** - Last workflow run succeeded
-- **2 points** - CI exists but no recent runs
-- **0 points** - Last workflow run failed or no CI detected
+## Stable & Done Exception
 
-## Pending Commits (5 points)
+Some modules are "done" - they work perfectly and don't need updates. Old doesn't mean bad!
 
-Unreleased commits since the last release. Chore, docs, style, and CI commits are filtered out.
+A module gets the **Stable & Done** bonus (15 instead of 5 for freshness) if:
 
-- **5 points** - All changes have been released
-- **3 points** - 1-5 unreleased changes
-- **1 point** - 6-15 unreleased changes
-- **0 points** - 16+ unreleased changes (may indicate abandoned maintenance)
+- Published > 1 year ago, **but**:
+  - All changes released (no pending commits)
+  - < 10 open issues
+  - No known vulnerabilities
+  - CI passing (or no CI)
 
 ## Score Interpretation
 
 | Score | Rating | Meaning |
 |-------|--------|---------|
-| 80-100 | Excellent | Well-maintained, Nuxt 4 ready |
-| 60-79 | Good | Actively maintained, minor issues possible |
-| 40-59 | Fair | Limited maintenance, use with caution |
-| 0-39 | Poor | Outdated or abandoned, seek alternatives |
+| 90-100 | Excellent | Well maintained, high quality |
+| 70-89 | Good | Safe to use, minor concerns |
+| 50-69 | Caution | Review the signals before using |
+| < 50 | Warning | Significant issues, consider alternatives |
+
+## What's NOT in the Score
+
+These are shown as info but don't affect scoring:
+
+- **Downloads** - Popular doesn't mean good
+- **Stars** - GitHub stars don't indicate quality
+- **Contributors** - One person can build great things

@@ -27,21 +27,35 @@ The package is marked as deprecated on npm. This usually means:
 - The package has known issues that won't be fixed
 - Development has moved to a different package
 
-### Archived
+### Abandoned with Pending Work
 
-The GitHub repository is archived, meaning:
+A module is critical if it has **both**:
+- No activity for over 1 year (365 days)
+- Unreleased commits (pending changes that were never published)
 
-- No more updates or fixes will be made
-- Issues and PRs are closed
-- The project is effectively abandoned
+This indicates the project was abandoned mid-development with unfinished work.
 
-### Abandoned
+## What's NOT Critical
 
-No commits in over 1 year (365 days). This indicates:
+Some conditions are **warnings** but not critical:
 
-- The project may not be actively maintained
-- Security issues may not be addressed
-- Compatibility with newer Nuxt versions is uncertain
+### Archived Repositories
+
+An archived repo alone is **not** critical. Many archived modules:
+- Are "complete" and don't need updates
+- Still work perfectly fine
+- Were archived intentionally by maintainers
+
+The archive status is shown as a warning badge, but doesn't trigger the critical filter.
+
+### Stable Abandoned Modules
+
+A module with no activity for over a year but **all changes released** is not critical. It might be:
+- Feature-complete
+- Stable and working
+- Not needing updates
+
+Only abandoned modules with pending/unreleased work are critical.
 
 ## Using the Critical Filter
 
@@ -66,5 +80,5 @@ When you encounter a critical module:
 4. **Consider forking** - For critical functionality, you might maintain your own fork
 
 ::callout{type="warning"}
-Not all critical modules are unusable. A module might be "complete" and not need updates, or a vulnerability might not affect your use case. Always evaluate the specific situation.
+Not all critical modules are unusable. A deprecated module might still work fine, or a vulnerability might not affect your specific use case. Always evaluate the specific situation.
 ::
