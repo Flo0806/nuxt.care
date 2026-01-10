@@ -1,0 +1,11 @@
+node_modules
+.nuxt
+.output
+.data
+.git
+.github
+*.md
+!README.md
+.env*
+.vscode
+coverage

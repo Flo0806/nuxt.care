@@ -48,5 +48,13 @@
     "happy-dom": "^20.1.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "@parcel/watcher",
+      "sharp"
+    ]
   }
 }
