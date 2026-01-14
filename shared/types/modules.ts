@@ -119,6 +119,7 @@ export interface NpmInfo {
   hasTypes: boolean
   hasTests: boolean
   unpackedSize: number | null
+  downloads: number | null
 }
 
 export interface CIStatusInfo {
@@ -164,7 +165,7 @@ export interface ModuleJsonInfo {
   exists: boolean
   path?: string
   name?: string
-  compatibility?: { nuxt?: string }
+  compatibility?: { nuxt?: string | number[] }
   nuxtCompat?: CompatAnalysis
 }
 
@@ -213,7 +214,7 @@ export interface NuxtApiModule {
   type: 'official' | 'community' | '3rd-party'
   icon?: string
   maintainers?: Array<{ name: string }>
-  compatibility?: { nuxt?: string }
+  compatibility?: { nuxt?: string | number[] }
   stats?: NuxtApiStats
 }
 

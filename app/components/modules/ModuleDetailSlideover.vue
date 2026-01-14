@@ -3,7 +3,7 @@
     v-model:open="isOpen"
     :title="module?.name || 'Module Details'"
     :description="module?.description || 'Module information'"
-    :ui="{ width: 'max-w-xl' }"
+    :ui="{ content: 'max-w-xl' }"
   >
     <template #content>
       <div
@@ -103,10 +103,10 @@
           <div class="grid grid-cols-4 gap-4 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
             <div class="text-center">
               <div class="text-lg font-bold text-neutral-900 dark:text-white">
-                {{ formatNumber(module.nuxtApiStats?.downloads) }}
+                {{ formatNumber(module.npm?.downloads) }}
               </div>
               <div class="text-xs text-neutral-500">
-                Downloads
+                DL/week
               </div>
             </div>
             <div class="text-center">
@@ -851,7 +851,9 @@ function vulnBorderColor(severity: string): string {
   return 'border-neutral-300 dark:border-neutral-700'
 }
 
-function vulnBadgeColor(severity: string): string {
+type BadgeColor = 'success' | 'primary' | 'secondary' | 'info' | 'warning' | 'error' | 'neutral'
+
+function vulnBadgeColor(severity: string): BadgeColor {
   if (severity === 'CRITICAL') return 'error'
   if (severity === 'HIGH') return 'warning'
   if (severity === 'MEDIUM') return 'warning'

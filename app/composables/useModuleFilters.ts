@@ -43,7 +43,7 @@ export const chipFilters: ChipFilter[] = [
   // Popularity
   { id: 'stars100', label: '100+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 100 },
   { id: 'stars1k', label: '1K+ ⭐', icon: 'i-lucide-star', filter: m => (m.github?.stars || 0) >= 1000 },
-  { id: 'dl10k', label: '10K+ DL', icon: 'i-lucide-download', filter: m => (m.nuxtApiStats?.downloads || 0) >= 10000 },
+  { id: 'dl10k', label: '10K+ DL/w', icon: 'i-lucide-download', filter: m => (m.npm?.downloads || 0) >= 10000 },
   // Score
   { id: 'score70', label: 'Score 70+', icon: 'i-lucide-heart-pulse', filter: m => m.health.score >= 70 },
   { id: 'scoreLow', label: 'Score < 50', icon: 'i-lucide-heart-crack', filter: m => m.health.score < 50 },
@@ -86,7 +86,7 @@ export function getCompatStatus(mod: ModuleData): 'nuxt4' | 'nuxt3' | 'unknown' 
   return 'unknown'
 }
 
-export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: Ref<string[]>) {
+export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, favorites: Ref<string[]>) {
   const search = ref('')
   const sortBy = ref('score')
   const filterCategory = ref('all')
@@ -201,7 +201,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
   })
 
   const hasActiveFilters = computed(() => {
-    return search.value
+    return !!search.value
       || filterCategory.value !== 'all'
       || filterType.value !== 'all'
       || filterCompat.value !== 'all'
@@ -245,7 +245,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null>, favorites: R
         case 'score-asc':
           return a.health.score - b.health.score
         case 'downloads':
-          return (b.nuxtApiStats?.downloads || 0) - (a.nuxtApiStats?.downloads || 0)
+          return (b.npm?.downloads || 0) - (a.npm?.downloads || 0)
         case 'stars':
           return (b.github?.stars || 0) - (a.github?.stars || 0)
         case 'activity': {

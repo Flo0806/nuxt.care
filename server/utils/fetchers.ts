@@ -152,10 +152,15 @@ export async function fetchPendingCommits(repoPath: string, lastReleaseDate: str
  */
 export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
   try {
-    const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`)
-    if (!res.ok) return null
+    // Fetch registry info and downloads in parallel
+    const [registryRes, downloadsRes] = await Promise.all([
+      fetch(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`),
+      fetch(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(pkg)}`),
+    ])
 
-    const data = await res.json() as {
+    if (!registryRes.ok) return null
+
+    const data = await registryRes.json() as {
       'name': string
       'dist-tags'?: { latest?: string }
       'versions'?: Record<string, {
@@ -172,6 +177,13 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
       }>
       'time'?: Record<string, string>
       'deprecated'?: string
+    }
+
+    // Parse downloads (weekly)
+    let downloads: number | null = null
+    if (downloadsRes.ok) {
+      const dlData = await downloadsRes.json() as { downloads?: number }
+      downloads = dlData.downloads ?? null
     }
 
     const latest = data['dist-tags']?.latest
@@ -204,6 +216,7 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
       hasTypes,
       hasTests,
       unpackedSize: latestInfo?.dist?.unpackedSize || null,
+      downloads,
     }
   }
   catch {

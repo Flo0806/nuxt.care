@@ -73,13 +73,13 @@
     <!-- Stats Row -->
     <div class="flex items-center justify-between mb-4">
       <!-- Downloads -->
-      <UTooltip text="npm Downloads">
+      <UTooltip text="Weekly npm downloads">
         <div class="text-center cursor-help">
           <div class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
-            {{ formatNumber(module.nuxtApiStats?.downloads) }}
+            {{ formatNumber(module.npm?.downloads) }}
           </div>
           <div class="text-[10px] text-neutral-400 uppercase tracking-wide">
-            DL
+            DL/w
           </div>
         </div>
       </UTooltip>
@@ -445,8 +445,10 @@ const compatStatus = computed((): 'nuxt4' | 'nuxt3' | 'unknown' => {
   return 'unknown'
 })
 
+type BadgeColor = 'success' | 'primary' | 'secondary' | 'info' | 'warning' | 'error' | 'neutral'
+
 const badges = computed(() => {
-  const list: Array<{ label: string, color: string }> = []
+  const list: Array<{ label: string, color: BadgeColor }> = []
 
   // Type
   if (props.module.type === 'official') {

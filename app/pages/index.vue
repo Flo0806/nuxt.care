@@ -112,11 +112,12 @@
 <script setup lang="ts">
 import type { ModuleData, SyncMeta } from '~~/shared/types/modules'
 
-const { data: modules, pending } = await useFetch<ModuleData[]>('/api/modules', {
-  // Client-only fetch - avoids SSR/hydration mismatches, always fresh data
+const { data: modules, pending, refresh: refreshModules } = await useFetch<ModuleData[]>('/api/modules', {
+  key: 'modules',
   server: false,
 })
-const { data: syncStatus } = await useFetch<SyncMeta>('/api/sync', {
+const { data: syncStatus, refresh: refreshSyncStatus } = await useFetch<SyncMeta>('/api/sync', {
+  key: 'sync-status',
   server: false,
 })
 
@@ -178,12 +179,27 @@ watch([search, sortBy, filterCategory, filterType, filterCompat, filterMaintaine
   currentPage.value = 1
 })
 
-// Refetch every 5s while syncing
-const interval = setInterval(async () => {
-  if (syncStatus.value?.isRunning) {
-    await refreshNuxtData()
-  }
-}, 5000)
+// Poll sync status every 5s while syncing, reload modules when done
+const wasRunning = ref(syncStatus.value?.isRunning ?? false)
+let interval: ReturnType<typeof setInterval> | null = null
 
-onUnmounted(() => clearInterval(interval))
+onMounted(() => {
+  interval = setInterval(async () => {
+    const wasRunningBefore = wasRunning.value
+    await refreshSyncStatus()
+
+    const isRunningNow = syncStatus.value?.isRunning ?? false
+
+    // Sync just finished - reload modules once
+    if (wasRunningBefore && !isRunningNow) {
+      await refreshModules()
+    }
+
+    wasRunning.value = isRunningNow
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (interval) clearInterval(interval)
+})
 </script>

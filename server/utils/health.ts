@@ -82,7 +82,7 @@ export function calculateHealth(data: ModuleData): HealthScore {
   else add('warning', 'Nuxt 4 not confirmed', 0, 15)
 
   // Info only
-  const dl = data.nuxtApiStats?.downloads || 0
+  const dl = data.npm?.downloads || 0
   const stars = data.github?.stars || 0
   const contribs = data.contributors?.uniqueContributors || 0
 

@@ -1,13 +1,23 @@
 /**
- * Analyze nuxt version constraint string
+ * Analyze nuxt version compatibility
  *
- * TODO: When https://github.com/nuxt/modules/pull/1353 is merged,
- * the API will return "nuxt": [3, 4] as array instead of ">=3.0.0".
- * Update this function to use the new format for explicit version detection.
+ * Supports two formats:
+ * - New array format: [3, 4] - explicit version list (preferred when available)
+ * - Legacy string format: ">=3.0.0" - semver constraint (fallback)
  */
-export function analyzeCompatString(compat?: string): CompatAnalysis | null {
+export function analyzeCompatString(compat?: string | number[]): CompatAnalysis | null {
   if (!compat) return null
 
+  // New array format: [3, 4] means supports Nuxt 3 and 4
+  if (Array.isArray(compat)) {
+    return {
+      supports4: compat.includes(4),
+      supports3: compat.includes(3),
+      raw: compat.join(', '),
+    }
+  }
+
+  // Legacy string format: parse semver constraint
   // Explicit Nuxt 4 support
   const explicit4 = /\^4|>=4|>3\.99|\*/.test(compat)
 
@@ -15,7 +25,6 @@ export function analyzeCompatString(compat?: string): CompatAnalysis | null {
   const isCaret3 = /\^3/.test(compat)
 
   // >=3 without ^3 and without <4 means Nuxt 4 compatible
-  // Temporary workaround until PR #1353 is merged
   const isOpenEnded3Plus = />=3|>2\.99/.test(compat) && !/<4|<4\.0/.test(compat)
   const implicit4 = !isCaret3 && isOpenEnded3Plus
 
