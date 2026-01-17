@@ -5,7 +5,7 @@ export async function ghFetch<T>(url: string, token?: string): Promise<T | null>
   try {
     const headers: Record<string, string> = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'nuxamine',
+      'User-Agent': 'nuxt-care',
     }
     if (token) {
       headers['Authorization'] = `Bearer ${token}`

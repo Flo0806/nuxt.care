@@ -6,7 +6,7 @@ navigation:
 
 # Nuxt 4 Detection
 
-Nuxamine checks multiple sources to determine if a module supports Nuxt 4.
+nuxt.care checks multiple sources to determine if a module supports Nuxt 4.
 
 ## Detection Sources
 

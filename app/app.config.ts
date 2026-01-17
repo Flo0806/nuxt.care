@@ -1,7 +1,7 @@
 export default defineAppConfig({
   ui: {
     colors: {
-      primary: 'nuxamine',
+      primary: 'nuxtcare',
       secondary: 'slate',
       success: 'green',
       info: 'blue',

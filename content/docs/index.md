@@ -1,16 +1,16 @@
 ---
-title: Nuxamine
+title: nuxt.care
 navigation:
   order: 1
 ---
 
-# Nuxamine
+# nuxt.care
 
-**Nuxt + Examine = Nuxamine**
+**Health-Check & Audit Tool for Nuxt Modules**
 
-A health-check and audit tool for Nuxt modules. Nuxamine helps you discover which modules are actively maintained, Nuxt 4 compatible, and which ones you should avoid.
+A health-check and audit tool for Nuxt modules. nuxt.care helps you discover which modules are actively maintained, Nuxt 4 compatible, and which ones you should avoid.
 
-## Why Nuxamine?
+## Why nuxt.care?
 
 Choosing the right Nuxt module can be challenging:
 
@@ -19,7 +19,7 @@ Choosing the right Nuxt module can be challenging:
 - Are there known security vulnerabilities?
 - Is the project abandoned?
 
-Nuxamine answers these questions by analyzing data from multiple sources:
+nuxt.care answers these questions by analyzing data from multiple sources:
 
 - **Nuxt Modules API** - Official module registry
 - **GitHub API** - Repository activity, releases, CI status
@@ -37,7 +37,7 @@ Nuxamine answers these questions by analyzing data from multiple sources:
 
 ## Scoring Philosophy
 
-Unlike other tools, Nuxamine focuses on **reliability over popularity**:
+Unlike other tools, nuxt.care focuses on **reliability over popularity**:
 
 - 85% of the score comes from verifiable data (tests, types, CI, vulnerabilities)
 - Downloads and stars are shown but don't affect the score
@@ -45,6 +45,6 @@ Unlike other tools, Nuxamine focuses on **reliability over popularity**:
 
 ## Open Source
 
-Nuxamine is open source and available on [GitHub](https://github.com/Flo0806/nuxamine).
+nuxt.care is open source and available on [GitHub](https://github.com/Flo0806/nuxt.care).
 
-Found a bug or have a feature request? [Open an issue](https://github.com/Flo0806/nuxamine/issues)!
+Found a bug or have a feature request? [Open an issue](https://github.com/Flo0806/nuxt.care/issues)!

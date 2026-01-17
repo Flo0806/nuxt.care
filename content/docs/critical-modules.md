@@ -6,7 +6,7 @@ navigation:
 
 # Critical Modules
 
-Nuxamine highlights modules that may pose risks to your project. These are marked as "Critical" and displayed with a warning badge.
+nuxt.care highlights modules that may pose risks to your project. These are marked as "Critical" and displayed with a warning badge.
 
 ## What Makes a Module Critical?
 
