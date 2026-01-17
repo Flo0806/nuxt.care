@@ -1,0 +1,46 @@
+name: Data Issue
+description: Report incorrect module data (wrong score, missing info, etc.)
+labels: ["data", "pending triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Found wrong data for a module? Let us know!
+
+  - type: input
+    id: module
+    attributes:
+      label: Module name
+      placeholder: e.g. @nuxt/image
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: What's wrong?
+      options:
+        - Health score seems incorrect
+        - Nuxt 4 compatibility wrong
+        - Missing or outdated version info
+        - Wrong maintainer/contributor data
+        - Vulnerability data incorrect
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What should it show?
+      description: Describe what the correct data should be
+      placeholder: The module shows "No Nuxt 4 support" but it actually supports Nuxt 4 because...
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source (optional)
+      description: Link to proof (GitHub release, npm page, etc.)
+      placeholder: https://github.com/...
