@@ -16,7 +16,7 @@
       </span>
     </div>
 
-    <!-- Header: Favorite + Name + Score -->
+    <!-- Header: Favorite + Name + Star + Score -->
     <div class="flex items-center gap-2 mb-2">
       <button
         :aria-label="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
@@ -33,6 +33,28 @@
       <span class="text-base font-bold text-neutral-900 dark:text-white truncate flex-1">
         {{ module.name }}
       </span>
+      <!-- GitHub Star Button (only when logged in) -->
+      <button
+        v-if="isLoggedIn && module.repo"
+        :aria-label="isStarred(module.repo) ? 'Unstar on GitHub' : 'Star on GitHub'"
+        class="shrink-0 transition-colors"
+        :class="isStarred(module.repo)
+          ? 'text-yellow-500 hover:text-yellow-600'
+          : 'text-neutral-400 hover:text-yellow-500 dark:text-neutral-500 dark:hover:text-yellow-400'"
+        :disabled="starsLoading || isLoading(module.repo)"
+        @click.stop="handleStar"
+      >
+        <UIcon
+          v-if="starsLoading || isLoading(module.repo)"
+          name="i-lucide-loader-2"
+          class="w-4 h-4 animate-spin text-neutral-400"
+        />
+        <UIcon
+          v-else
+          :name="isStarred(module.repo) ? 'i-heroicons-star-solid' : 'i-lucide-star'"
+          class="w-4 h-4"
+        />
+      </button>
       <ModulesScoreBadge
         :score="module.health.score"
         :signals="module.health.signals"
@@ -306,6 +328,21 @@ defineEmits<{
   'toggle-favorite': []
   'select': []
 }>()
+
+// Auth & Stars
+const { isLoggedIn } = useAuth()
+const { isStarred, isLoading, toggleStar, loading: starsLoading } = useStars()
+const toast = useToast()
+
+async function handleStar() {
+  if (!props.module.repo) return
+  const starred = await toggleStar(props.module.repo)
+  toast.add({
+    title: starred ? 'Starred!' : 'Unstarred',
+    icon: starred ? 'i-lucide-star' : 'i-lucide-star-off',
+    color: starred ? 'success' : 'neutral',
+  })
+}
 
 const categoryConfig = computed(() => getCategoryConfig(props.module.category))
 

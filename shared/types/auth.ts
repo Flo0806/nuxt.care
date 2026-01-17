@@ -24,6 +24,7 @@ export interface StoredUser {
   email: string | null
   createdAt: string
   lastLoginAt: string
+  accessToken?: string
 }
 
 /**
