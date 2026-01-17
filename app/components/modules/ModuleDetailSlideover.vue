@@ -12,6 +12,18 @@
       >
         <!-- Header -->
         <div class="p-6 border-b border-neutral-200 dark:border-neutral-800">
+          <!-- Mobile Back Button -->
+          <button
+            class="sm:hidden flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-3 -ml-1"
+            @click="isOpen = false"
+          >
+            <UIcon
+              name="i-lucide-chevron-left"
+              class="w-4 h-4"
+            />
+            Back to list
+          </button>
+
           <div class="flex items-start justify-between gap-4 mb-2">
             <div class="flex items-center gap-3">
               <button
