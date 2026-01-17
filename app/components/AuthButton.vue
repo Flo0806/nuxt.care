@@ -32,7 +32,7 @@ const items = [
     >
       <UAvatar
         :src="user?.avatarUrl"
-        :alt="user?.username"
+        alt="github avatar"
         size="xs"
       />
       <span class="ml-2 hidden sm:inline">{{ user?.username }}</span>
