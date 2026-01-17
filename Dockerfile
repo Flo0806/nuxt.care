@@ -22,11 +22,14 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY . .
 
-# Build the SSR app (dummy env vars for prerendering - real values at runtime)
-ENV NUXT_SESSION_PASSWORD=build-time-placeholder-min-32-chars
-ENV NUXT_OAUTH_GITHUB_CLIENT_ID=build-placeholder
-ENV NUXT_OAUTH_GITHUB_CLIENT_SECRET=build-placeholder
-RUN pnpm build
+# Build the SSR app (dummy env vars for prerendering only - not persisted)
+ARG NUXT_SESSION_PASSWORD=build-time-placeholder-min-32-chars
+ARG NUXT_OAUTH_GITHUB_CLIENT_ID=build-placeholder
+ARG NUXT_OAUTH_GITHUB_CLIENT_SECRET=build-placeholder
+RUN NUXT_SESSION_PASSWORD=$NUXT_SESSION_PASSWORD \
+    NUXT_OAUTH_GITHUB_CLIENT_ID=$NUXT_OAUTH_GITHUB_CLIENT_ID \
+    NUXT_OAUTH_GITHUB_CLIENT_SECRET=$NUXT_OAUTH_GITHUB_CLIENT_SECRET \
+    pnpm build
 
 # Stage 2: Production runtime
 FROM node:22-bookworm-slim
