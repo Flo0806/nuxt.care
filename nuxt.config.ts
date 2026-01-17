@@ -47,6 +47,8 @@ export default defineNuxtConfig({
     prerender: {
       crawlLinks: true,
       routes: ['/docs'],
+      failOnError: false,
+      ignore: ['/auth/**', '/__nuxt_content/**'],
     },
   },
 

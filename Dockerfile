@@ -22,7 +22,10 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY . .
 
-# Build the SSR app
+# Build the SSR app (dummy env vars for prerendering - real values at runtime)
+ENV NUXT_SESSION_PASSWORD=build-time-placeholder-min-32-chars
+ENV NUXT_OAUTH_GITHUB_CLIENT_ID=build-placeholder
+ENV NUXT_OAUTH_GITHUB_CLIENT_SECRET=build-placeholder
 RUN pnpm build
 
 # Stage 2: Production runtime
