@@ -122,6 +122,15 @@ const { data: syncStatus, refresh: refreshSyncStatus } = await useFetch<SyncMeta
 })
 
 const { favorites, toggleFavorite } = useFavorites()
+const { isLoggedIn } = useAuth()
+const { loadAllStarred, initialized: starsInitialized } = useStars()
+
+// Load starred repos when logged in (after hydration)
+onMounted(async () => {
+  if (isLoggedIn.value && !starsInitialized.value) {
+    await loadAllStarred()
+  }
+})
 
 // Slideover
 const selectedModule = ref<ModuleData | null>(null)

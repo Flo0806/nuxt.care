@@ -18,9 +18,9 @@ export async function getStoredUser(githubId: number): Promise<StoredUser | null
 
 /**
  * Create or update user in KV storage
- * Preserves createdAt on update, updates lastLoginAt
+ * Preserves createdAt on update, updates lastLoginAt and accessToken
  */
-export async function upsertUser(githubUser: GitHubUser): Promise<StoredUser> {
+export async function upsertUser(githubUser: GitHubUser, accessToken?: string): Promise<StoredUser> {
   const key = getUserKey(githubUser.id)
   const existing = await kv.get<StoredUser>(key)
 
@@ -32,6 +32,7 @@ export async function upsertUser(githubUser: GitHubUser): Promise<StoredUser> {
     email: githubUser.email,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),
+    accessToken: accessToken ?? existing?.accessToken,
   }
 
   await kv.set(key, user)
