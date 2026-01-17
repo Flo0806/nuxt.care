@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     '@nuxt/test-utils',
     '@nuxt/ui',
     '@nuxthub/core',
+    'nuxt-auth-utils',
   ],
 
   devtools: { enabled: true },
@@ -19,6 +20,15 @@ export default defineNuxtConfig({
   runtimeConfig: {
     github: {
       token: '',
+    },
+    oauth: {
+      github: {
+        clientId: '',
+        clientSecret: '',
+      },
+    },
+    session: {
+      password: '',
     },
     public: {
       version: pkg.version,
@@ -42,7 +52,6 @@ export default defineNuxtConfig({
 
   hub: {
     kv: true,
-    database: true,
   },
 
   eslint: {

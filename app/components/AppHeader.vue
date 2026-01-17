@@ -80,6 +80,7 @@
       >
         Syncing {{ syncStatus.syncedModules }}/{{ syncStatus.totalModules }}
       </UBadge>
+      <AuthButton />
       <UColorModeButton />
     </div>
   </header>
