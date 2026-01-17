@@ -125,9 +125,15 @@ const { favorites, toggleFavorite } = useFavorites()
 const { isLoggedIn } = useAuth()
 const { loadAllStarred, initialized: starsInitialized } = useStars()
 
-// Load starred repos when logged in (after hydration)
+// Load starred repos when logged in (after hydration or login)
 onMounted(async () => {
   if (isLoggedIn.value && !starsInitialized.value) {
+    await loadAllStarred()
+  }
+})
+
+watch(isLoggedIn, async (loggedIn) => {
+  if (loggedIn && !starsInitialized.value) {
     await loadAllStarred()
   }
 })
