@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: nuxt.care
+    url: https://nuxt.care
+    about: Visit the live site
+  - name: Discussions
+    url: https://github.com/Flo0806/nuxt.care/discussions
+    about: Questions or ideas? Start a discussion
