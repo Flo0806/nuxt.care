@@ -25,6 +25,7 @@ export default defineNuxtConfig({
       github: {
         clientId: '',
         clientSecret: '',
+        redirectURL: '',
       },
     },
     session: {
@@ -45,7 +46,7 @@ export default defineNuxtConfig({
       '0 */8 * * *': ['sync:modules'],
     },
     prerender: {
-      crawlLinks: true,
+      crawlLinks: false,
       routes: ['/docs'],
       failOnError: false,
       ignore: ['/auth/**', '/__nuxt_content/**'],
