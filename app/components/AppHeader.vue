@@ -2,13 +2,13 @@
   <header class="flex items-center justify-between mb-6">
     <div class="flex items-center gap-4">
       <img
-        src="/images/nuxamine-logo.png"
-        alt="Nuxamine Logo"
+        src="/images/nuxt.care-logo.svg"
+        alt="nuxt.care Logo"
         class="h-12 w-12"
       >
       <div>
         <h1 class="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-          Nuxamine
+          nuxt.care
           <UBadge
             color="primary"
             variant="subtle"
@@ -30,7 +30,7 @@
           </NuxtLink>
           <span class="text-neutral-300 dark:text-neutral-600">|</span>
           <a
-            href="https://github.com/Flo0806/nuxamine"
+            href="https://github.com/Flo0806/nuxt.care"
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
@@ -102,7 +102,7 @@ defineEmits<{
 const { public: { version } } = useRuntimeConfig()
 
 const { data: repoData } = await useFetch<{ stargazers_count: number }>(
-  'https://api.github.com/repos/Flo0806/nuxamine',
+  'https://api.github.com/repos/Flo0806/nuxt.care',
   { server: false },
 )
 

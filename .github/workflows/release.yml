@@ -60,15 +60,15 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Nuxamine v${{ steps.version.outputs.version }}
+          name: nuxt.care v${{ steps.version.outputs.version }}
           body: |
-            ## Nuxamine v${{ steps.version.outputs.version }}
+            ## nuxt.care v${{ steps.version.outputs.version }}
 
-            Docker image: `ghcr.io/flo0806/nuxamine:${{ steps.version.outputs.version }}`
+            Docker image: `ghcr.io/flo0806/nuxt.care:${{ steps.version.outputs.version }}`
 
             ```bash
-            docker pull ghcr.io/flo0806/nuxamine:${{ steps.version.outputs.version }}
-            docker run -p 3000:3000 ghcr.io/flo0806/nuxamine:${{ steps.version.outputs.version }}
+            docker pull ghcr.io/flo0806/nuxt.care:${{ steps.version.outputs.version }}
+            docker run -p 3000:3000 ghcr.io/flo0806/nuxt.care:${{ steps.version.outputs.version }}
             ```
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') }}

@@ -84,16 +84,16 @@
 }
 
 @theme static {
-  /* Nuxamine Green - Primary (derived from logo #2E7D32) */
-  --color-nuxamine-50: oklch(0.97 0.02 145);
-  --color-nuxamine-100: oklch(0.94 0.05 145);
-  --color-nuxamine-200: oklch(0.87 0.10 145);
-  --color-nuxamine-300: oklch(0.77 0.15 145);
-  --color-nuxamine-400: oklch(0.65 0.18 145);
-  --color-nuxamine-500: oklch(0.55 0.17 145);
-  --color-nuxamine-600: oklch(0.48 0.15 145);
-  --color-nuxamine-700: oklch(0.42 0.13 145);
-  --color-nuxamine-800: oklch(0.36 0.10 145);
-  --color-nuxamine-900: oklch(0.30 0.08 145);
-  --color-nuxamine-950: oklch(0.22 0.06 145);
+  /* nuxt.care Green - Primary (derived from logo #2E7D32) */
+  --color-nuxtcare-50: oklch(0.97 0.02 145);
+  --color-nuxtcare-100: oklch(0.94 0.05 145);
+  --color-nuxtcare-200: oklch(0.87 0.10 145);
+  --color-nuxtcare-300: oklch(0.77 0.15 145);
+  --color-nuxtcare-400: oklch(0.65 0.18 145);
+  --color-nuxtcare-500: oklch(0.55 0.17 145);
+  --color-nuxtcare-600: oklch(0.48 0.15 145);
+  --color-nuxtcare-700: oklch(0.42 0.13 145);
+  --color-nuxtcare-800: oklch(0.36 0.10 145);
+  --color-nuxtcare-900: oklch(0.30 0.08 145);
+  --color-nuxtcare-950: oklch(0.22 0.06 145);
 }

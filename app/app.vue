@@ -10,8 +10,8 @@ useHead({
   htmlAttrs: {
     lang: 'en',
   },
-  title: 'Nuxamine',
-  titleTemplate: '%s - Nuxt Module Health Check',
+  title: 'nuxt.care',
+  titleTemplate: '%s | nuxt.care',
   meta: [
     { name: 'description', content: 'Health-Check & Audit Tool for Nuxt Modules' },
   ],

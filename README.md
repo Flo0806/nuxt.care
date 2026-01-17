@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="public/images/nuxamine-logo.png" alt="Nuxamine Logo" width="200">
+  <img src="public/images/nuxt.care-logo.svg" alt="nuxt.care Logo" width="200">
 </p>
 
-<h1 align="center">Nuxamine</h1>
+<h1 align="center">nuxt.care</h1>
 
 <p align="center">
   <strong>Health-Check & Audit Tool for Nuxt Modules</strong><br>
@@ -30,7 +30,7 @@
 
 ## How Scoring Works
 
-Nuxamine calculates a **Risk/Quality Score** from 0-100. This is **not** a popularity contest - we focus on reliability, maintenance, and compatibility.
+nuxt.care calculates a **Risk/Quality Score** from 0-100. This is **not** a popularity contest - we focus on reliability, maintenance, and compatibility.
 
 ### Philosophy
 
@@ -130,8 +130,8 @@ These are shown as info but don't affect scoring:
 
 ```bash
 # Clone
-git clone https://github.com/Flo0806/nuxamine.git
-cd nuxamine
+git clone https://github.com/Flo0806/nuxt.care.git
+cd nuxt.care
 
 # Install
 pnpm install

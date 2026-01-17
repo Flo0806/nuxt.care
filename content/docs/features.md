@@ -6,7 +6,7 @@ navigation:
 
 # Features
 
-An overview of all Nuxamine features.
+An overview of all nuxt.care features.
 
 ## Dashboard
 

@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'nuxamine:favorites'
+const STORAGE_KEY = 'nuxt.care:favorites'
 
 export function useFavorites() {
   const favorites = ref<string[]>([])
