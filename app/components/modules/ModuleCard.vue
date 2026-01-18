@@ -319,6 +319,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatNumber, formatBytes } from '~/utils/format'
+
 const props = defineProps<{
   module: ModuleData
   isFavorite: boolean
@@ -457,12 +459,6 @@ const pendingIconColor = computed(() => {
   return 'text-orange-600'
 })
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
 const isStale = computed(() => {
   const days = daysSincePush.value
   return days !== null && days > 180 && days < 365
@@ -523,11 +519,4 @@ const badges = computed(() => {
 
   return list
 })
-
-function formatNumber(num: number | undefined | null): string {
-  if (num === undefined || num === null) return '-'
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
-  if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`
-  return String(num)
-}
 </script>
