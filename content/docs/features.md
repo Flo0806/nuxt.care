@@ -100,6 +100,38 @@ Quick filters for common criteria:
 
 Click the heart icon on any module to save it as a favorite. Favorites are stored in your browser's local storage.
 
+## GitHub Login & Starring
+
+### Login
+
+Click **"Login with GitHub"** in the header to authenticate with your GitHub account. This enables the starring feature.
+
+### Star Modules
+
+When logged in, you can star modules directly on GitHub without leaving nuxt.care:
+
+- **Star icon** appears next to each module's health score
+- **Filled star** = you've starred this repo on GitHub
+- **Outline star** = not yet starred
+- Click to toggle - the star is added/removed on GitHub immediately
+
+### Why use this?
+
+- Quick way to bookmark interesting modules while browsing
+- Stars are synced with GitHub - visible on your GitHub profile
+- No need to open each repo individually
+
+### Favorites vs Stars
+
+| Feature | Favorites (Heart) | Stars (Star) |
+|---------|-------------------|--------------|
+| Storage | Browser (localStorage) | GitHub |
+| Sync | This device only | Across all devices |
+| Visible to others | No | Yes (on GitHub) |
+| Requires login | No | Yes |
+
+Use **Favorites** for quick local bookmarks, **Stars** when you want to support a project or sync across devices.
+
 ## Pagination
 
 Modules are displayed 12 per page with pagination controls at the bottom.
