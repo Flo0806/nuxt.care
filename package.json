@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "release": "./scripts/release.sh"
   },
   "dependencies": {
     "@nuxt/a11y": "1.0.0-alpha.1",
