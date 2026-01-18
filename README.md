@@ -18,9 +18,10 @@
 </p>
 
 <p align="center">
-  <a href="https://www.buymeacoffee.com/flo0806"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=flat&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
+  <a href="https://github.com/Flo0806/nuxt.care/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Flo0806/nuxt.care/ci.yml?style=flat&label=CI" alt="CI Status"></a>
   <a href="https://github.com/Flo0806/nuxt.care"><img src="https://img.shields.io/github/stars/Flo0806/nuxt.care?style=flat&logo=github" alt="GitHub Stars"></a>
-  <a href="https://github.com/Flo0806/nuxt.care/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Flo0806/nuxt.care?style=flat" alt="License"></a>
+  <a href="https://github.com/Flo0806/nuxt.care/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat" alt="MIT License"></a>
+  <a href="https://www.buymeacoffee.com/flo0806"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=flat&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
 </p>
 
 ---
@@ -153,10 +154,22 @@ pnpm dev
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NUXT_GITHUB_TOKEN` | GitHub PAT for API access | Required |
-| `NUXT_SYNC_LIMIT` | Limit modules for dev (0 = all) | `0` |
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NUXT_GITHUB_TOKEN` | GitHub PAT for API access (module sync) | Yes |
+| `NUXT_OAUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | For login |
+| `NUXT_OAUTH_GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | For login |
+| `NUXT_SESSION_PASSWORD` | Session encryption key (min 32 chars) | For login |
+| `NUXT_SYNC_LIMIT` | Limit modules for dev (0 = all) | No |
+
+#### GitHub OAuth Setup (optional)
+
+To enable "Login with GitHub" and starring:
+
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Create a new OAuth App
+3. Set callback URL to `http://localhost:3000/auth/github` (dev) or your domain
+4. Copy Client ID and Client Secret to `.env`
 
 ## Tech Stack
 
