@@ -13,7 +13,14 @@
   <a href="#features">Features</a> •
   <a href="#how-scoring-works">Scoring</a> •
   <a href="#setup">Setup</a> •
-  <a href="#tech-stack">Tech Stack</a>
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#support">Support</a>
+</p>
+
+<p align="center">
+  <a href="https://www.buymeacoffee.com/flo0806"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=flat&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
+  <a href="https://github.com/Flo0806/nuxt.care"><img src="https://img.shields.io/github/stars/Flo0806/nuxt.care?style=flat&logo=github" alt="GitHub Stars"></a>
+  <a href="https://github.com/Flo0806/nuxt.care/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Flo0806/nuxt.care?style=flat" alt="License"></a>
 </p>
 
 ---
@@ -164,6 +171,12 @@ pnpm dev
 - [npm Registry](https://registry.npmjs.org) - Package info, publish dates
 - [GitHub API](https://api.github.com) - Repo stats, CI status, releases
 - [OSV Database](https://osv.dev) - Known vulnerabilities
+
+## Support
+
+nuxt.care is **free and open source**. If it helps you make better decisions about your Nuxt modules, consider supporting development:
+
+<a href="https://www.buymeacoffee.com/flo0806" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="40"></a>
 
 ## License
 
