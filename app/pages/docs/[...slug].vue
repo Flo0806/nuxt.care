@@ -16,8 +16,54 @@ const { data: navigation } = await useAsyncData('docs-nav', async () => {
     <div class="container mx-auto px-4 py-8">
       <AppHeader />
 
+      <!-- Mobile menu -->
+      <USlideover
+        side="left"
+        inset
+        title="Documentation"
+      >
+        <UButton
+          label="Menu"
+          color="neutral"
+          variant="subtle"
+          class="flex md:hidden"
+          icon="lucide:text-align-start"
+          size="sm"
+        />
+
+        <template #body>
+          <ul class="space-y-1">
+            <li
+              v-for="item in navigation"
+              :key="item.path"
+            >
+              <NuxtLink
+                :to="item.path"
+                class="block px-3 py-2 rounded-md text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                exact-active-class="bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium"
+              >
+                {{ item.title }}
+              </NuxtLink>
+            </li>
+          </ul>
+        </template>
+        <template #footer>
+          <NuxtLink
+            to="/"
+            class="inline-flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-500 mb-6"
+          >
+            <UIcon
+              name="i-lucide-arrow-left"
+              class="w-4 h-4"
+            />
+            Back to App
+          </NuxtLink>
+        </template>
+      </USlideover>
+
       <div class="flex gap-8">
-        <aside class="w-56 shrink-0">
+        <!-- Desktop sidebar - hidden on mobile -->
+        <aside class="hidden md:block w-56 shrink-0">
           <nav class="sticky top-8">
             <NuxtLink
               to="/"
