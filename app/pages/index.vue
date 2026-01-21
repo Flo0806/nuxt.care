@@ -29,6 +29,7 @@
           v-model:filter-compat="filterCompat"
           v-model:filter-maintainer="filterMaintainer"
           v-model:show-favorites-only="showFavoritesOnly"
+          v-model:show-contributed-only="showContributedOnly"
           v-model:show-critical-only="showCriticalOnly"
           v-model:show-stars-only="showStarsOnly"
           :active-chips="activeChips"
@@ -40,6 +41,7 @@
           :module-count="filteredModules.length"
           :favorites-count="favorites.length"
           :stars-count="stars.length"
+          :contributed-count="contributedCount"
           :critical-count="criticalCount"
           :is-logged-in="isLoggedIn"
           @toggle-chip="toggleChip"
@@ -125,7 +127,7 @@ const { data: syncStatus, refresh: refreshSyncStatus } = await useFetch<SyncMeta
 })
 
 const { favorites, toggleFavorite } = useFavorites()
-const { isLoggedIn } = useAuth()
+const { isLoggedIn, user } = useAuth()
 const { loadAllStarred, initialized: starsInitialized, starredRepos } = useStars()
 
 const stars = computed(() => {
@@ -175,7 +177,14 @@ const {
   hasActiveFilters,
   resetFilters,
   filteredModules,
-} = useModuleFilters(modules, favorites, stars)
+  showContributedOnly,
+} = useModuleFilters(modules, favorites, stars, user)
+
+const contributedCount = computed(() => {
+  if (!modules.value || !user.value) return 0
+  const username = user.value.username
+  return modules.value.filter(m => m.contributors?.contributors?.includes(username)).length
+})
 
 // Pagination
 const itemsPerPage = 12
@@ -199,7 +208,7 @@ const paginationEnd = computed(() => {
 })
 
 // Reset page when filters change
-watch([search, sortBy, filterCategory, filterType, filterCompat, filterMaintainer, showFavoritesOnly, showStarsOnly, showCriticalOnly, activeChips], () => {
+watch([search, sortBy, filterCategory, filterType, filterCompat, filterMaintainer, showFavoritesOnly, showStarsOnly, showContributedOnly, showCriticalOnly, activeChips], () => {
   currentPage.value = 1
 })
 
