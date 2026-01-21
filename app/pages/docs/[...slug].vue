@@ -1,5 +1,14 @@
 <script lang="ts" setup>
+import { useMediaQuery } from '@vueuse/core'
+
 const route = useRoute()
+const mobileMenuOpen = ref(false)
+
+// Close mobile menu when switching to desktop view
+const isDesktop = useMediaQuery('(min-width: 768px)')
+watch(isDesktop, (desktop) => {
+  if (desktop) mobileMenuOpen.value = false
+})
 
 const { data: page } = await useAsyncData(route.path, () => {
   return queryCollection('content').path(route.path).first()
@@ -18,6 +27,7 @@ const { data: navigation } = await useAsyncData('docs-nav', async () => {
 
       <!-- Mobile menu -->
       <USlideover
+        v-model:open="mobileMenuOpen"
         side="left"
         inset
         title="Documentation"
@@ -27,7 +37,7 @@ const { data: navigation } = await useAsyncData('docs-nav', async () => {
           color="neutral"
           variant="subtle"
           class="flex md:hidden"
-          icon="lucide:text-align-start"
+          icon="i-lucide-menu"
           size="sm"
         />
 
@@ -41,6 +51,7 @@ const { data: navigation } = await useAsyncData('docs-nav', async () => {
                 :to="item.path"
                 class="block px-3 py-2 rounded-md text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 exact-active-class="bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium"
+                @click="mobileMenuOpen = false"
               >
                 {{ item.title }}
               </NuxtLink>
@@ -51,6 +62,7 @@ const { data: navigation } = await useAsyncData('docs-nav', async () => {
           <NuxtLink
             to="/"
             class="inline-flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-500 mb-6"
+            @click="mobileMenuOpen = false"
           >
             <UIcon
               name="i-lucide-arrow-left"
