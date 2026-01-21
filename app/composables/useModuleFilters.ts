@@ -86,7 +86,7 @@ export function getCompatStatus(mod: ModuleData): 'nuxt4' | 'nuxt3' | 'unknown' 
   return 'unknown'
 }
 
-export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, favorites: Ref<string[]>, stars: Ref<string[]>) {
+export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, favorites: Ref<string[]>, stars: Ref<string[]>, user?: Ref<SessionUser | null>) {
   const search = ref('')
   const sortBy = ref('score')
 
@@ -105,6 +105,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
   const showFavoritesOnly = ref(false)
   const showStarsOnly = ref(false)
   const showCriticalOnly = ref(false)
+  const showContributedOnly = ref(false)
   const activeChips = ref<Set<string>>(new Set())
 
   // Helper: apply all filters, optionally excluding one (for dynamic dropdown options)
@@ -147,6 +148,12 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
 
     if (showStarsOnly.value) {
       result = result.filter(m => stars.value.includes(m.name))
+    }
+
+    if (showContributedOnly.value) {
+      const username = user?.value?.username
+      if (!username) return []
+      result = result.filter(m => m.contributors?.contributors?.includes(username))
     }
 
     if (activeChips.value.size > 0) {
@@ -223,6 +230,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
       || showFavoritesOnly.value
       || showStarsOnly.value
       || showCriticalOnly.value
+      || showContributedOnly.value
       || activeChips.value.size > 0
   })
 
@@ -246,6 +254,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
     showFavoritesOnly.value = false
     showStarsOnly.value = false
     showCriticalOnly.value = false
+    showContributedOnly.value = false
     activeChips.value = new Set()
   }
 
@@ -286,6 +295,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
     filterMaintainer,
     showFavoritesOnly,
     showStarsOnly,
+    showContributedOnly,
     showCriticalOnly,
     activeChips,
     toggleChip,
