@@ -35,11 +35,11 @@ Show your module's health score in your README:
 [![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/YOUR-MODULE)](https://nuxt.care/?search=YOUR-MODULE)
 ```
 
-Replace `YOUR-MODULE` with your npm package name (e.g., `nuxt-icon`, `@nuxt/image`).
+Replace `YOUR-MODULE` with your module name as shown on nuxt.care (e.g., `icon`, `image`).
 
 **Example:**
 
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/nuxt-icon)](https://nuxt.care/?search=nuxt-icon)
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon)](https://nuxt.care/?search=icon)
 
 ---
 

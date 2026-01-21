@@ -13,20 +13,37 @@ Add a nuxt.care health badge to your module's README to show its quality score.
 Add this to your README.md:
 
 ```markdown
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/YOUR-MODULE-NAME)](https://nuxt.care/?search=YOUR-MODULE-NAME)
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/YOUR-MODULE)](https://nuxt.care/?search=YOUR-MODULE)
 ```
 
-Replace `YOUR-MODULE-NAME` with your module's name (e.g., `nuxt-icon`, `@nuxt/image`).
+Replace `YOUR-MODULE` with your module's name as shown on nuxt.care (the card title).
 
 The badge links to your module on nuxt.care when clicked.
 
 ## Example
 
-For the `nuxt-icon` module:
+For Nuxt UI:
 
 ```markdown
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/nuxt-icon)](https://nuxt.care/?search=nuxt-icon)
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/ui)](https://nuxt.care/?search=ui)
 ```
+
+For Nuxt Icon:
+
+```markdown
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon)](https://nuxt.care/?search=icon)
+```
+
+## Finding Your Module Name
+
+Use the **module name as shown on nuxt.care** (the title on the module card):
+
+| Module | Badge URL |
+|--------|-----------|
+| Nuxt UI | `/api/badge/ui` |
+| Nuxt Icon | `/api/badge/icon` |
+| Nuxt Image | `/api/badge/image` |
+| Pinia | `/api/badge/pinia` |
 
 ## Badge Colors
 
@@ -59,29 +76,22 @@ Response (shields.io endpoint schema):
 }
 ```
 
-## Finding Your Module Name
-
-Your module name is the same as shown on nuxt.care. You can use either:
-
-- The module name (e.g., `icon`)
-- The npm package name (e.g., `nuxt-icon` or `@nuxt/image`)
-
 ## Badge Styles
 
 You can customize the badge style using shields.io parameters:
 
 ```markdown
 <!-- Flat style (default) -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/nuxt-icon)
+![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon)
 
 <!-- Flat square -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/nuxt-icon&style=flat-square)
+![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon&style=flat-square)
 
 <!-- For the badge -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/nuxt-icon&style=for-the-badge)
+![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon&style=for-the-badge)
 
 <!-- Plastic -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/nuxt-icon&style=plastic)
+![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon&style=plastic)
 ```
 
 See [shields.io styles](https://shields.io/badges/endpoint-badge) for more options.
