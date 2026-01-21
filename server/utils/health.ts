@@ -75,11 +75,18 @@ export function calculateHealth(data: ModuleData): HealthScore {
   else add('warning', `${pending} pending`, 3, 15)
 
   // NUXT 4 (15)
-  const n4 = [data.nuxtApiCompat?.supports4, data.topics?.hasNuxt4, data.keywords?.hasNuxt4, data.release?.nuxt4Mentioned].filter(Boolean).length
-  if (n4 >= 2) add('positive', 'Nuxt 4 compatible', 15, 15)
-  else if (n4 === 1) add('info', 'Nuxt 4 partially confirmed', 10, 15)
-  else if (data.type === 'official') add('info', 'Nuxt 4: official module', 5, 15)
-  else add('warning', 'Nuxt 4 not confirmed', 0, 15)
+  // Official compat declaration is authoritative - full points if declared
+  if (data.nuxtApiCompat?.supports4) {
+    add('positive', 'Nuxt 4 compatible', 15, 15)
+  }
+  else {
+    // Fall back to secondary signals (topics, keywords, release notes)
+    const n4 = [data.topics?.hasNuxt4, data.keywords?.hasNuxt4, data.release?.nuxt4Mentioned].filter(Boolean).length
+    if (n4 >= 2) add('positive', 'Nuxt 4 compatible', 15, 15)
+    else if (n4 === 1) add('info', 'Nuxt 4 partially confirmed', 10, 15)
+    else if (data.type === 'official') add('info', 'Nuxt 4: official module', 5, 15)
+    else add('warning', 'Nuxt 4 not confirmed', 0, 15)
+  }
 
   // Info only
   const dl = data.npm?.downloads || 0
