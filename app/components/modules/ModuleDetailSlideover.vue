@@ -827,12 +827,14 @@ const pendingSubtext = computed(() => {
 function signalIcon(type: string): string {
   if (type === 'positive') return 'i-lucide-check-circle'
   if (type === 'warning') return 'i-lucide-alert-triangle'
+  if (type === 'info') return 'i-lucide-info'
   return 'i-lucide-x-circle'
 }
 
 function signalColor(type: string): string {
   if (type === 'positive') return 'text-green-700'
   if (type === 'warning') return 'text-yellow-700'
+  if (type === 'info') return 'text-blue-500'
   return 'text-red-700'
 }
 
