@@ -1,5 +1,14 @@
 <script lang="ts" setup>
+import { useMediaQuery } from '@vueuse/core'
+
 const route = useRoute()
+const mobileMenuOpen = ref(false)
+
+// Close mobile menu when switching to desktop view
+const isDesktop = useMediaQuery('(min-width: 768px)')
+watch(isDesktop, (desktop) => {
+  if (desktop) mobileMenuOpen.value = false
+})
 
 const { data: page } = await useAsyncData(route.path, () => {
   return queryCollection('docs').path(route.path).first()
@@ -16,8 +25,57 @@ const { data: navigation } = await useAsyncData('docs-nav', async () => {
     <div class="container mx-auto px-4 py-8">
       <AppHeader />
 
+      <!-- Mobile menu -->
+      <USlideover
+        v-model:open="mobileMenuOpen"
+        side="left"
+        inset
+        title="Documentation"
+      >
+        <UButton
+          label="Menu"
+          color="neutral"
+          variant="subtle"
+          class="flex md:hidden"
+          icon="i-lucide-menu"
+          size="sm"
+        />
+
+        <template #body>
+          <ul class="space-y-1">
+            <li
+              v-for="item in navigation"
+              :key="item.path"
+            >
+              <NuxtLink
+                :to="item.path"
+                class="block px-3 py-2 rounded-md text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                exact-active-class="bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium"
+                @click="mobileMenuOpen = false"
+              >
+                {{ item.title }}
+              </NuxtLink>
+            </li>
+          </ul>
+        </template>
+        <template #footer>
+          <NuxtLink
+            to="/"
+            class="inline-flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-500 mb-6"
+            @click="mobileMenuOpen = false"
+          >
+            <UIcon
+              name="i-lucide-arrow-left"
+              class="w-4 h-4"
+            />
+            Back to App
+          </NuxtLink>
+        </template>
+      </USlideover>
+
       <div class="flex gap-8">
-        <aside class="w-56 shrink-0">
+        <!-- Desktop sidebar - hidden on mobile -->
+        <aside class="hidden md:block w-56 shrink-0">
           <nav class="sticky top-8">
             <NuxtLink
               to="/"
