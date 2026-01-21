@@ -30,6 +30,7 @@
           v-model:filter-maintainer="filterMaintainer"
           v-model:show-favorites-only="showFavoritesOnly"
           v-model:show-critical-only="showCriticalOnly"
+          v-model:show-stars-only="showStarsOnly"
           :active-chips="activeChips"
           :category-options="categoryOptions"
           :type-options="typeOptions"
@@ -38,7 +39,9 @@
           :has-active-filters="hasActiveFilters"
           :module-count="filteredModules.length"
           :favorites-count="favorites.length"
+          :stars-count="stars.length"
           :critical-count="criticalCount"
+          :is-logged-in="isLoggedIn"
           @toggle-chip="toggleChip"
           @reset="resetFilters"
         />
@@ -123,7 +126,12 @@ const { data: syncStatus, refresh: refreshSyncStatus } = await useFetch<SyncMeta
 
 const { favorites, toggleFavorite } = useFavorites()
 const { isLoggedIn } = useAuth()
-const { loadAllStarred, initialized: starsInitialized } = useStars()
+const { loadAllStarred, initialized: starsInitialized, starredRepos } = useStars()
+
+const stars = computed(() => {
+  if (!modules.value || !starredRepos.value) return []
+  return modules.value.filter(m => m.repo && starredRepos.value[m.repo] === true).map(m => m.name)
+})
 
 // Load starred repos when logged in (after hydration or login)
 onMounted(async () => {
@@ -155,6 +163,7 @@ const {
   filterCompat,
   filterMaintainer,
   showFavoritesOnly,
+  showStarsOnly,
   showCriticalOnly,
   activeChips,
   toggleChip,
@@ -166,7 +175,7 @@ const {
   hasActiveFilters,
   resetFilters,
   filteredModules,
-} = useModuleFilters(modules, favorites)
+} = useModuleFilters(modules, favorites, stars)
 
 // Pagination
 const itemsPerPage = 12
@@ -190,7 +199,7 @@ const paginationEnd = computed(() => {
 })
 
 // Reset page when filters change
-watch([search, sortBy, filterCategory, filterType, filterCompat, filterMaintainer, showFavoritesOnly, showCriticalOnly, activeChips], () => {
+watch([search, sortBy, filterCategory, filterType, filterCompat, filterMaintainer, showFavoritesOnly, showStarsOnly, showCriticalOnly, activeChips], () => {
   currentPage.value = 1
 })
 

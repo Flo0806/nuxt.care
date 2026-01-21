@@ -86,7 +86,7 @@ export function getCompatStatus(mod: ModuleData): 'nuxt4' | 'nuxt3' | 'unknown' 
   return 'unknown'
 }
 
-export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, favorites: Ref<string[]>) {
+export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, favorites: Ref<string[]>, stars: Ref<string[]>) {
   const search = ref('')
   const sortBy = ref('score')
 
@@ -103,6 +103,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
   const filterCompat = ref('all')
   const filterMaintainer = ref('all')
   const showFavoritesOnly = ref(false)
+  const showStarsOnly = ref(false)
   const showCriticalOnly = ref(false)
   const activeChips = ref<Set<string>>(new Set())
 
@@ -142,6 +143,10 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
 
     if (showCriticalOnly.value) {
       result = result.filter(isCriticalModule)
+    }
+
+    if (showStarsOnly.value) {
+      result = result.filter(m => stars.value.includes(m.name))
     }
 
     if (activeChips.value.size > 0) {
@@ -216,6 +221,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
       || filterCompat.value !== 'all'
       || filterMaintainer.value !== 'all'
       || showFavoritesOnly.value
+      || showStarsOnly.value
       || showCriticalOnly.value
       || activeChips.value.size > 0
   })
@@ -238,6 +244,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
     filterCompat.value = 'all'
     filterMaintainer.value = 'all'
     showFavoritesOnly.value = false
+    showStarsOnly.value = false
     showCriticalOnly.value = false
     activeChips.value = new Set()
   }
@@ -278,6 +285,7 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
     filterCompat,
     filterMaintainer,
     showFavoritesOnly,
+    showStarsOnly,
     showCriticalOnly,
     activeChips,
     toggleChip,

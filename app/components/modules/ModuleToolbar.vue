@@ -106,6 +106,28 @@
       </UButton>
 
       <UButton
+        v-if="isLoggedIn"
+        :color="showStarsOnly ? 'primary' : 'neutral'"
+        :variant="showStarsOnly ? 'soft' : 'ghost'"
+        size="sm"
+        @click="$emit('update:showStarsOnly', !showStarsOnly)"
+      >
+        <UIcon
+          name="i-lucide-star"
+          class="w-4 h-4"
+        />
+        Stars
+        <UBadge
+          v-if="starsCount"
+          color="primary"
+          variant="subtle"
+          size="xs"
+        >
+          {{ starsCount }}
+        </UBadge>
+      </UButton>
+
+      <UButton
         v-if="hasActiveFilters"
         color="neutral"
         variant="ghost"
@@ -136,6 +158,7 @@ defineProps<{
   filterCompat: string
   filterMaintainer: string
   showFavoritesOnly: boolean
+  showStarsOnly: boolean
   showCriticalOnly: boolean
   activeChips: Set<string>
   categoryOptions: Array<{ label: string, value: string, icon?: string }>
@@ -145,7 +168,9 @@ defineProps<{
   hasActiveFilters: boolean
   moduleCount: number
   favoritesCount: number
+  starsCount: number
   criticalCount: number
+  isLoggedIn: boolean
 }>()
 
 defineEmits<{
@@ -156,6 +181,7 @@ defineEmits<{
   'update:filterCompat': [value: string]
   'update:filterMaintainer': [value: string]
   'update:showFavoritesOnly': [value: boolean]
+  'update:showStarsOnly': [value: boolean]
   'update:showCriticalOnly': [value: boolean]
   'toggle-chip': [chipId: string]
   'reset': []

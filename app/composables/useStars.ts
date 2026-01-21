@@ -82,6 +82,7 @@ export function useStars() {
   }
 
   return {
+    starredRepos,
     loadAllStarred,
     toggleStar,
     isStarred,
