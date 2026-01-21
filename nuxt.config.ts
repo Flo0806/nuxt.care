@@ -17,6 +17,18 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  content: {
+    database: {
+      type: 'sqlite',
+      filename: './contents.sqlite',
+    },
+    build: {
+      markdown: {
+        highlight: false,
+      },
+    },
+  },
+
   runtimeConfig: {
     github: {
       token: '',
@@ -34,6 +46,10 @@ export default defineNuxtConfig({
     public: {
       version: pkg.version,
     },
+  },
+
+  routeRules: {
+    '/docs/**': { prerender: true },
   },
   compatibilityDate: '2025-07-15',
 

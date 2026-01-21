@@ -57,8 +57,8 @@ export function isCriticalModule(mod: ModuleData): boolean {
   // Deprecated = critical (shouldn't use)
   if (mod.npm?.deprecated) return true
 
-  // Archived alone = NOT critical (just a warning, module might still work fine)
-  // Abandoned alone = NOT critical if stable (all changes released)
+  // Archived = critical (no longer maintained)
+  if (mod.github?.archived) return true
 
   // Abandoned WITH pending commits = critical (dead with unfinished work)
   const pendingCount = mod.pendingCommits?.nonChore ?? 0

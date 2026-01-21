@@ -227,11 +227,12 @@ describe('calculateHealth', () => {
   })
 
   describe('nuxt 4 compatibility scoring', () => {
-    it('gives 15 points for 2+ Nuxt 4 signals', () => {
+    it('gives 15 points when nuxtApiCompat declares Nuxt 4 support', () => {
+      // Official compat declaration is authoritative - full points regardless of other signals
       const module = createModule({
-        nuxtApiCompat: { supports4: true, supports3: true, raw: '>=3' },
-        topics: { hasNuxt4: true, hasNuxt3: true, hasNuxt2: false, isNuxtModule: true, all: [] },
-        keywords: { hasNuxt4: false, hasNuxt3: false, all: [] },
+        nuxtApiCompat: { supports4: true, supports3: true, raw: '>=4.0.0' },
+        topics: null,
+        keywords: null,
         release: null,
       })
 
@@ -242,10 +243,25 @@ describe('calculateHealth', () => {
       expect(n4Signal?.points).toBe(15)
     })
 
-    it('gives 10 points for exactly 1 Nuxt 4 signal', () => {
+    it('gives 15 points for 2+ secondary signals (without compat)', () => {
       const module = createModule({
-        nuxtApiCompat: { supports4: true, supports3: true, raw: '>=3' },
-        topics: { hasNuxt4: false, hasNuxt3: true, hasNuxt2: false, isNuxtModule: true, all: [] },
+        nuxtApiCompat: null,
+        topics: { hasNuxt4: true, hasNuxt3: true, hasNuxt2: false, isNuxtModule: true, all: [] },
+        keywords: { hasNuxt4: true, hasNuxt3: false, all: [] },
+        release: null,
+      })
+
+      const result = calculateHealth(module)
+      const n4Signal = result.signals.find((s: HealthSignal) => s.msg.includes('Nuxt 4 compatible'))
+
+      expect(n4Signal).toBeDefined()
+      expect(n4Signal?.points).toBe(15)
+    })
+
+    it('gives 10 points for exactly 1 secondary signal (without compat)', () => {
+      const module = createModule({
+        nuxtApiCompat: null,
+        topics: { hasNuxt4: true, hasNuxt3: true, hasNuxt2: false, isNuxtModule: true, all: [] },
         keywords: null,
         release: null,
       })
