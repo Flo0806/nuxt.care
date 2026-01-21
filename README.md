@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="#health-badge-for-your-module">Badge</a> •
   <a href="#features">Features</a> •
   <a href="#how-scoring-works">Scoring</a> •
   <a href="#setup">Setup</a> •
@@ -26,6 +27,22 @@
 
 ---
 
+## Health Badge for Your Module
+
+Show your module's health score in your README:
+
+```markdown
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/YOUR-MODULE)](https://nuxt.care/?search=YOUR-MODULE)
+```
+
+Replace `YOUR-MODULE` with your npm package name (e.g., `nuxt-icon`, `@nuxt/image`).
+
+**Example:**
+
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/nuxt-icon)](https://nuxt.care/?search=nuxt-icon)
+
+---
+
 ## Features
 
 - **Health Scoring** - Transparent 0-100 score based on reliable data
@@ -34,6 +51,7 @@
 - **Maintenance Status** - See pending commits, release freshness, CI status
 - **Smart Filters** - Filter by category, type, compatibility, quality metrics
 - **Favorites** - Track modules you care about
+- **Health Badge** - Add a quality badge to your module's README
 - **Auto-Sync** - Automatic data refresh every 8 hours
 
 ## How Scoring Works

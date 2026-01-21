@@ -89,6 +89,15 @@ export function getCompatStatus(mod: ModuleData): 'nuxt4' | 'nuxt3' | 'unknown' 
 export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, favorites: Ref<string[]>) {
   const search = ref('')
   const sortBy = ref('score')
+
+  // Read search from URL on client-side mount
+  onMounted(() => {
+    const params = new URLSearchParams(window.location.search)
+    const searchParam = params.get('search')
+    if (searchParam) {
+      search.value = searchParam
+    }
+  })
   const filterCategory = ref('all')
   const filterType = ref('all')
   const filterCompat = ref('all')

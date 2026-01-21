@@ -136,6 +136,16 @@ Use **Favorites** for quick local bookmarks, **Stars** when you want to support 
 
 Modules are displayed 12 per page with pagination controls at the bottom.
 
+## Health Badge
+
+Add a nuxt.care badge to your module's README:
+
+```markdown
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/YOUR-MODULE)](https://nuxt.care/?search=YOUR-MODULE)
+```
+
+See [Health Badge](/docs/badge) for details.
+
 ## Data Sync
 
 Module data is synced from various APIs:
