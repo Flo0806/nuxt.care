@@ -203,13 +203,13 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
     })
 
     const hasTypes = !!(
-      latestInfo?.types                    // "types" field
-      || latestInfo?.typings               // "typings" field (legacy)
-      || exportsHasTypes                   // exports with "types" condition
-      || devDeps.typescript                // typescript in devDeps
-      || devDeps['vue-tsc']                // vue-tsc = Vue + TypeScript
-      || devDeps['@nuxt/module-builder']   // Nuxt module builder uses TypeScript
-      || devDeps['nuxt-module-build']      // Alternative module builder
+      latestInfo?.types // "types" field
+      || latestInfo?.typings // "typings" field (legacy)
+      || exportsHasTypes // exports with "types" condition
+      || devDeps.typescript // typescript in devDeps
+      || devDeps['vue-tsc'] // vue-tsc = Vue + TypeScript
+      || devDeps['@nuxt/module-builder'] // Nuxt module builder uses TypeScript
+      || devDeps['nuxt-module-build'] // Alternative module builder
     )
 
     // Check for test script
