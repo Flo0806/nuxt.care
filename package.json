@@ -53,6 +53,7 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
   },
+  "packageManager": "pnpm@10.27.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "better-sqlite3",
