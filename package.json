@@ -59,7 +59,9 @@
       "better-sqlite3",
       "esbuild",
       "@parcel/watcher",
-      "sharp"
+      "sharp",
+      "unrs-resolver",
+      "vue-demi"
     ]
   }
 }
