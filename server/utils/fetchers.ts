@@ -169,6 +169,7 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
         keywords?: string[]
         types?: string
         typings?: string
+        exports?: Record<string, unknown>
         scripts?: Record<string, string>
         dist?: {
           unpackedSize?: number
@@ -191,14 +192,24 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
     const time = data.time || {}
 
     // Check for TypeScript support
-    // - types/typings field = exports type declarations
-    // - typescript in devDeps = written in TypeScript (common for Nuxt modules using module-builder)
     const devDeps = latestInfo?.devDependencies || {}
+    const exports = latestInfo?.exports
+
+    // Check exports for type declarations (modern packages)
+    const exportsHasTypes = exports && Object.values(exports).some((exp) => {
+      if (typeof exp === 'object' && exp !== null && 'types' in exp) return true
+      if (typeof exp === 'string' && /\.d\.[mc]?ts$/.test(exp)) return true
+      return false
+    })
+
     const hasTypes = !!(
-      latestInfo?.types
-      || latestInfo?.typings
-      || devDeps.typescript
-      || devDeps['@types/node']
+      latestInfo?.types                    // "types" field
+      || latestInfo?.typings               // "typings" field (legacy)
+      || exportsHasTypes                   // exports with "types" condition
+      || devDeps.typescript                // typescript in devDeps
+      || devDeps['vue-tsc']                // vue-tsc = Vue + TypeScript
+      || devDeps['@nuxt/module-builder']   // Nuxt module builder uses TypeScript
+      || devDeps['nuxt-module-build']      // Alternative module builder
     )
 
     // Check for test script

@@ -57,6 +57,22 @@ export default defineNuxtConfig({
     kv: true,
   },
 
+  content: {
+    database: {
+      type: 'sqlite',
+      binding: false,
+    },
+    build: {
+      markdown: {
+        highlight: false,
+      },
+    },
+  },
+
+  routeRules: {
+    '/docs/**': { prerender: true },
+  },
+
   eslint: {
     config: {
       stylistic: true,

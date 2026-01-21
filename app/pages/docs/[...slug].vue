@@ -2,11 +2,11 @@
 const route = useRoute()
 
 const { data: page } = await useAsyncData(route.path, () => {
-  return queryCollection('content').path(route.path).first()
+  return queryCollection('docs').path(route.path).first()
 })
 
 const { data: navigation } = await useAsyncData('docs-nav', async () => {
-  const docs = await queryCollection('content').all()
+  const docs = await queryCollection('docs').all()
   return docs.sort((a, b) => (a.navigation?.order ?? 99) - (b.navigation?.order ?? 99))
 })
 </script>
