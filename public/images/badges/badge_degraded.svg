@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="32" viewBox="0 0 120 32">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#e19708"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="32" rx="6" fill="url(#bg)"/>
+  <text x="60" y="21" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">DEGRADED</text>
+</svg>
