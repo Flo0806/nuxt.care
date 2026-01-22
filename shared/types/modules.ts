@@ -194,6 +194,17 @@ export interface HealthScore {
   signals: HealthSignal[]
 }
 
+export type ModuleStatus = 'optimal' | 'stable' | 'degraded' | 'critical'
+
+export interface ModuleSlim {
+  name: string
+  npm: string
+  score: number
+  status: ModuleStatus
+  lastUpdated: string | null
+  badge?: string // inline SVG or data URL, only if ?badge=inline|dataurl
+}
+
 export interface SyncMeta {
   lastSync: string | null
   isRunning: boolean
