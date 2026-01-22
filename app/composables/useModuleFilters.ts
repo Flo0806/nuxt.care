@@ -112,13 +112,35 @@ export function useModuleFilters(modules: Ref<ModuleData[] | null | undefined>, 
     let result = modules.value || []
 
     if (search.value) {
-      const q = search.value.toLowerCase()
-      result = result.filter(m =>
-        m.name.toLowerCase().includes(q)
-        || m.description?.toLowerCase().includes(q)
-        || m.npmPackage?.toLowerCase().includes(q)
-        || m.repo?.toLowerCase().includes(q),
-      )
+      const searchTerm = search.value.trim()
+
+      // Check for npm: prefix (exact package search)
+      const npmMatch = searchTerm.match(/^npm:(\S+)(?:\s+(.*))?$/i)
+      if (npmMatch?.[1]) {
+        const npmPackage = npmMatch[1].toLowerCase()
+        const extraSearch = npmMatch[2]?.toLowerCase()
+
+        result = result.filter((m) => {
+          // Exact npm package match
+          if (m.npmPackage?.toLowerCase() !== npmPackage) return false
+          // If extra search terms, also filter by those
+          if (extraSearch) {
+            return m.name.toLowerCase().includes(extraSearch)
+              || m.description?.toLowerCase().includes(extraSearch)
+          }
+          return true
+        })
+      }
+      else {
+        // Normal contains search
+        const q = searchTerm.toLowerCase()
+        result = result.filter(m =>
+          m.name.toLowerCase().includes(q)
+          || m.description?.toLowerCase().includes(q)
+          || m.npmPackage?.toLowerCase().includes(q)
+          || m.repo?.toLowerCase().includes(q),
+        )
+      }
     }
 
     if (exclude !== 'category' && filterCategory.value !== 'all') {
