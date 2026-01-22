@@ -4,7 +4,8 @@
 const requests = new Map<string, { count: number, reset: number }>()
 
 // Cleanup old entries every 5 minutes
-setInterval(() => {
+// unref() prevents the timer from keeping the process alive (important for build)
+const cleanupInterval = setInterval(() => {
   const now = Date.now()
   for (const [ip, entry] of requests) {
     if (now > entry.reset) {
@@ -12,6 +13,7 @@ setInterval(() => {
     }
   }
 }, 5 * 60 * 1000)
+cleanupInterval.unref()
 
 export default defineEventHandler((event) => {
   // Only rate limit /api/v1/
