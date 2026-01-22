@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ModuleData, ModuleSlim, ModuleStatus } from '~~/shared/types/modules'
 import { calculateHealth } from '../../utils/health'
@@ -18,9 +18,16 @@ function scoreToStatus(score: number): ModuleStatus {
 // Cache badges in memory
 const badgeCache = new Map<ModuleStatus, string>()
 
+// Determine public path (differs between dev and production)
+function getPublicPath(): string {
+  const prodPath = join(process.cwd(), '.output', 'public')
+  if (existsSync(prodPath)) return prodPath
+  return join(process.cwd(), 'public')
+}
+
 function loadBadgeSvg(status: ModuleStatus): string {
   if (!badgeCache.has(status)) {
-    const path = join(process.cwd(), 'public', 'images', 'badges', `badge_${status}.svg`)
+    const path = join(getPublicPath(), 'images', 'badges', `badge_${status}.svg`)
     badgeCache.set(status, readFileSync(path, 'utf-8'))
   }
   return badgeCache.get(status)!
