@@ -77,7 +77,7 @@ describe('Badge API Integration', async () => {
     }
   })
 
-  it('returns shields.io schema for valid module', async () => {
+  it('returns shields.io schema with correct score for valid module', async () => {
     const response = await $fetch<{
       schemaVersion: number
       label: string
@@ -85,11 +85,43 @@ describe('Badge API Integration', async () => {
       color: string
     }>('/api/v1/badge?module=pinia')
 
-    expect(response).toMatchObject({
-      schemaVersion: 1,
-      label: 'nuxt.care',
-    })
-    expect(response.message).toBeDefined()
-    expect(response.color).toBeDefined()
+    expect(response.schemaVersion).toBe(1)
+    expect(response.label).toBe('nuxt.care')
+    // Score should be high (mock module has good health signals)
+    expect(response.message).toMatch(/^\d+\/100$/)
+    const score = Number.parseInt(response.message.split('/')[0])
+    expect(score).toBeGreaterThanOrEqual(70)
+    // High score should have optimal or stable color
+    expect(['#22c55e', '#84cc16']).toContain(response.color)
+  })
+
+  it('finds module by npm package name', async () => {
+    const response = await $fetch<{
+      schemaVersion: number
+      message: string
+    }>('/api/v1/badge?package=@pinia/nuxt')
+
+    expect(response.schemaVersion).toBe(1)
+    expect(response.message).toMatch(/^\d+\/100$/)
+  })
+
+  it('returns status text when mode=status', async () => {
+    const response = await $fetch<{
+      message: string
+    }>('/api/v1/badge?module=pinia&mode=status')
+
+    // Should return status string, not score
+    expect(response.message).not.toMatch(/\/100$/)
+    expect(['optimal', 'stable', 'degraded', 'critical']).toContain(response.message)
+  })
+
+  it('returns 404 for non-existent module', async () => {
+    try {
+      await $fetch('/api/v1/badge?module=non-existent-module-xyz')
+      expect.fail('Should have thrown')
+    }
+    catch (error) {
+      expect((error as { statusCode: number }).statusCode).toBe(404)
+    }
   })
 })
