@@ -130,6 +130,7 @@ describe('GET /api/badge/[module]', () => {
     vi.stubGlobal('defineEventHandler', defineEventHandler)
     vi.stubGlobal('getRouterParam', getRouterParam)
     vi.stubGlobal('createError', createError)
+    vi.stubGlobal('setResponseHeader', vi.fn())
     vi.stubGlobal('kv', {
       get: vi.fn().mockResolvedValue(mockModules),
     })
@@ -143,7 +144,7 @@ describe('GET /api/badge/[module]', () => {
     const event = { context: { params: { module: 'nuxt-icon' } } }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await badgeHandler(event as any)
-
+    console.log('Faile 2', response)
     expect(response.schemaVersion).toBe(1)
     expect(response.label).toBe('nuxt.care')
     expect(response.message).toMatch(/^\d+\/100$/)
