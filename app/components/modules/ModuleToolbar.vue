@@ -128,6 +128,28 @@
       </UButton>
 
       <UButton
+        v-if="isLoggedIn"
+        :color="showContributedOnly ? 'primary' : 'neutral'"
+        :variant="showContributedOnly ? 'soft' : 'ghost'"
+        size="sm"
+        @click="$emit('update:showContributedOnly', !showContributedOnly)"
+      >
+        <UIcon
+          name="i-lucide-user-round-check"
+          class="w-4 h-4"
+        />
+        Contributed
+        <UBadge
+          v-if="contributedCount"
+          color="primary"
+          variant="subtle"
+          size="xs"
+        >
+          {{ contributedCount }}
+        </UBadge>
+      </UButton>
+
+      <UButton
         v-if="hasActiveFilters"
         color="neutral"
         variant="ghost"
@@ -160,6 +182,7 @@ defineProps<{
   showFavoritesOnly: boolean
   showStarsOnly: boolean
   showCriticalOnly: boolean
+  showContributedOnly: boolean
   activeChips: Set<string>
   categoryOptions: Array<{ label: string, value: string, icon?: string }>
   typeOptions: Array<{ label: string, value: string }>
@@ -169,6 +192,7 @@ defineProps<{
   moduleCount: number
   favoritesCount: number
   starsCount: number
+  contributedCount: number
   criticalCount: number
   isLoggedIn: boolean
 }>()
@@ -182,6 +206,7 @@ defineEmits<{
   'update:filterMaintainer': [value: string]
   'update:showFavoritesOnly': [value: boolean]
   'update:showStarsOnly': [value: boolean]
+  'update:showContributedOnly': [value: boolean]
   'update:showCriticalOnly': [value: boolean]
   'toggle-chip': [chipId: string]
   'reset': []
