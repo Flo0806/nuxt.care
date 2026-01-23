@@ -1,7 +1,12 @@
 import type { ModuleData } from '~~/shared/types/modules'
 import { calculateHealth } from '../../utils/health'
 
+// DEPRECATED: Use /api/v1/badge?module=xxx instead
 export default defineEventHandler(async (event) => {
+  // Mark as deprecated (RFC 8594)
+  setResponseHeader(event, 'Deprecation', 'true')
+  setResponseHeader(event, 'Link', '</api/v1/badge>; rel="successor-version"')
+
   const moduleName = getRouterParam(event, 'module')
 
   if (!moduleName) {
