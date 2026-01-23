@@ -12,6 +12,9 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:nuxt": "vitest run --project nuxt",
+    "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "release": "./scripts/release.sh"

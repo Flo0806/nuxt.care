@@ -17,6 +17,10 @@ export default defineConfig({
         },
       },
       await defineVitestProject({
+        // Workaround: https://github.com/nuxt/test-utils/issues/1490
+        resolve: {
+          alias: { 'bun:test': fileURLToPath(new URL('./vitest.config.ts', import.meta.url)) },
+        },
         test: {
           name: 'nuxt',
           include: ['test/nuxt/**/*.{test,spec}.ts'],
@@ -25,6 +29,22 @@ export default defineConfig({
             nuxt: {
               rootDir: fileURLToPath(new URL('.', import.meta.url)),
               domEnvironment: 'happy-dom',
+            },
+          },
+        },
+      }),
+      await defineVitestProject({
+        // Workaround: https://github.com/nuxt/test-utils/issues/1490
+        resolve: {
+          alias: { 'bun:test': fileURLToPath(new URL('./vitest.config.ts', import.meta.url)) },
+        },
+        test: {
+          name: 'integration',
+          include: ['test/integration/**/*.{test,spec}.ts'],
+          testTimeout: 60000, // Build + server startup takes time
+          environmentOptions: {
+            nuxt: {
+              rootDir: fileURLToPath(new URL('.', import.meta.url)),
             },
           },
         },

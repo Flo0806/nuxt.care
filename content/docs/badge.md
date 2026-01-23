@@ -8,90 +8,121 @@ navigation:
 
 Add a nuxt.care health badge to your module's README to show its quality score.
 
-## Usage
+::callout{type="warning"}
+**Important Update:** The Badge API has moved to `/api/v1/badge`. The old `/api/badge/{module}` endpoint is **deprecated** and will be removed in a future version. Please update your badges!
+::
+
+## Quick Start
 
 Add this to your README.md:
 
 ```markdown
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/YOUR-MODULE)](https://nuxt.care/?search=YOUR-MODULE)
+[![nuxt.care](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=YOUR-MODULE)](https://nuxt.care/?search=YOUR-MODULE)
 ```
 
-Replace `YOUR-MODULE` with your module's name as shown on nuxt.care (the card title).
+Replace `YOUR-MODULE` with your module's name as shown on nuxt.care.
 
-The badge links to your module on nuxt.care when clicked.
+## Examples
 
-## Example
-
-For Nuxt UI:
-
+**Nuxt Icon:**
 ```markdown
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/ui)](https://nuxt.care/?search=ui)
+[![nuxt.care](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=icon)](https://nuxt.care/?search=icon)
 ```
 
-For Nuxt Icon:
-
+**Pinia (by npm package):**
 ```markdown
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon)](https://nuxt.care/?search=icon)
+[![nuxt.care](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?package=@pinia/nuxt)](https://nuxt.care/?search=pinia)
 ```
 
-## Finding Your Module Name
+## API Reference
 
-Use the **module name as shown on nuxt.care** (the title on the module card):
-
-| Module | Badge URL |
-|--------|-----------|
-| Nuxt UI | `/api/badge/ui` |
-| Nuxt Icon | `/api/badge/icon` |
-| Nuxt Image | `/api/badge/image` |
-| Pinia | `/api/badge/pinia` |
-
-## Badge Colors
-
-The badge color reflects the health score:
-
-| Score | Color |
-|-------|-------|
-| 80-100 | Green |
-| 60-79 | Light Green |
-| 40-59 | Yellow |
-| 20-39 | Orange |
-| 0-19 | Red |
-
-## API Endpoint
-
-The badge data comes from:
+### Endpoint
 
 ```
-GET https://nuxt.care/api/badge/{module-name}
+GET https://nuxt.care/api/v1/badge
 ```
 
-Response (shields.io endpoint schema):
+### Query Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `module` | * | Module name as shown on nuxt.care |
+| `package` | * | npm package name (alternative to module) |
+| `mode` | | `score` (default) = "85/100", `status` = "stable" |
+
+\* Either `module` or `package` is required.
+
+### Response
 
 ```json
 {
   "schemaVersion": 1,
   "label": "nuxt.care",
   "message": "85/100",
-  "color": "brightgreen"
+  "color": "green"
 }
+```
+
+### Colors & Status
+
+| Score | Color | Status |
+|-------|-------|--------|
+| 90+ | brightgreen | optimal |
+| 70-89 | green | stable |
+| 40-69 | yellow | degraded |
+| <40 | red | critical |
+
+## Display Modes
+
+**Score (default):** Shows numeric score
+```
+/api/v1/badge?module=icon → "85/100"
+```
+
+**Status:** Shows status label
+```
+/api/v1/badge?module=icon&mode=status → "stable"
 ```
 
 ## Badge Styles
 
-You can customize the badge style using shields.io parameters:
+Customize with shields.io parameters:
 
 ```markdown
-<!-- Flat style (default) -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon)
+<!-- Flat (default) -->
+![](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=icon)
 
 <!-- Flat square -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon&style=flat-square)
+![](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=icon&style=flat-square)
 
 <!-- For the badge -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon&style=for-the-badge)
-
-<!-- Plastic -->
-![health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon&style=plastic)
+![](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=icon&style=for-the-badge)
 ```
 
 See [shields.io styles](https://shields.io/badges/endpoint-badge) for more options.
+
+---
+
+## Migration from Old API
+
+::callout{type="error"}
+**DEPRECATED:** `/api/badge/{module}` is deprecated and will be removed!
+::
+
+If you're using the old format, update your badges:
+
+| Old (deprecated) | New |
+|------------------|-----|
+| `/api/badge/icon` | `/api/v1/badge?module=icon` |
+| `/api/badge/pinia` | `/api/v1/badge?module=pinia` |
+| `/api/badge/@pinia/nuxt` | `/api/v1/badge?package=@pinia/nuxt` |
+
+**Before:**
+```markdown
+![](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon)
+```
+
+**After:**
+```markdown
+![](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=icon)
+```
