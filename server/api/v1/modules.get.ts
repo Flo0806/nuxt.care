@@ -1,19 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { ModuleData, ModuleSlim, ModuleStatus } from '~~/shared/types/modules'
-import { calculateHealth } from '../../utils/health'
+import { calculateHealth, scoreToStatus } from '../../utils/health'
 
 // GET /api/v1/modules - all modules (sorted by score)
 // GET /api/v1/modules?package=a&package=b - specific modules by npm package
 // GET /api/v1/modules?slim=true - slim format for devtools
 // GET /api/v1/modules?slim=true&badge=inline|dataurl|url
-
-function scoreToStatus(score: number): ModuleStatus {
-  if (score >= 90) return 'optimal'
-  if (score >= 70) return 'stable'
-  if (score >= 40) return 'degraded'
-  return 'critical'
-}
 
 // Cache badges in memory
 const badgeCache = new Map<ModuleStatus, string>()

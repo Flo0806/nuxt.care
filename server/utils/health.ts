@@ -101,3 +101,23 @@ export function calculateHealth(data: ModuleData): HealthScore {
 }
 
 const fmt = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n)
+
+export function scoreToStatus(score: number): ModuleStatus {
+  if (!score) return 'unknown'
+  if (score >= 90) return 'optimal'
+  if (score >= 70) return 'stable'
+  if (score >= 40) return 'degraded'
+  return 'critical'
+}
+
+export const statusColors: Record<ModuleStatus, string> = {
+  optimal: '#22c55e',
+  stable: '#84cc16',
+  degraded: '#eab308',
+  critical: '#ef4444',
+  unknown: '#6b7280',
+}
+
+export const getStatusColor = (score: number): string => {
+  return statusColors[scoreToStatus(score)]
+}

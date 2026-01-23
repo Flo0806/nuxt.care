@@ -194,7 +194,7 @@ export interface HealthScore {
   signals: HealthSignal[]
 }
 
-export type ModuleStatus = 'optimal' | 'stable' | 'degraded' | 'critical'
+export type ModuleStatus = 'optimal' | 'stable' | 'degraded' | 'critical' | 'unknown'
 
 export interface ModuleSlim {
   name: string
