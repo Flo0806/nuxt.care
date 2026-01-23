@@ -37,9 +37,11 @@ Show your module's health score in your README:
 
 Replace `YOUR-MODULE` with your module name as shown on nuxt.care (e.g., `icon`, `image`).
 
+> For multiple params don't forget to encode your URL like `[![nuxt.care health](https://img.shields.io/endpoint?url=https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fmode%3Dhealth%26package%3D%40nuxt%2Fui)](https://nuxt.care/?search=ui)`
+
 **Example:**
 
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/icon)](https://nuxt.care/?search=icon)
+[![nuxt.care health](https://img.shields.io/endpoint?url=https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fmode%3Dhealth%26package%3D%40nuxt%2Fui)](https://nuxt.care/?search=ui)       
 
 ---
 
