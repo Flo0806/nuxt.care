@@ -64,8 +64,6 @@ describe('Badge API Integration', async () => {
     await $fetch('/api/_test/seed', {
       method: 'POST',
       body: { modules: [mockModule] },
-    }).catch(() => {
-      // Seed endpoint might not exist in production build
     })
   })
 

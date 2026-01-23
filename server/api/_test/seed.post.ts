@@ -2,8 +2,8 @@ import type { ModuleData } from '~~/shared/types/modules'
 
 // Test-only endpoint to seed KV with mock data
 export default defineEventHandler(async (event) => {
-  // Only allow in test/development
-  if (process.env.NODE_ENV === 'production') {
+  // Only allow when running tests
+  if (!process.env.VITEST) {
     throw createError({ statusCode: 404, message: 'Not found' })
   }
 
