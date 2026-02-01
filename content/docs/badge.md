@@ -26,13 +26,61 @@ Replace `YOUR-MODULE` with your module's name as shown on nuxt.care.
 
 **Nuxt Icon:**
 ```markdown
-[![nuxt.care](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=icon)](https://nuxt.care/?search=icon)
+[![nuxt.care](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?module=icon)](https://nuxt.care/?search=npm:@nuxt/icon)
 ```
 
 **Pinia (by npm package):**
 ```markdown
-[![nuxt.care](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?package=@pinia/nuxt)](https://nuxt.care/?search=pinia)
+[![nuxt.care](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?package=@pinia/nuxt)](https://nuxt.care/?search=npm:@pinia/nuxt)
 ```
+
+## Search Parameter
+
+Use `search=npm:PACKAGE` to link directly to a module by its exact npm package name:
+
+| Search | Result |
+|--------|--------|
+| `?search=npm:@nuxt/icon` | Exact match for `@nuxt/icon` |
+| `?search=npm:@pinia/nuxt` | Exact match for `@pinia/nuxt` |
+| `?search=icon` | Fuzzy search, may return multiple results |
+
+The `npm:` prefix ensures the link goes directly to the correct module.
+
+## URL Encoding for shields.io
+
+::callout{type="warning"}
+**Important:** shields.io requires the entire `url` parameter to be URL-encoded!
+::
+
+When using the `package` parameter with scoped packages (like `@nuxt/ui`), you must encode the URL:
+
+| Character | Encoded |
+|-----------|---------|
+| `@` | `%40` |
+| `/` | `%2F` |
+| `:` | `%3A` |
+| `?` | `%3F` |
+| `&` | `%26` |
+| `=` | `%3D` |
+
+**Example for @nuxt/ui:**
+
+Unencoded (won't work in shields.io):
+```
+https://nuxt.care/api/v1/badge?package=@nuxt/ui
+```
+
+Encoded (correct):
+```
+https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fpackage%3D%40nuxt%2Fui
+```
+
+Full badge markdown:
+```markdown
+[![nuxt.care](https://img.shields.io/endpoint?url=https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fpackage%3D%40nuxt%2Fui)](https://nuxt.care/?search=npm:@nuxt/ui)
+```
+
+Use an [online URL encoder](https://www.urlencoder.org/) to encode your URLs.
 
 ## API Reference
 

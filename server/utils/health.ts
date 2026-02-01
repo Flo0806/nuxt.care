@@ -40,7 +40,22 @@ export function calculateHealth(data: ModuleData): HealthScore {
   add(trustPts === 5 ? 'positive' : 'info', trustMsg, trustPts, 5)
 
   // Quality (30)
-  add(data.npm?.hasTests ? 'positive' : 'warning', data.npm?.hasTests ? 'Has tests' : 'No tests', data.npm?.hasTests ? 12 : 0, 12)
+  // Test detection: combine devDeps/scripts (hasTests) with actual test files
+  const hasTestTools = data.npm?.hasTests
+  const hasTestFiles = data.testFiles?.hasTestFiles
+  if (hasTestTools && hasTestFiles) {
+    add('positive', `Has tests (${data.testFiles?.testFileCount} files)`, 12, 12)
+  }
+  else if (hasTestTools && hasTestFiles === false) {
+    add('warning', 'Test tools installed, no test files', 4, 12)
+  }
+  else if (hasTestTools) {
+    // testFiles not checked yet (old sync data)
+    add('positive', 'Has tests', 12, 12)
+  }
+  else {
+    add('warning', 'No tests', 0, 12)
+  }
   add(data.npm?.hasTypes ? 'positive' : 'warning', data.npm?.hasTypes ? 'TypeScript support' : 'No TypeScript', data.npm?.hasTypes ? 10 : 0, 10)
   add(data.github?.license ? 'positive' : 'warning', data.github?.license ? `License: ${data.github.license}` : 'No license', data.github?.license ? 5 : 0, 5)
 
