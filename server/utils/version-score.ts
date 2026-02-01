@@ -313,6 +313,8 @@ export function toSlimResponse(full: VersionScoreResponse): VersionScoreSlim {
     // Latest version details
     latestDeprecated: full.latestVersionInfo ? !!full.latestVersionInfo.deprecated : null,
     latestVulnCount: full.latestVulnerabilities?.count ?? null,
+    latestHasTests: full.latestVersionInfo?.hasTests ?? null,
+    latestHasTypes: full.latestVersionInfo?.hasTypes ?? null,
     // Repo-level info
     ciPassing: full.repoInfo?.ciPassing ?? null,
   }

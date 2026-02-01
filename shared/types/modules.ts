@@ -262,6 +262,8 @@ export interface VersionScoreSlim {
   // Latest version details (for comparison)
   latestDeprecated: boolean | null
   latestVulnCount: number | null
+  latestHasTests: boolean | null
+  latestHasTypes: boolean | null
   // Repo-level info
   ciPassing: boolean | null
 }
