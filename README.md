@@ -32,16 +32,44 @@
 Show your module's health score in your README:
 
 ```markdown
-[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/badge/YOUR-MODULE)](https://nuxt.care/?search=YOUR-MODULE)
+[![nuxt.care health](https://img.shields.io/endpoint?url=https://nuxt.care/api/v1/badge?package=YOUR-PACKAGE)](https://nuxt.care/?search=npm:YOUR-PACKAGE)
 ```
 
-Replace `YOUR-MODULE` with your module name as shown on nuxt.care (e.g., `icon`, `image`).
+Replace `YOUR-PACKAGE` with your npm package name (e.g., `@nuxt/icon`, `@pinia/nuxt`).
 
-> For multiple params don't forget to encode your URL like `[![nuxt.care health](https://img.shields.io/endpoint?url=https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fmode%3Dhealth%26package%3D%40nuxt%2Fui)](https://nuxt.care/?search=ui)`
+### Search Parameter
 
-**Example:**
+Use `search=npm:PACKAGE` to search exactly by npm package name:
+- `?search=npm:@nuxt/icon` - finds exactly `@nuxt/icon`
+- `?search=icon` - fuzzy search, may return multiple results
 
-[![nuxt.care health](https://img.shields.io/endpoint?url=https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fmode%3Dhealth%26package%3D%40nuxt%2Fui)](https://nuxt.care/?search=ui)       
+### URL Encoding for shields.io
+
+**Important:** shields.io requires URL-encoded parameters. Use an [URL encoder](https://www.urlencoder.org/) or encode manually:
+
+| Character | Encoded |
+|-----------|---------|
+| `:` | `%3A` |
+| `/` | `%2F` |
+| `@` | `%40` |
+| `?` | `%3F` |
+| `&` | `%26` |
+| `=` | `%3D` |
+
+**Example with @nuxt/ui:**
+
+```markdown
+[![nuxt.care health](https://img.shields.io/endpoint?url=https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fpackage%3D%40nuxt%2Fui)](https://nuxt.care/?search=npm:@nuxt/ui)
+```
+
+[![nuxt.care health](https://img.shields.io/endpoint?url=https%3A%2F%2Fnuxt.care%2Fapi%2Fv1%2Fbadge%3Fpackage%3D%40nuxt%2Fui)](https://nuxt.care/?search=npm:@nuxt/ui)
+
+### Badge Modes
+
+| Mode | URL | Shows |
+|------|-----|-------|
+| Score (default) | `?package=@nuxt/ui` | `85/100` |
+| Status | `?package=@nuxt/ui&mode=status` | `Stable` |       
 
 ---
 

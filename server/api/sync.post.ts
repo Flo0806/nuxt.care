@@ -146,6 +146,7 @@ function createErrorModule(mod: NuxtApiModule, err: unknown): ModuleData {
     release: null,
     oldestIssue: null,
     contributors: null,
+    testFiles: null,
     readme: null,
     ciStatus: null,
     pendingCommits: null,
@@ -180,6 +181,7 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
     release: null,
     oldestIssue: null,
     contributors: null,
+    testFiles: null,
     readme: null,
     ciStatus: null,
     pendingCommits: null,
@@ -224,6 +226,14 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
 
       if (contributors) {
         data.contributors = contributors
+      }
+
+      // Check for actual test files in repo
+      if (github) {
+        const testFiles = await fetchHasTestFiles(repoPath, github.defaultBranch, githubToken)
+        if (testFiles) {
+          data.testFiles = testFiles
+        }
       }
     }
   }

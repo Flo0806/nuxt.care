@@ -179,9 +179,9 @@
       <UTooltip :text="testsTooltip">
         <div class="flex items-center gap-1.5 cursor-help">
           <UIcon
-            :name="hasTests ? 'i-lucide-check-circle' : 'i-lucide-x-circle'"
+            :name="testsIcon"
             class="w-4 h-4"
-            :class="hasTests ? 'text-green-600' : 'text-red-600'"
+            :class="testsIconColor"
           />
           <span class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
             Tests
@@ -418,12 +418,44 @@ const sizeTooltip = computed(() => {
   return `${formatBytes(size)} unpacked (node_modules)`
 })
 
-// Tests
-const hasTests = computed(() => props.module.npm?.hasTests ?? false)
+// Tests - 3 states: hasTools + hasFiles, hasTools + noFiles, noTools
+const hasTestTools = computed(() => props.module.npm?.hasTests ?? false)
+const hasTestFiles = computed(() => props.module.testFiles?.hasTestFiles)
+const testFileCount = computed(() => props.module.testFiles?.testFileCount ?? 0)
+
+const testsStatus = computed<'full' | 'tools-only' | 'none'>(() => {
+  if (!hasTestTools.value) return 'none'
+  if (hasTestFiles.value === false) return 'tools-only'
+  return 'full' // hasTestFiles is true or undefined (not synced yet)
+})
+
+const testsIcon = computed(() => {
+  switch (testsStatus.value) {
+    case 'full': return 'i-lucide-check-circle'
+    case 'tools-only': return 'i-lucide-alert-circle'
+    default: return 'i-lucide-x-circle'
+  }
+})
+
+const testsIconColor = computed(() => {
+  switch (testsStatus.value) {
+    case 'full': return 'text-green-600'
+    case 'tools-only': return 'text-yellow-600'
+    default: return 'text-red-600'
+  }
+})
+
 const testsTooltip = computed(() => {
-  return hasTests.value
-    ? 'Test script found in package.json'
-    : 'No test script found'
+  switch (testsStatus.value) {
+    case 'full':
+      return testFileCount.value > 0
+        ? `${testFileCount.value} test files found`
+        : 'Test tools installed'
+    case 'tools-only':
+      return 'Test tools installed but no test files found'
+    default:
+      return 'No test tools or files found'
+  }
 })
 
 // CI Status

@@ -17,6 +17,7 @@ export interface ModuleData {
   release: ReleaseInfo | null
   oldestIssue: OldestIssue | null
   contributors: ContributorsInfo | null
+  testFiles: TestFilesInfo | null
   readme: ReadmeAnalysis | null
   ciStatus: CIStatusInfo | null
   pendingCommits: PendingCommitsInfo | null
@@ -98,6 +99,12 @@ export interface ContributorsInfo {
   commitsLastYear: number
   uniqueContributors: number
   contributors: string[]
+}
+
+export interface TestFilesInfo {
+  hasTestFiles: boolean
+  testFileCount: number
+  sampleFiles: string[]
 }
 
 export interface ReadmeAnalysis {
@@ -215,6 +222,76 @@ export interface SyncMeta {
   error: string | null
 }
 
+// Version-specific score types
+export interface VersionScoreResponse {
+  name: string
+  npm: string
+  version: string
+  latestVersion: string
+  isLatest: boolean
+  score: number
+  latestScore: number | null
+  status: ModuleStatus
+  latestStatus: ModuleStatus | null
+  signals: HealthSignal[]
+  versionInfo: VersionInfo
+  vulnerabilities: VulnerabilityInfo | null
+  recommendation: 'upgrade' | 'ok' | 'avoid'
+  repoInfo: RepoInfo | null
+}
+
+export interface VersionScoreSlim {
+  name: string
+  npm: string
+  version: string
+  latestVersion: string
+  isLatest: boolean
+  score: number
+  latestScore: number | null
+  status: ModuleStatus
+  recommendation: 'upgrade' | 'ok' | 'avoid'
+}
+
+export interface VersionInfo {
+  deprecated: string | null
+  publishedAt: string | null
+  daysSincePublish: number | null
+  hasTests: boolean
+  hasTypes: boolean
+  peerDeps: Record<string, string> | null
+  nuxtCompat: CompatAnalysis | null
+}
+
+export interface RepoInfo {
+  stars: number
+  archived: boolean
+  license: string | null
+  ciPassing: boolean | null
+  contributors: number
+}
+
+export interface NpmPackument {
+  'name': string
+  'dist-tags': Record<string, string>
+  'versions': Record<string, NpmVersionInfo>
+  'time': Record<string, string>
+}
+
+export interface NpmVersionInfo {
+  version: string
+  deprecated?: string
+  scripts?: Record<string, string>
+  types?: string
+  typings?: string
+  exports?: Record<string, unknown>
+  devDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
+  dist?: {
+    unpackedSize?: number
+    fileCount?: number
+  }
+}
+
 // Nuxt API response types
 export interface NuxtApiModule {
   name: string
@@ -268,6 +345,19 @@ export interface GitHubWorkflowRunsResponse {
     conclusion: string | null
     updated_at: string
   }>
+}
+
+export interface GitHubTreeResponse {
+  sha: string
+  url: string
+  tree: Array<{
+    path: string
+    mode: string
+    type: 'blob' | 'tree'
+    sha: string
+    size?: number
+  }>
+  truncated: boolean
 }
 
 // OSV API types
