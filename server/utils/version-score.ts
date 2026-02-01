@@ -52,13 +52,15 @@ export async function calculateVersionScore(
   // Calculate latest score for comparison (if not already latest)
   let latestScore: number | null = null
   let latestStatus: ModuleStatus | null = null
+  let latestVersionInfoData: VersionInfo | null = null
+  let latestVulnerabilities: VulnerabilityInfo | null = null
 
   if (latestVersion && requestedVersion !== latestVersion) {
-    const latestVersionInfo = extractVersionInfo(packument, latestVersion)
-    const latestVulns = await fetchVulnerabilitiesForVersion(pkg, latestVersion)
+    latestVersionInfoData = extractVersionInfo(packument, latestVersion)
+    latestVulnerabilities = await fetchVulnerabilitiesForVersion(pkg, latestVersion)
 
-    if (latestVersionInfo) {
-      latestScore = calculateHealthForVersion(latestVersionInfo, latestVulns, repoInfo, cachedModule)
+    if (latestVersionInfoData) {
+      latestScore = calculateHealthForVersion(latestVersionInfoData, latestVulnerabilities, repoInfo, cachedModule)
       latestStatus = scoreToStatus(latestScore)
     }
   }
@@ -82,6 +84,8 @@ export async function calculateVersionScore(
     signals: buildSignals(versionInfo, vulnerabilities, repoInfo, cachedModule),
     versionInfo,
     vulnerabilities,
+    latestVulnerabilities,
+    latestVersionInfo: latestVersionInfoData,
     recommendation,
     repoInfo,
   }
@@ -298,7 +302,19 @@ export function toSlimResponse(full: VersionScoreResponse): VersionScoreSlim {
     score: full.score,
     latestScore: full.latestScore,
     status: full.status,
+    latestStatus: full.latestStatus,
     recommendation: full.recommendation,
+    // Current version details
+    deprecated: !!full.versionInfo.deprecated,
+    vulnCount: full.vulnerabilities?.count ?? 0,
+    hasTests: full.versionInfo.hasTests,
+    hasTypes: full.versionInfo.hasTypes,
+    daysSincePublish: full.versionInfo.daysSincePublish,
+    // Latest version details
+    latestDeprecated: full.latestVersionInfo ? !!full.latestVersionInfo.deprecated : null,
+    latestVulnCount: full.latestVulnerabilities?.count ?? null,
+    // Repo-level info
+    ciPassing: full.repoInfo?.ciPassing ?? null,
   }
 }
 

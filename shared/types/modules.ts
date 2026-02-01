@@ -236,6 +236,8 @@ export interface VersionScoreResponse {
   signals: HealthSignal[]
   versionInfo: VersionInfo
   vulnerabilities: VulnerabilityInfo | null
+  latestVulnerabilities: VulnerabilityInfo | null
+  latestVersionInfo: VersionInfo | null
   recommendation: 'upgrade' | 'ok' | 'avoid'
   repoInfo: RepoInfo | null
 }
@@ -249,7 +251,19 @@ export interface VersionScoreSlim {
   score: number
   latestScore: number | null
   status: ModuleStatus
+  latestStatus: ModuleStatus | null
   recommendation: 'upgrade' | 'ok' | 'avoid'
+  // Current version details
+  deprecated: boolean
+  vulnCount: number
+  hasTests: boolean
+  hasTypes: boolean
+  daysSincePublish: number | null
+  // Latest version details (for comparison)
+  latestDeprecated: boolean | null
+  latestVulnCount: number | null
+  // Repo-level info
+  ciPassing: boolean | null
 }
 
 export interface VersionInfo {
