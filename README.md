@@ -237,7 +237,13 @@ To enable "Login with GitHub" and starring:
 
 nuxt.care is **free and open source**. If it helps you make better decisions about your Nuxt modules, consider supporting development:
 
-<a href="https://www.buymeacoffee.com/flo0806" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="40"></a>
+<a href="https://github.com/sponsors/Flo0806"><img src="https://img.shields.io/badge/Sponsor-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub"></a>
+<a href="https://www.buymeacoffee.com/flo0806" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="28"></a>
+
+### Sponsors
+
+<!-- sponsors -->
+<!-- sponsors -->
 
 ## License
 

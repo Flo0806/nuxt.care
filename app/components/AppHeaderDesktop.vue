@@ -83,6 +83,19 @@
       >
         Syncing {{ syncStatus.syncedModules }}/{{ syncStatus.totalModules }}
       </UBadge>
+      <UTooltip text="Sponsor this project">
+        <a
+          href="https://github.com/sponsors/Flo0806"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-center w-8 h-8 rounded-md text-pink-500 hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors"
+        >
+          <UIcon
+            name="i-lucide-heart"
+            class="w-5 h-5"
+          />
+        </a>
+      </UTooltip>
       <AuthButton />
       <UColorModeButton />
     </div>

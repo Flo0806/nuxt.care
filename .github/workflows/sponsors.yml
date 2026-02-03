@@ -1,0 +1,28 @@
+name: Update Sponsors
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  sponsors:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update Sponsors in README
+        uses: JamesIves/github-sponsors-readme-action@v1
+        with:
+          token: ${{ secrets.PAT }}
+          file: README.md
+          marker: sponsors
+          template: '<a href="https://github.com/{{{ login }}}"><img src="https://github.com/{{{ login }}}.png" width="50" height="50" alt="{{{ name }}}" /></a>'
+          fallback: 'Be the first to sponsor!'
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'docs: update sponsors'
+          file_pattern: README.md
