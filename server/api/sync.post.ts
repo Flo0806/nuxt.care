@@ -79,6 +79,7 @@ async function runSync(startedAt: string): Promise<void> {
         await updateProgress(startedAt, totalModules, i)
       }
 
+      if (!mod) continue
       try {
         const moduleData = await fetchModuleData(mod, githubToken)
         results.push(moduleData)

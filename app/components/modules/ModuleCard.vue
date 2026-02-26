@@ -295,7 +295,7 @@
           </UTooltip>
           <UTooltip text="Open on Nuxt (Modules)">
             <a
-              :href="`https://www.nuxt.com/module/${module.name}`"
+              :href="`https://www.nuxt.com/modules/${module.name}`"
               target="_blank"
               rel="noopener noreferrer"
               :aria-label="`Open ${module.name} on npm`"
