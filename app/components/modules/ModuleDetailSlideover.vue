@@ -493,7 +493,7 @@
             <!-- npm Details -->
             <UAccordion
               v-if="module.npm"
-              :items="[{ label: 'npm', slot: 'npm' }]"
+              :items="[{ label: 'npmx', slot: 'npm' }]"
             >
               <template #npm>
                 <div class="space-y-3 text-sm">
@@ -663,14 +663,14 @@
             color="neutral"
             variant="soft"
             size="sm"
-            :to="`https://www.npmjs.com/package/${module.npmPackage}`"
+            :to="`https://www.npmx.dev/package/${module.npmPackage}`"
             target="_blank"
           >
             <UIcon
               name="i-lucide-package"
               class="w-4 h-4"
             />
-            npm
+            npmx
           </UButton>
           <UButton
             color="neutral"

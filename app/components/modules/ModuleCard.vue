@@ -278,9 +278,9 @@
               />
             </a>
           </UTooltip>
-          <UTooltip text="Open on npm">
+          <UTooltip text="Open on npmx">
             <a
-              :href="`https://www.npmjs.com/package/${module.npmPackage}`"
+              :href="`https://www.npmx.dev/package/${module.npmPackage}`"
               target="_blank"
               rel="noopener noreferrer"
               :aria-label="`Open ${module.name} on npm`"
@@ -289,6 +289,21 @@
             >
               <UIcon
                 name="i-lucide-package"
+                class="w-4 h-4"
+              />
+            </a>
+          </UTooltip>
+          <UTooltip text="Open on Nuxt (Modules)">
+            <a
+              :href="`https://www.nuxt.com/module/${module.name}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              :aria-label="`Open ${module.name} on npm`"
+              class="text-neutral-400 hover:text-red-500 transition-colors"
+              @click.stop
+            >
+              <UIcon
+                name="i-lucide-box"
                 class="w-4 h-4"
               />
             </a>
