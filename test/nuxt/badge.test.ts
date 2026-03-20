@@ -23,6 +23,7 @@ function createModule(overrides: Partial<ModuleData> = {}): ModuleData {
     contributors: null,
     readme: null,
     ciStatus: null,
+    testFiles: null,
     pendingCommits: null,
     npm: null,
     keywords: null,
@@ -64,6 +65,7 @@ const goodModule = createModule({
     license: 'MIT',
   },
   vulnerabilities: { count: 0, critical: 0, high: 0, medium: 0, low: 0, vulnerabilities: [] },
+  testFiles: null,
   pendingCommits: { total: 0, nonChore: 0, commits: [] },
   topics: { hasNuxt4: true, hasNuxt3: true, hasNuxt2: false, isNuxtModule: true, all: ['nuxt4'] },
   nuxtApiCompat: { supports4: true, supports3: true, raw: '>=3.0.0' },
@@ -99,6 +101,7 @@ const mediumModule = createModule({
     license: 'MIT',
   },
   vulnerabilities: { count: 0, critical: 0, high: 0, medium: 0, low: 0, vulnerabilities: [] },
+  testFiles: null,
   pendingCommits: { total: 2, nonChore: 1, commits: [] },
 })
 
