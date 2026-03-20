@@ -769,28 +769,6 @@ const activityColor = computed(() => {
   return 'text-red-700 dark:text-red-400'
 })
 
-function formatNumber(num: number | undefined | null): string {
-  if (num === undefined || num === null) return '-'
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
-  if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`
-  return String(num)
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString()
-}
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return `${d.getDate()}.${d.getMonth() + 1}`
-}
 
 // CI Status
 const ciIcon = computed(() => {
