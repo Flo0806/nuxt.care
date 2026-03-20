@@ -1,3 +1,5 @@
+import { saveSnapshots } from '../utils/history'
+
 export default defineEventHandler(async (event) => {
   const meta = await kv.get<SyncMetaWithServerId>('sync:meta') || getDefaultMeta()
 
@@ -96,6 +98,11 @@ async function runSync(startedAt: string): Promise<void> {
     const duration = Date.now() - new Date(startedAt).getTime()
 
     await kv.set('modules:all', results)
+
+    // Save daily history snapshots (max 1 per day)
+    const { saved, skipped } = await saveSnapshots(results)
+    console.log(`[sync] History: ${saved} snapshots saved, ${skipped} skipped (already today)`)
+
     await kv.set('sync:meta', {
       lastSync: new Date().toISOString(),
       isRunning: false,
@@ -159,7 +166,7 @@ function createErrorModule(mod: NuxtApiModule, err: unknown): ModuleData {
     vulnerabilities: null,
     health: {
       score: 0,
-      signals: [{ type: 'negative', msg: `Fetch failed: ${String(err)}`, points: 0, maxPoints: 100 }],
+      signals: [{ key: 'error', type: 'negative', msg: `Fetch failed: ${String(err)}`, points: 0, maxPoints: 100 }],
     },
   }
 }
