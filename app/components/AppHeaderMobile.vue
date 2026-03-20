@@ -28,6 +28,8 @@
               ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
               : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'"
             :disabled="starLoading"
+            :aria-label="starLoading ? 'Loading star status' : hasStarred ? `Unstar repository, ${stars} stars` : `Star repository, ${stars} stars`"
+            :aria-pressed="isLoggedIn ? hasStarred : undefined"
             @click="$emit('star')"
           >
             <UIcon

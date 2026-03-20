@@ -49,19 +49,18 @@ const hasStarred = ref(false)
 const starLoading = ref(true)
 
 onMounted(async () => {
-  try {
-    const data = await $fetch<{ stargazers_count: number }>(`https://api.github.com/repos/${REPO}`)
-    stars.value = data.stargazers_count
+  const countPromise = $fetch<{ stargazers_count: number }>(`https://api.github.com/repos/${REPO}`)
+    .then(data => stars.value = data.stargazers_count)
+    .catch(() => {})
 
-    if (isLoggedIn.value) {
-      const { starred } = await $fetch<{ starred: boolean }>(`/api/stars/${REPO}`)
-      hasStarred.value = starred
-    }
-  }
-  catch { /* ignore */ }
-  finally {
-    starLoading.value = false
-  }
+  const starPromise = isLoggedIn.value
+    ? $fetch<{ starred: boolean }>(`/api/stars/${REPO}`)
+        .then(data => hasStarred.value = data.starred)
+        .catch(() => {})
+    : Promise.resolve()
+
+  await Promise.all([countPromise, starPromise])
+  starLoading.value = false
 })
 
 async function handleStar() {
