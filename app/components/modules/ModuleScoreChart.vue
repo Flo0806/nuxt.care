@@ -259,7 +259,6 @@ function signalLabel(key: string): string {
   return SIGNAL_LABELS[key] || key
 }
 
-
 async function fetchHistory() {
   loading.value = true
   try {

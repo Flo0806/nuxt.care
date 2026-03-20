@@ -769,7 +769,6 @@ const activityColor = computed(() => {
   return 'text-red-700 dark:text-red-400'
 })
 
-
 // CI Status
 const ciIcon = computed(() => {
   const ci = props.module?.ciStatus
