@@ -16,3 +16,36 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+/**
+ * Format a date string as relative time (e.g. "3d ago", "2w ago")
+ */
+export function formatRelative(dateStr: string): string {
+  const ts = new Date(dateStr).getTime()
+  if (!Number.isFinite(ts)) return ''
+  const days = Math.max(0, Math.floor((Date.now() - ts) / 86400000))
+  if (days === 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 7) return `${days}d ago`
+  if (days < 30) return `${Math.floor(days / 7)}w ago`
+  return `${Math.floor(days / 30)}mo ago`
+}
+
+/**
+ * Format a date string as localized date
+ */
+export function formatDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  if (!Number.isFinite(d.getTime())) return ''
+  return d.toLocaleDateString()
+}
+
+/**
+ * Format a date string as short day.month
+ */
+export function formatDateShort(dateStr: string): string {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (!Number.isFinite(d.getTime())) return ''
+  return `${d.getDate()}.${d.getMonth() + 1}`
+}
