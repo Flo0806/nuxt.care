@@ -29,7 +29,7 @@ export async function calculateVersionScore(
 
   // Try to get cached module data for repo-level info
   const allModules = await kv.get<ModuleData[]>('modules:all')
-  const cachedModule = allModules?.find(m => m.npmPackage === pkg)
+  const cachedModule = allModules?.find((m: ModuleData) => m.npmPackage === pkg)
 
   // Build repo info from cache
   const repoInfo: RepoInfo | null = cachedModule
@@ -178,82 +178,82 @@ function buildSignals(
 ): HealthSignal[] {
   const signals: HealthSignal[] = []
 
-  const add = (type: HealthSignal['type'], msg: string, points: number, maxPoints: number) => {
-    signals.push({ type, msg, points, maxPoints })
+  const add = (key: string, type: HealthSignal['type'], msg: string, points: number, maxPoints: number) => {
+    signals.push({ key, type, msg, points, maxPoints })
   }
 
   // Penalties
-  if (versionInfo.deprecated) add('negative', `Deprecated: ${versionInfo.deprecated}`, -50, 0)
-  if (repoInfo?.archived) add('negative', 'Repository archived', -30, 0)
+  if (versionInfo.deprecated) add('deprecated', 'negative', `Deprecated: ${versionInfo.deprecated}`, -50, 0)
+  if (repoInfo?.archived) add('archived', 'negative', 'Repository archived', -30, 0)
 
   const { critical = 0, high = 0 } = vulns || {}
-  if (critical > 0) add('negative', `${critical} critical vulnerabilities`, -40, 0)
-  else if (high > 0) add('negative', `${high} high vulnerabilities`, -20, 0)
+  if (critical > 0) add('vulns-penalty', 'negative', `${critical} critical vulnerabilities`, -40, 0)
+  else if (high > 0) add('vulns-penalty', 'negative', `${high} high vulnerabilities`, -20, 0)
 
   // Security (15)
-  if (vulns?.count === 0) add('positive', 'No vulnerabilities', 15, 15)
-  else if (vulns) add('warning', `${vulns.count} vulnerabilities`, 0, 15)
-  else add('info', 'Vulnerability status unknown', 0, 15)
+  if (vulns?.count === 0) add('security', 'positive', 'No vulnerabilities', 15, 15)
+  else if (vulns) add('security', 'warning', `${vulns.count} vulnerabilities`, 0, 15)
+  else add('security', 'info', 'Vulnerability status unknown', 0, 15)
 
   // Trust (5)
   const trustMap = { 'official': [5, 'Official Nuxt module'], 'community': [3, 'Community module'], '3rd-party': [0, '3rd-party module'] } as const
   const [trustPts, trustMsg] = trustMap[cachedModule?.type || '3rd-party'] || [0, '3rd-party module']
-  add(trustPts === 5 ? 'positive' : 'info', trustMsg, trustPts, 5)
+  add('trust', trustPts === 5 ? 'positive' : 'info', trustMsg, trustPts, 5)
 
   // Quality (30)
   const hasTestTools = versionInfo.hasTests
   const hasTestFiles = cachedModule?.testFiles?.hasTestFiles
   if (hasTestTools && hasTestFiles) {
-    add('positive', `Has tests (${cachedModule?.testFiles?.testFileCount} files)`, 12, 12)
+    add('tests', 'positive', `Has tests (${cachedModule?.testFiles?.testFileCount} files)`, 12, 12)
   }
   else if (hasTestTools && hasTestFiles === false) {
-    add('warning', 'Test tools installed, no test files', 4, 12)
+    add('tests', 'warning', 'Test tools installed, no test files', 4, 12)
   }
   else if (hasTestTools) {
-    add('positive', 'Has tests', 12, 12)
+    add('tests', 'positive', 'Has tests', 12, 12)
   }
   else {
-    add('warning', 'No tests', 0, 12)
+    add('tests', 'warning', 'No tests', 0, 12)
   }
-  add(versionInfo.hasTypes ? 'positive' : 'warning', versionInfo.hasTypes ? 'TypeScript support' : 'No TypeScript', versionInfo.hasTypes ? 10 : 0, 10)
-  add(repoInfo?.license ? 'positive' : 'warning', repoInfo?.license ? `License: ${repoInfo.license}` : 'No license', repoInfo?.license ? 5 : 0, 5)
+  add('types', versionInfo.hasTypes ? 'positive' : 'warning', versionInfo.hasTypes ? 'TypeScript support' : 'No TypeScript', versionInfo.hasTypes ? 10 : 0, 10)
+  add('license', repoInfo?.license ? 'positive' : 'warning', repoInfo?.license ? `License: ${repoInfo.license}` : 'No license', repoInfo?.license ? 5 : 0, 5)
 
-  if (repoInfo?.ciPassing === true) add('positive', 'CI passing', 3, 3)
-  else if (repoInfo?.ciPassing === false) add('negative', 'CI failing', 0, 3)
-  else add('info', 'No CI info', 0, 3)
+  if (repoInfo?.ciPassing === true) add('ci', 'positive', 'CI passing', 3, 3)
+  else if (repoInfo?.ciPassing === false) add('ci', 'negative', 'CI failing', 0, 3)
+  else add('ci', 'info', 'No CI info', 0, 3)
 
   // Maintenance (35)
   const days = versionInfo.daysSincePublish
-  if (days == null) add('warning', 'Publish date unknown', 0, 20)
-  else if (days < 90) add('positive', `Published ${days}d ago`, 20, 20)
-  else if (days < 365) add('info', `Published ${Math.floor(days / 30)}mo ago`, 12, 20)
-  else add('warning', `Published ${Math.floor(days / 365)}y ago`, 5, 20)
+  if (days == null) add('freshness', 'warning', 'Publish date unknown', 0, 20)
+  else if (days < 90) add('freshness', 'positive', `Published ${days}d ago`, 20, 20)
+  else if (days < 365) add('freshness', 'info', `Published ${Math.floor(days / 30)}mo ago`, 12, 20)
+  else add('freshness', 'warning', `Published ${Math.floor(days / 365)}y ago`, 5, 20)
 
   const pending = cachedModule?.pendingCommits?.nonChore ?? null
-  if (pending === 0) add('positive', 'All changes released', 15, 15)
-  else if (pending == null) add('info', 'Release status unknown', 0, 15)
-  else add('warning', `${pending} pending commits`, pending <= 5 ? 8 : 3, 15)
+  if (pending === 0) add('pending', 'positive', 'All changes released', 15, 15)
+  else if (pending == null) add('pending', 'info', 'Release status unknown', 0, 15)
+  else add('pending', 'warning', `${pending} pending commits`, pending <= 5 ? 8 : 3, 15)
 
   // Nuxt 4 (15)
   if (versionInfo.nuxtCompat?.supports4) {
-    add('positive', 'Nuxt 4 compatible (peerDeps)', 15, 15)
+    add('nuxt4', 'positive', 'Nuxt 4 compatible (peerDeps)', 15, 15)
   }
   else if (cachedModule?.nuxtApiCompat?.supports4) {
-    add('positive', 'Nuxt 4 compatible', 15, 15)
+    add('nuxt4', 'positive', 'Nuxt 4 compatible', 15, 15)
   }
   else {
     const n4 = [cachedModule?.topics?.hasNuxt4, cachedModule?.keywords?.hasNuxt4, cachedModule?.release?.nuxt4Mentioned].filter(Boolean).length
-    if (n4 >= 2) add('positive', 'Nuxt 4 compatible', 15, 15)
-    else if (n4 === 1) add('info', 'Nuxt 4 partially confirmed', 10, 15)
-    else if (cachedModule?.type === 'official') add('info', 'Nuxt 4: official module', 5, 15)
-    else add('warning', 'Nuxt 4 not confirmed', 0, 15)
+    if (n4 >= 2) add('nuxt4', 'positive', 'Nuxt 4 compatible', 15, 15)
+    else if (n4 === 1) add('nuxt4', 'info', 'Nuxt 4 partially confirmed', 10, 15)
+    else if (cachedModule?.type === 'official') add('nuxt4', 'info', 'Nuxt 4: official module', 5, 15)
+    else add('nuxt4', 'warning', 'Nuxt 4 not confirmed', 0, 15)
   }
 
   // Info only
   if (repoInfo) {
-    signals.push({ type: 'info', msg: `${formatNumber(repoInfo.stars)} stars`, points: 0, maxPoints: 0 })
+    signals.push({ key: 'stars', type: 'info', msg: `${formatNumber(repoInfo.stars)} stars`, points: 0, maxPoints: 0 })
     if (repoInfo.contributors > 0) {
-      signals.push({ type: 'info', msg: `${repoInfo.contributors} contributors`, points: 0, maxPoints: 0 })
+      signals.push({ key: 'contributors', type: 'info', msg: `${repoInfo.contributors} contributors`, points: 0, maxPoints: 0 })
     }
   }
 

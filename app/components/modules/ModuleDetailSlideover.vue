@@ -179,16 +179,16 @@
               </div>
 
               <!-- CI Status -->
-              <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
+              <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden">
                 <div class="flex items-center gap-2 mb-1">
                   <UIcon
                     :name="ciIcon"
-                    class="w-4 h-4"
+                    class="w-4 h-4 shrink-0"
                     :class="ciColor"
                   />
                   <span class="text-sm font-medium">CI</span>
                 </div>
-                <p class="text-xs text-neutral-500">
+                <p class="text-xs text-neutral-500 line-clamp-2">
                   {{ ciLabel }}
                 </p>
                 <a
@@ -255,6 +255,21 @@
                 View full diff on GitHub
               </a>
             </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="border-t border-neutral-200 dark:border-neutral-700" />
+
+          <!-- Score Trend -->
+          <div class="space-y-3">
+            <h3 class="text-sm font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+              <UIcon
+                name="i-lucide-chart-line"
+                class="w-4 h-4 text-primary-500"
+              />
+              Score Trend
+            </h3>
+            <ModulesModuleScoreChart :module-name="module.name" />
           </div>
 
           <!-- Divider -->

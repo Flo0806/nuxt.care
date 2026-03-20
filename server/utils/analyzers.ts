@@ -62,3 +62,15 @@ export function analyzeKeywords(keywords?: string[]): KeywordsAnalysis | null {
     all: keywords,
   }
 }
+
+export function resolveCiPassing(mod: ModuleData): boolean | null {
+  if (mod.ciStatus?.lastRunConclusion === 'success') return true
+  if (mod.ciStatus?.lastRunConclusion === 'failure') return false
+  return null
+}
+
+export function resolveNuxt4Compatible(mod: ModuleData, versionCompat?: CompatAnalysis | null): boolean {
+  if (versionCompat?.supports4 || mod.nuxtApiCompat?.supports4) return true
+  const signals = [mod.topics?.hasNuxt4, mod.keywords?.hasNuxt4, mod.release?.nuxt4Mentioned]
+  return signals.filter(Boolean).length >= 2
+}

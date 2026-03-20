@@ -14,55 +14,55 @@ export function calculateHealth(data: ModuleData): HealthScore {
   let score = 0
   const signals: HealthSignal[] = []
 
-  const add = (type: HealthSignal['type'], msg: string, points: number, maxPoints: number) => {
+  const add = (key: string, type: HealthSignal['type'], msg: string, points: number, maxPoints: number) => {
     score += points
-    signals.push({ type, msg, points, maxPoints })
+    signals.push({ key, type, msg, points, maxPoints })
   }
 
-  const info = (msg: string) => signals.push({ type: 'info', msg, points: 0, maxPoints: 0 })
+  const info = (key: string, msg: string) => signals.push({ key, type: 'info', msg, points: 0, maxPoints: 0 })
 
   // Penalties
-  if (data.npm?.deprecated) add('negative', 'Deprecated', -50, 0)
-  if (data.github?.archived) add('negative', 'Archived', -30, 0)
+  if (data.npm?.deprecated) add('deprecated', 'negative', 'Deprecated', -50, 0)
+  if (data.github?.archived) add('archived', 'negative', 'Archived', -30, 0)
 
   const { critical = 0, high = 0 } = data.vulnerabilities || {}
-  if (critical > 0) add('negative', `${critical} critical vulnerabilities`, -40, 0)
-  else if (high > 0) add('negative', `${high} high vulnerabilities`, -20, 0)
+  if (critical > 0) add('vulns-penalty', 'negative', `${critical} critical vulnerabilities`, -40, 0)
+  else if (high > 0) add('vulns-penalty', 'negative', `${high} high vulnerabilities`, -20, 0)
 
   // Security (15)
-  if (data.vulnerabilities?.count === 0) add('positive', 'No vulnerabilities', 15, 15)
-  else if (data.vulnerabilities) add('warning', 'Has vulnerabilities', 0, 15)
-  else add('info', 'Vulnerability status unknown', 0, 15)
+  if (data.vulnerabilities?.count === 0) add('security', 'positive', 'No vulnerabilities', 15, 15)
+  else if (data.vulnerabilities) add('security', 'warning', 'Has vulnerabilities', 0, 15)
+  else add('security', 'info', 'Vulnerability status unknown', 0, 15)
 
   // Trust (5)
   const trustMap = { 'official': [5, 'Official Nuxt module'], 'community': [3, 'Community module'], '3rd-party': [0, '3rd-party module'] } as const
   const [trustPts, trustMsg] = trustMap[data.type] || [0, '3rd-party module']
-  add(trustPts === 5 ? 'positive' : 'info', trustMsg, trustPts, 5)
+  add('trust', trustPts === 5 ? 'positive' : 'info', trustMsg, trustPts, 5)
 
   // Quality (30)
   // Test detection: combine devDeps/scripts (hasTests) with actual test files
   const hasTestTools = data.npm?.hasTests
   const hasTestFiles = data.testFiles?.hasTestFiles
   if (hasTestTools && hasTestFiles) {
-    add('positive', `Has tests (${data.testFiles?.testFileCount} files)`, 12, 12)
+    add('tests', 'positive', `Has tests (${data.testFiles?.testFileCount} files)`, 12, 12)
   }
   else if (hasTestTools && hasTestFiles === false) {
-    add('warning', 'Test tools installed, no test files', 4, 12)
+    add('tests', 'warning', 'Test tools installed, no test files', 4, 12)
   }
   else if (hasTestTools) {
     // testFiles not checked yet (old sync data)
-    add('positive', 'Has tests', 12, 12)
+    add('tests', 'positive', 'Has tests', 12, 12)
   }
   else {
-    add('warning', 'No tests', 0, 12)
+    add('tests', 'warning', 'No tests', 0, 12)
   }
-  add(data.npm?.hasTypes ? 'positive' : 'warning', data.npm?.hasTypes ? 'TypeScript support' : 'No TypeScript', data.npm?.hasTypes ? 10 : 0, 10)
-  add(data.github?.license ? 'positive' : 'warning', data.github?.license ? `License: ${data.github.license}` : 'No license', data.github?.license ? 5 : 0, 5)
+  add('types', data.npm?.hasTypes ? 'positive' : 'warning', data.npm?.hasTypes ? 'TypeScript support' : 'No TypeScript', data.npm?.hasTypes ? 10 : 0, 10)
+  add('license', data.github?.license ? 'positive' : 'warning', data.github?.license ? `License: ${data.github.license}` : 'No license', data.github?.license ? 5 : 0, 5)
 
   const ci = data.ciStatus
-  if (ci?.hasCI && ci.lastRunConclusion === 'success') add('positive', 'CI passing', 3, 3)
-  else if (ci?.hasCI && ci.lastRunConclusion === 'failure') add('negative', 'CI failing', 0, 3)
-  else add('info', 'No CI', 0, 3)
+  if (ci?.hasCI && ci.lastRunConclusion === 'success') add('ci', 'positive', 'CI passing', 3, 3)
+  else if (ci?.hasCI && ci.lastRunConclusion === 'failure') add('ci', 'negative', 'CI failing', 0, 3)
+  else add('ci', 'info', 'No CI', 0, 3)
 
   // Maintenance (35)
   const days = data.npm?.daysSincePublish
@@ -76,31 +76,31 @@ export function calculateHealth(data: ModuleData): HealthScore {
     && (!ci?.hasCI || ci.lastRunConclusion === 'success')
 
   // Freshness (20)
-  if (days == null) add('warning', 'Publish date unknown', 0, 20)
-  else if (days < 90) add('positive', `Published ${days}d ago`, 20, 20)
-  else if (days < 365) add('info', `Published ${Math.floor(days / 30)}mo ago`, 12, 20)
-  else if (isStable) add('info', `Stable (${Math.floor(days / 365)}y, mature)`, 15, 20)
-  else add('warning', `Published ${Math.floor(days / 365)}y ago`, 5, 20)
+  if (days == null) add('freshness', 'warning', 'Publish date unknown', 0, 20)
+  else if (days < 90) add('freshness', 'positive', `Published ${days}d ago`, 20, 20)
+  else if (days < 365) add('freshness', 'info', `Published ${Math.floor(days / 30)}mo ago`, 12, 20)
+  else if (isStable) add('freshness', 'info', `Stable (${Math.floor(days / 365)}y, mature)`, 15, 20)
+  else add('freshness', 'warning', `Published ${Math.floor(days / 365)}y ago`, 5, 20)
 
   // Pending commits (15)
-  if (pending === 0) add('positive', 'All changes released', 15, 15)
-  else if (pending == null) add('info', 'Release status unknown', 0, 15)
-  else if (activity != null && activity < 90) add('info', `${pending} pending (active)`, 8, 15)
-  else if (activity != null && activity > 365) add('negative', `${pending} pending (abandoned)`, 0, 15)
-  else add('warning', `${pending} pending`, 3, 15)
+  if (pending === 0) add('pending', 'positive', 'All changes released', 15, 15)
+  else if (pending == null) add('pending', 'info', 'Release status unknown', 0, 15)
+  else if (activity != null && activity < 90) add('pending', 'info', `${pending} pending (active)`, 8, 15)
+  else if (activity != null && activity > 365) add('pending', 'negative', `${pending} pending (abandoned)`, 0, 15)
+  else add('pending', 'warning', `${pending} pending`, 3, 15)
 
   // NUXT 4 (15)
   // Official compat declaration is authoritative - full points if declared
   if (data.nuxtApiCompat?.supports4) {
-    add('positive', 'Nuxt 4 compatible', 15, 15)
+    add('nuxt4', 'positive', 'Nuxt 4 compatible', 15, 15)
   }
   else {
     // Fall back to secondary signals (topics, keywords, release notes)
     const n4 = [data.topics?.hasNuxt4, data.keywords?.hasNuxt4, data.release?.nuxt4Mentioned].filter(Boolean).length
-    if (n4 >= 2) add('positive', 'Nuxt 4 compatible', 15, 15)
-    else if (n4 === 1) add('info', 'Nuxt 4 partially confirmed', 10, 15)
-    else if (data.type === 'official') add('info', 'Nuxt 4: official module', 5, 15)
-    else add('warning', 'Nuxt 4 not confirmed', 0, 15)
+    if (n4 >= 2) add('nuxt4', 'positive', 'Nuxt 4 compatible', 15, 15)
+    else if (n4 === 1) add('nuxt4', 'info', 'Nuxt 4 partially confirmed', 10, 15)
+    else if (data.type === 'official') add('nuxt4', 'info', 'Nuxt 4: official module', 5, 15)
+    else add('nuxt4', 'warning', 'Nuxt 4 not confirmed', 0, 15)
   }
 
   // Info only
@@ -108,9 +108,9 @@ export function calculateHealth(data: ModuleData): HealthScore {
   const stars = data.github?.stars || 0
   const contribs = data.contributors?.uniqueContributors || 0
 
-  info(`${fmt(dl)} downloads`)
-  info(`${fmt(stars)} stars`)
-  if (contribs > 0) info(`${contribs} contributor${contribs > 1 ? 's' : ''}`)
+  info('downloads', `${fmt(dl)} downloads`)
+  info('stars', `${fmt(stars)} stars`)
+  if (contribs > 0) info('contributors', `${contribs} contributor${contribs > 1 ? 's' : ''}`)
 
   return { score: Math.max(0, Math.min(100, score)), signals }
 }
