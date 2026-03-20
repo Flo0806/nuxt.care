@@ -56,6 +56,7 @@ function createModule(overrides: Partial<ModuleData> = {}): ModuleData {
     contributors: null,
     readme: null,
     ciStatus: null,
+    testFiles: null,
     pendingCommits: null,
     npm: null,
     keywords: null,

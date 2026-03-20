@@ -30,6 +30,7 @@ const mockModule: ModuleData = {
   contributors: { commitsLastYear: 50, uniqueContributors: 5, contributors: ['posva'] },
   readme: null,
   ciStatus: null,
+  testFiles: null,
   pendingCommits: { total: 0, nonChore: 0, commits: [] },
   npm: {
     name: '@pinia/nuxt',
