@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
   }
 
   const diff = query.diff as string | undefined
-  const days = query.days ? Number(query.days) : undefined
+  const daysRaw = query.days ? Number(query.days) : undefined
+  const days = daysRaw !== undefined && Number.isFinite(daysRaw) && daysRaw > 0 ? daysRaw : undefined
   const from = query.from as string | undefined
   const to = query.to as string | undefined
 

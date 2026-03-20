@@ -29,7 +29,7 @@ export async function calculateVersionScore(
 
   // Try to get cached module data for repo-level info
   const allModules = await kv.get<ModuleData[]>('modules:all')
-  const cachedModule = allModules?.find(m => m.npmPackage === pkg)
+  const cachedModule = allModules?.find((m: ModuleData) => m.npmPackage === pkg)
 
   // Build repo info from cache
   const repoInfo: RepoInfo | null = cachedModule

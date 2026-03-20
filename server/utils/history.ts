@@ -1,4 +1,5 @@
 import { calculateHealth } from './health'
+import { resolveCiPassing, resolveNuxt4Compatible } from './analyzers'
 
 const TODAY_KEY = () => new Date().toISOString().slice(0, 10) // YYYY-MM-DD
 
@@ -28,13 +29,8 @@ export function createSnapshot(mod: ModuleData): ModuleSnapshot {
       vulnCount: mod.vulnerabilities?.count ?? null,
       hasTests: !!(mod.npm?.hasTests && mod.testFiles?.hasTestFiles),
       hasTypes: !!mod.npm?.hasTypes,
-      ciPassing: mod.ciStatus?.lastRunConclusion === 'success'
-        ? true
-        : mod.ciStatus?.lastRunConclusion === 'failure'
-          ? false
-          : null,
-      nuxt4Compatible: !!(mod.nuxtApiCompat?.supports4
-        || [mod.topics?.hasNuxt4, mod.keywords?.hasNuxt4, mod.release?.nuxt4Mentioned].filter(Boolean).length >= 2),
+      ciPassing: resolveCiPassing(mod),
+      nuxt4Compatible: resolveNuxt4Compatible(mod),
     },
   }
 }
@@ -53,7 +49,7 @@ export async function saveSnapshots(modules: ModuleData[]): Promise<{ saved: num
     }
 
     // Only one snapshot per day
-    const alreadyHasToday = history.snapshots.some(s => s.date === today)
+    const alreadyHasToday = history.snapshots.some((s: ModuleSnapshot) => s.date === today)
     if (alreadyHasToday) {
       skipped++
       continue
@@ -80,14 +76,14 @@ export async function getModuleHistory(moduleName: string, options?: { from?: st
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - options.days)
     const cutoffStr = cutoff.toISOString().slice(0, 10)
-    snapshots = snapshots.filter(s => s.date >= cutoffStr)
+    snapshots = snapshots.filter((s: ModuleSnapshot) => s.date >= cutoffStr)
   }
 
   if (options.from) {
-    snapshots = snapshots.filter(s => s.date >= options.from!)
+    snapshots = snapshots.filter((s: ModuleSnapshot) => s.date >= options.from!)
   }
   if (options.to) {
-    snapshots = snapshots.filter(s => s.date <= options.to!)
+    snapshots = snapshots.filter((s: ModuleSnapshot) => s.date <= options.to!)
   }
 
   return { ...history, snapshots }

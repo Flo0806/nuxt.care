@@ -1,5 +1,4 @@
 import { fetchNpmPackument, extractVersionInfo, fetchVulnerabilitiesForVersion } from '../../utils/fetchers'
-import { scoreToStatus } from '../../utils/health'
 
 // POST /api/v1/history-backfill
 // Backfills history using real version-specific scores (npm + vulns)
@@ -18,13 +17,13 @@ interface NpmRangeResponse {
   package: string
 }
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (_event) => {
   const modules = await kv.get<ModuleData[]>('modules:all')
   if (!modules) {
     throw createError({ statusCode: 500, message: 'No module data available. Run sync first.' })
   }
 
-  const targets = modules.filter(m => BACKFILL_MODULES.includes(m.name))
+  const targets = modules.filter((m: ModuleData) => BACKFILL_MODULES.includes(m.name))
   if (targets.length === 0) {
     throw createError({ statusCode: 404, message: `None of [${BACKFILL_MODULES.join(', ')}] found in module data` })
   }
@@ -34,7 +33,7 @@ export default defineEventHandler(async (event) => {
   for (const mod of targets) {
     const key = `history:${mod.name}`
     const existing = await kv.get<ModuleHistory>(key)
-    const existingDates = new Set(existing?.snapshots.map(s => s.date) || [])
+    const existingDates = new Set(existing?.snapshots.map((s: ModuleSnapshot) => s.date) || [])
 
     // Fetch all data upfront: packument, downloads, version timeline
     const [packument, downloads] = await Promise.all([
@@ -138,11 +137,8 @@ export default defineEventHandler(async (event) => {
           vulnCount: vulns?.count ?? null,
           hasTests: vInfo.hasTests,
           hasTypes: vInfo.hasTypes,
-          ciPassing: mod.ciStatus?.lastRunConclusion === 'success' ? true
-            : mod.ciStatus?.lastRunConclusion === 'failure' ? false
-              : null,
-          nuxt4Compatible: !!(vInfo.nuxtCompat?.supports4 || mod.nuxtApiCompat?.supports4
-            || [mod.topics?.hasNuxt4, mod.keywords?.hasNuxt4, mod.release?.nuxt4Mentioned].filter(Boolean).length >= 2),
+          ciPassing: resolveCiPassing(mod),
+          nuxt4Compatible: resolveNuxt4Compatible(mod, vInfo.nuxtCompat),
         },
       }
 
