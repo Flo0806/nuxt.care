@@ -159,7 +159,7 @@ const popularClasses = [
 
 function cardClass(index: number): string {
   const classes = mode.value === 'new' ? newClasses : popularClasses
-  return classes[Math.min(index, classes.length - 1)] ?? classes[0]
+  return classes[Math.min(index, classes.length - 1)]!
 }
 
 const newestModules = computed(() => {

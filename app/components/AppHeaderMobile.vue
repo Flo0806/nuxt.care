@@ -22,24 +22,23 @@
             />
             Docs
           </NuxtLink>
-          <a
-            href="https://github.com/Flo0806/nuxt.care"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
+          <button
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium transition-colors cursor-pointer"
+            :class="hasStarred
+              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'"
+            :disabled="starLoading"
+            :aria-label="starLoading ? 'Loading star status' : hasStarred ? `Unstar repository, ${stars} stars` : `Star repository, ${stars} stars`"
+            :aria-pressed="isLoggedIn ? hasStarred : undefined"
+            @click="$emit('star')"
           >
             <UIcon
-              name="i-lucide-star"
+              :name="starLoading ? 'i-lucide-loader-2' : 'i-lucide-star'"
               class="w-3 h-3"
+              :class="{ 'fill-current': hasStarred && !starLoading, 'animate-spin': starLoading }"
             />
-            <UBadge
-              color="neutral"
-              variant="subtle"
-              size="xs"
-            >
-              {{ stars }}
-            </UBadge>
-          </a>
+            {{ stars }}
+          </button>
         </div>
       </div>
       <UBadge
@@ -103,11 +102,15 @@ import type { SyncMeta } from '~~/shared/types/modules'
 defineProps<{
   version: string
   stars: number
+  hasStarred: boolean
+  starLoading: boolean
+  isLoggedIn: boolean
   syncStatus?: SyncMeta | null
   criticalCount: number
 }>()
 
 defineEmits<{
   'show-critical': []
+  'star': []
 }>()
 </script>
