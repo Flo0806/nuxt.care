@@ -45,9 +45,7 @@
       <template #default="{ item, index }">
         <button
           class="w-full h-full p-3 rounded-lg border transition-colors text-left"
-          :class="mode === 'new'
-            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 hover:border-emerald-400 dark:hover:border-emerald-600'
-            : 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600'"
+          :class="cardClass(index)"
           @click="$emit('select', item)"
         >
           <!-- Rank + Name + Score -->
@@ -131,6 +129,37 @@ const mode = ref<'new' | 'popular'>('new')
 
 function toggleMode() {
   mode.value = mode.value === 'new' ? 'popular' : 'new'
+}
+
+const newClasses = [
+  'bg-emerald-100 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 hover:border-emerald-400',
+  'bg-emerald-100 dark:bg-emerald-950/35 border-emerald-300 dark:border-emerald-700 hover:border-emerald-400',
+  'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 hover:border-emerald-400',
+  'bg-emerald-50 dark:bg-emerald-950/25 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300',
+  'bg-emerald-50/80 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300',
+  'bg-emerald-50/60 dark:bg-emerald-950/15 border-emerald-200/80 dark:border-emerald-800/80 hover:border-emerald-300',
+  'bg-emerald-50/50 dark:bg-emerald-950/12 border-emerald-200/70 dark:border-emerald-800/70 hover:border-emerald-300',
+  'bg-emerald-50/40 dark:bg-emerald-950/10 border-emerald-200/60 dark:border-emerald-800/60 hover:border-emerald-300',
+  'bg-emerald-50/30 dark:bg-emerald-950/8 border-emerald-200/50 dark:border-emerald-800/50 hover:border-emerald-300',
+  'bg-emerald-50/20 dark:bg-emerald-950/5 border-emerald-200/40 dark:border-emerald-800/40 hover:border-emerald-300',
+]
+
+const popularClasses = [
+  'bg-blue-100 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 hover:border-blue-400',
+  'bg-blue-100 dark:bg-blue-950/35 border-blue-300 dark:border-blue-700 hover:border-blue-400',
+  'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 hover:border-blue-400',
+  'bg-blue-50 dark:bg-blue-950/25 border-blue-200 dark:border-blue-800 hover:border-blue-300',
+  'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 hover:border-blue-300',
+  'bg-blue-50/60 dark:bg-blue-950/15 border-blue-200/80 dark:border-blue-800/80 hover:border-blue-300',
+  'bg-blue-50/50 dark:bg-blue-950/12 border-blue-200/70 dark:border-blue-800/70 hover:border-blue-300',
+  'bg-blue-50/40 dark:bg-blue-950/10 border-blue-200/60 dark:border-blue-800/60 hover:border-blue-300',
+  'bg-blue-50/30 dark:bg-blue-950/8 border-blue-200/50 dark:border-blue-800/50 hover:border-blue-300',
+  'bg-blue-50/20 dark:bg-blue-950/5 border-blue-200/40 dark:border-blue-800/40 hover:border-blue-300',
+]
+
+function cardClass(index: number): string {
+  const classes = mode.value === 'new' ? newClasses : popularClasses
+  return classes[Math.min(index, classes.length - 1)] ?? classes[0]
 }
 
 const newestModules = computed(() => {
