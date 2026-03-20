@@ -1,11 +1,11 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <!-- Nuxt 4 Readiness -->
     <div class="p-4 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
       <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
         Nuxt 4 Readiness
       </p>
-      <div class="h-40">
+      <div class="h-36">
         <Doughnut
           :data="nuxt4Data"
           :options="doughnutOptions"
@@ -19,7 +19,7 @@
       <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
         Security Status
       </p>
-      <div class="h-40">
+      <div class="h-36">
         <Doughnut
           :data="securityData"
           :options="doughnutOptions"
@@ -33,7 +33,7 @@
       <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
         Health Distribution
       </p>
-      <div class="h-40">
+      <div class="h-36">
         <Bar
           :data="healthData"
           :options="barOptions"

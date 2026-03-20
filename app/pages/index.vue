@@ -21,6 +21,11 @@
 
       <!-- Has modules: show toolbar + list -->
       <template v-else-if="modules?.length">
+        <ModulesModuleBanner
+          :modules="modules"
+          @select="openModule"
+        />
+
         <ModulesModuleToolbar
           v-model:search="search"
           v-model:sort-by="sortBy"
