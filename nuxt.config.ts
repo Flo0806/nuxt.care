@@ -72,6 +72,14 @@ export default defineNuxtConfig({
   hub: {
     kv: true,
   },
+  vite: {
+    optimizeDeps: {
+      include: [
+        'vue-chartjs',
+        'chart.js',
+      ],
+    },
+  },
 
   eslint: {
     config: {
