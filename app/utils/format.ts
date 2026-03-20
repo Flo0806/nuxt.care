@@ -21,7 +21,9 @@ export function formatBytes(bytes: number): string {
  * Format a date string as relative time (e.g. "3d ago", "2w ago")
  */
 export function formatRelative(dateStr: string): string {
-  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+  const ts = new Date(dateStr).getTime()
+  if (!Number.isFinite(ts)) return ''
+  const days = Math.max(0, Math.floor((Date.now() - ts) / 86400000))
   if (days === 0) return 'today'
   if (days === 1) return 'yesterday'
   if (days < 7) return `${days}d ago`
@@ -33,7 +35,9 @@ export function formatRelative(dateStr: string): string {
  * Format a date string as localized date
  */
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString()
+  const d = new Date(dateStr)
+  if (!Number.isFinite(d.getTime())) return ''
+  return d.toLocaleDateString()
 }
 
 /**
@@ -42,5 +46,6 @@ export function formatDate(dateStr: string): string {
 export function formatDateShort(dateStr: string): string {
   if (!dateStr) return ''
   const d = new Date(dateStr)
+  if (!Number.isFinite(d.getTime())) return ''
   return `${d.getDate()}.${d.getMonth() + 1}`
 }

@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="displayModules.length"
+    v-if="newestModules.length || popularModules.length"
     class="mb-6"
   >
     <!-- Header with toggle -->
