@@ -4,7 +4,7 @@
 export const SERVER_ID = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
 export const SYNC_INTERVAL = 8 * 60 * 60 * 1000 // 8 hours
-export const SYNC_TIMEOUT = process.env.NODE_ENV === 'production' ? 2 * 60 * 60 * 1000 : 10 * 60 * 1000
+export const SYNC_TIMEOUT = process.env.NODE_ENV === 'production' ? 2 * 60 * 60 * 1000 : 30 * 60 * 1000
 
 export type SyncMetaWithServerId = SyncMeta & { serverId?: string }
 

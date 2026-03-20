@@ -190,6 +190,7 @@ export interface VulnerabilityInfo {
 }
 
 export interface HealthSignal {
+  key: string
   type: 'positive' | 'negative' | 'warning' | 'info'
   msg: string
   points: number
@@ -210,6 +211,51 @@ export interface ModuleSlim {
   status: ModuleStatus
   lastUpdated: string | null
   badge?: string // inline SVG or data URL, only if ?badge=inline|dataurl
+}
+
+// History / Trend tracking
+export interface ModuleSnapshot {
+  date: string // ISO date (YYYY-MM-DD), one per day
+  score: number
+  signals: Record<string, { points: number, maxPoints: number }> // key = signal msg
+  meta: {
+    version: string | null
+    downloads: number | null
+    stars: number | null
+    contributors: number | null
+    lastCommit: string | null
+    lastRelease: string | null
+    openIssues: number | null
+    pendingCommits: number | null
+    deprecated: boolean
+    archived: boolean
+    vulnCount: number | null
+    hasTests: boolean
+    hasTypes: boolean
+    ciPassing: boolean | null
+    nuxt4Compatible: boolean
+  }
+}
+
+export interface ModuleHistory {
+  moduleName: string
+  npmPackage: string
+  snapshots: ModuleSnapshot[]
+}
+
+export interface ScoreChange {
+  signal: string
+  oldPoints: number
+  newPoints: number
+  maxPoints: number
+}
+
+export interface ModuleDiff {
+  moduleName: string
+  date: string
+  oldScore: number
+  newScore: number
+  changes: ScoreChange[]
 }
 
 export interface SyncMeta {
