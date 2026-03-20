@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { setup, $fetch } from '@nuxt/test-utils/e2e'
 import type { ModuleData } from '../../shared/types/modules'
 
@@ -60,12 +60,32 @@ describe('Badge API Integration', async () => {
     build: true,
   })
 
+  let originalModules: ModuleData[] | null = null
+
   beforeAll(async () => {
+    // Backup existing modules before seeding mock data
+    try {
+      originalModules = await $fetch<ModuleData[]>('/api/modules')
+    }
+    catch {
+      originalModules = null
+    }
+
     // Seed KV with mock data via internal API
     await $fetch('/api/_test/seed', {
       method: 'POST',
       body: { modules: [mockModule] },
     })
+  })
+
+  afterAll(async () => {
+    // Restore original modules
+    if (originalModules?.length) {
+      await $fetch('/api/_test/seed', {
+        method: 'POST',
+        body: { modules: originalModules },
+      })
+    }
   })
 
   it('returns 400 without package or module param', async () => {
