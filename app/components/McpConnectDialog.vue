@@ -102,6 +102,7 @@ const configs = {
   claude: JSON.stringify({
     mcpServers: {
       'nuxt-care': {
+        type: 'http',
         url: MCP_URL,
       },
     },
