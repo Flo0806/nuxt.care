@@ -1,0 +1,7 @@
+{
+  "name": "nuxt.care",
+  "description": "Health checks, scores, and integration context for 300+ Nuxt modules. Search, evaluate, and get setup instructions.",
+  "url": "https://nuxt.care/api/mcp",
+  "transport": "http",
+  "tools": ["module_search", "module_health", "module_context"]
+}

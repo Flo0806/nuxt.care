@@ -16,8 +16,8 @@ const cleanupInterval = setInterval(() => {
 cleanupInterval.unref()
 
 export default defineEventHandler((event) => {
-  // Only rate limit /api/v1/
-  if (!event.path.startsWith('/api/v1')) return
+  // Rate limit /api/v1/ and /api/mcp
+  if (!event.path.startsWith('/api/v1') && !event.path.startsWith('/api/mcp')) return
 
   const ip = getRequestIP(event) || 'unknown'
   const now = Date.now()
