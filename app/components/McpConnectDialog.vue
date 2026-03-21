@@ -34,7 +34,7 @@
       <div class="relative">
         <pre class="p-4 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-xs font-mono overflow-x-auto"><code>{{ activeConfig }}</code></pre>
         <button
-          class="absolute bottom-2 right-2 p-1.5 rounded-md bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 hover:border-primary-300 transition-colors cursor-pointer top-3 flex align-center justify-center h-7"
+          class="absolute bottom-2 right-1 p-1.5 rounded-md bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 hover:border-primary-300 transition-colors cursor-pointer top-1 flex align-center justify-center h-7"
           @click="copyConfig"
         >
           <UIcon
@@ -48,10 +48,13 @@
       <!-- Instructions -->
       <div class="mt-4 text-xs text-neutral-500 dark:text-neutral-400 space-y-1">
         <p v-if="activeTab === 'claude'">
-          Paste into <code class="px-1 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded">~/.claude/settings.json</code>
+          Run this command in your terminal, then restart Claude Code
         </p>
         <p v-else-if="activeTab === 'cursor'">
           Paste into <code class="px-1 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded">.cursor/mcp.json</code> in your project root
+        </p>
+        <p v-else-if="activeTab === 'copilot'">
+          Paste into <code class="px-1 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded">.vscode/mcp.json</code> in your project root
         </p>
         <p v-else>
           Use this URL in any MCP-compatible AI tool
@@ -87,29 +90,31 @@
 <script setup lang="ts">
 const isOpen = defineModel<boolean>('open', { default: false })
 
-const activeTab = ref<'claude' | 'cursor' | 'other'>('claude')
+const activeTab = ref<'claude' | 'cursor' | 'copilot' | 'other'>('claude')
 const copied = ref(false)
 
 const MCP_URL = 'https://nuxt.care/api/mcp'
 
 const tabs = [
-  { id: 'claude' as const, label: 'Claude' },
+  { id: 'claude' as const, label: 'Claude Code' },
   { id: 'cursor' as const, label: 'Cursor' },
+  { id: 'copilot' as const, label: 'Copilot' },
   { id: 'other' as const, label: 'Other' },
 ]
 
 const configs = {
-  claude: JSON.stringify({
+  claude: `claude mcp add --transport http nuxt-care ${MCP_URL}`,
+  cursor: JSON.stringify({
     mcpServers: {
       'nuxt-care': {
-        type: 'http',
         url: MCP_URL,
       },
     },
   }, null, 2),
-  cursor: JSON.stringify({
-    mcpServers: {
+  copilot: JSON.stringify({
+    servers: {
       'nuxt-care': {
+        type: 'http',
         url: MCP_URL,
       },
     },
