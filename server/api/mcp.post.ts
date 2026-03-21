@@ -64,6 +64,10 @@ const TOOLS = [
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
+  if (!body || typeof body !== 'object' || !body.method) {
+    throw createError({ statusCode: 400, message: 'Invalid JSON-RPC request' })
+  }
+
   // MCP uses JSON-RPC 2.0
   const { method, params, id } = body
 
@@ -74,6 +78,9 @@ export default defineEventHandler(async (event) => {
 
   // Execution: run a specific tool
   if (method === 'tools/call') {
+    if (!params || typeof params.name !== 'string') {
+      return { jsonrpc: '2.0', id, error: { code: -32602, message: 'Missing params.name' } }
+    }
     const { name, arguments: args } = params
 
     if (name === 'module_search') {
@@ -100,8 +107,11 @@ export default defineEventHandler(async (event) => {
 })
 
 async function handleModuleSearch(args: { query: string, limit?: number }) {
+  if (!args?.query || typeof args.query !== 'string') {
+    return { content: [{ type: 'text', text: 'Missing required parameter: query' }] }
+  }
   const query = args.query.toLowerCase()
-  const limit = Math.min(args.limit ?? 5, 10)
+  const limit = Math.max(1, Math.min(Math.floor(args.limit ?? 5), 10))
 
   const allModules = await kv.get<ModuleData[]>('modules:all')
   if (!allModules) {

@@ -108,21 +108,10 @@ async function runSync(startedAt: string): Promise<void> {
     const { saved, skipped } = await saveSnapshots(results)
     console.log(`[sync] History: ${saved} snapshots saved, ${skipped} skipped (already today)`)
 
-    // Crawl context for new modules immediately
+    // Crawl context for new modules in background (non-blocking)
     if (newModules.length > 0) {
-      console.log(`[sync] Crawling context for ${newModules.length} new module(s)...`)
-      let crawled = 0
-      for (const mod of newModules) {
-        try {
-          await crawlAndSaveContext(mod, githubToken)
-          crawled++
-          if (crawled % 25 === 0) console.log(`[sync] Crawl progress: ${crawled}/${newModules.length}`)
-        }
-        catch (err) {
-          console.warn(`[sync] Failed to crawl context for ${mod.name}:`, err)
-        }
-      }
-      console.log(`[sync] Crawl done: ${crawled}/${newModules.length}`)
+      console.log(`[sync] Scheduling context crawl for ${newModules.length} new module(s)...`)
+      crawlNewModulesInBackground(newModules, githubToken)
     }
 
     await kv.set('sync:meta', {
@@ -286,4 +275,21 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
   data.health = { score: 0, signals: [] }
 
   return data
+}
+
+function crawlNewModulesInBackground(modules: ModuleData[], token?: string) {
+  (async () => {
+    let crawled = 0
+    for (const mod of modules) {
+      try {
+        await crawlAndSaveContext(mod, token)
+        crawled++
+        if (crawled % 25 === 0) console.log(`[sync] Crawl progress: ${crawled}/${modules.length}`)
+      }
+      catch (err) {
+        console.warn(`[sync] Failed to crawl context for ${mod.name}:`, err)
+      }
+    }
+    console.log(`[sync] Crawl done: ${crawled}/${modules.length}`)
+  })().catch(err => console.error('[sync] Background crawl failed:', err))
 }

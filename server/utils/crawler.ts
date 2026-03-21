@@ -77,8 +77,8 @@ async function fetchRepoTree(repoPath: string, token?: string): Promise<string[]
 // Extract composable/component names from file paths
 function extractFromTree(paths: string[], type: 'composables' | 'components'): string[] {
   const pattern = type === 'composables'
-    ? /(?:runtime|src)\/composables\/(\w+)\.(ts|js)$/
-    : /(?:runtime|src)\/components\/(\w+)\.(vue|ts)$/
+    ? /(?:runtime|src)\/composables\/([\w-]+)\.(ts|js)$/
+    : /(?:runtime|src)\/components\/([\w-]+)\.(vue|ts)$/
 
   return paths
     .map(p => p.match(pattern)?.[1])

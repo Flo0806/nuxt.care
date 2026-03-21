@@ -47,15 +47,29 @@ describe('MCP crawler', () => {
     expect(result).toBeNull()
   })
 
-  it('builds correct install command', async () => {
-    const mod = createModule({ name: 'pinia', repo: 'vuejs/pinia' })
-    const result = await crawlModuleContext(mod)
-    // May be null if GitHub API is unreachable in test, but if it succeeds:
-    if (result) {
-      expect(result.installCommand).toBe('npx nuxt module add pinia')
-      expect(result.moduleName).toBe('pinia')
-      expect(result.npmPackage).toBe('test-module')
-      expect(result.crawledAt).toBeTruthy()
+  it('builds correct install command and metadata', async () => {
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async (url: string | URL | Request) => {
+      const u = String(url)
+      if (u.includes('/readme')) return new Response('# Test README', { status: 200 })
+      if (u.includes('/git/trees')) return new Response(JSON.stringify({ tree: [] }), { status: 200 })
+      if (u.includes('registry.npmjs.org')) return new Response(JSON.stringify({ homepage: 'https://test.dev' }), { status: 200 })
+      return new Response('', { status: 404 })
+    }
+
+    try {
+      const mod = createModule({ name: 'pinia', repo: 'vuejs/pinia' })
+      const result = await crawlModuleContext(mod)
+      expect(result).not.toBeNull()
+      expect(result!.installCommand).toBe('npx nuxt module add pinia')
+      expect(result!.moduleName).toBe('pinia')
+      expect(result!.npmPackage).toBe('test-module')
+      expect(result!.crawledAt).toBeTruthy()
+      expect(result!.readme).toBe('# Test README')
+      expect(result!.docsUrl).toBe('https://test.dev')
+    }
+    finally {
+      globalThis.fetch = originalFetch
     }
   })
 })
