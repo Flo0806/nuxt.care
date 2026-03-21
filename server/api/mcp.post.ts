@@ -1,10 +1,11 @@
 import { calculateHealth, scoreToStatus } from '../utils/health'
+import { calculateVersionScore } from '../utils/version-score'
 
 // Tool definitions for MCP discovery
 const TOOLS = [
   {
     name: 'module_search',
-    description: 'Search for Nuxt modules by keyword. Returns matching modules with health score, status, install command, downloads and stars. Use this to find and recommend modules.',
+    description: 'Search for Nuxt modules by keyword. Returns matching modules with health score, status, install command, downloads and stars. Use this whenever the user needs a module for a specific purpose (auth, forms, images, etc.) instead of guessing or relying on training data.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -23,6 +24,28 @@ const TOOLS = [
         module: { type: 'string', description: 'Module name like "pinia", "i18n", "image"' },
       },
       required: ['module'],
+    },
+  },
+  {
+    name: 'project_check',
+    description: 'PROACTIVE: Run this check automatically when starting work on a Nuxt project, during maintenance tasks, or when the user asks about dependencies/updates. Read the modules array from nuxt.config.ts and the installed versions from package.json (or lock file). Returns a markdown table with health scores, upgrade recommendations, and critical warnings for archived/deprecated/vulnerable modules. Always offer to run this check when you detect a Nuxt project.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        modules: {
+          type: 'array',
+          description: 'Array of { name: string, version: string } - name from nuxt.config.ts modules array (e.g. "@nuxt/image"), version from package.json or lock file',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Module name from nuxt.config.ts like "@nuxt/image", "@pinia/nuxt", "nuxt-auth-utils"' },
+              version: { type: 'string', description: 'Installed version from package.json like "1.8.0" or "^1.8.0"' },
+            },
+            required: ['name', 'version'],
+          },
+        },
+      },
+      required: ['modules'],
     },
   },
   {
@@ -59,6 +82,10 @@ export default defineEventHandler(async (event) => {
 
     if (name === 'module_health') {
       return { jsonrpc: '2.0', id, result: await handleModuleHealth(args) }
+    }
+
+    if (name === 'project_check') {
+      return { jsonrpc: '2.0', id, result: await handleProjectCheck(args) }
     }
 
     if (name === 'module_context') {
@@ -172,6 +199,123 @@ async function handleModuleHealth(args: { module: string }) {
   ].filter(Boolean).join('\n')
 
   return { content: [{ type: 'text', text }] }
+}
+
+async function handleProjectCheck(args: { modules: Array<{ name: string, version: string }> }) {
+  const allModules = await kv.get<ModuleData[]>('modules:all')
+  if (!allModules) {
+    return { content: [{ type: 'text', text: 'No module data available. Try again later.' }] }
+  }
+
+  // Match by npm package name (from nuxt.config.ts modules array)
+  const byNpm = new Map(allModules.map((m: ModuleData) => [m.npmPackage, m]))
+  // Also match by module name (some configs use short names)
+  const byName = new Map(allModules.map((m: ModuleData) => [m.name, m]))
+
+  const matched: Array<{ pkg: { name: string, version: string }, mod: ModuleData }> = []
+  const unmatched: string[] = []
+
+  for (const pkg of args.modules) {
+    const mod = (byNpm.get(pkg.name) ?? byName.get(pkg.name)) as ModuleData | undefined
+    if (mod) matched.push({ pkg, mod })
+    else unmatched.push(pkg.name)
+  }
+
+  if (matched.length === 0) {
+    return { content: [{ type: 'text', text: `No known Nuxt modules found in the ${args.modules.length} modules provided. Unrecognized: ${unmatched.join(', ')}` }] }
+  }
+
+  // Check each module: version score, latest score, warnings
+  const rows: string[] = []
+  const warnings: string[] = []
+
+  for (const { pkg, mod } of matched) {
+    const cleanVersion = pkg.version.replace(/^[\^~>=<]*/g, '')
+    const versionResult = await calculateVersionScore(mod.npmPackage, cleanVersion)
+    const latestHealth = calculateHealth(mod)
+
+    let action = '✅ OK'
+    let details = 'Up to date'
+
+    if (mod.github?.archived) {
+      action = '🔴 Archived'
+      details = 'Repository is archived - find a replacement!'
+      warnings.push(`**${mod.name}**: Repository is ARCHIVED. Stop using this module and migrate to an alternative.`)
+    }
+    else if (mod.npm?.deprecated) {
+      action = '🔴 Deprecated'
+      details = `${mod.npm.deprecated}`
+      warnings.push(`**${mod.name}**: DEPRECATED - ${mod.npm.deprecated}`)
+    }
+    else if (versionResult && !versionResult.isLatest) {
+      const scoreDiff = (versionResult.latestScore ?? 0) - versionResult.score
+      const parts: string[] = []
+
+      if (scoreDiff > 0) parts.push(`score +${scoreDiff}`)
+      if (versionResult.vulnerabilities
+        && versionResult.vulnerabilities.count > 0
+        && (!versionResult.latestVulnerabilities || versionResult.latestVulnerabilities.count < versionResult.vulnerabilities.count)) {
+        const fixed = versionResult.vulnerabilities.count - (versionResult.latestVulnerabilities?.count ?? 0)
+        parts.push(`${fixed} vuln${fixed > 1 ? 's' : ''} fixed`)
+      }
+      if (versionResult.versionInfo.deprecated) parts.push('version deprecated')
+      if (versionResult.latestVersionInfo?.nuxtCompat?.supports4 && !versionResult.versionInfo.nuxtCompat?.supports4) {
+        parts.push('Nuxt 4 support added')
+      }
+
+      if (versionResult.recommendation === 'avoid') {
+        action = '🔴 Upgrade!'
+        warnings.push(`**${mod.name}**: Installed version ${cleanVersion} should be avoided. ${parts.join(', ')}`)
+      }
+      else if (versionResult.recommendation === 'upgrade') {
+        action = '⚠️ Upgrade'
+      }
+      else {
+        action = '🔄 Update available'
+      }
+      details = parts.length > 0 ? parts.join(', ') : `${cleanVersion} → ${versionResult.latestVersion}`
+    }
+    else if (versionResult?.vulnerabilities && versionResult.vulnerabilities.count > 0) {
+      action = '⚠️ Vulns'
+      details = `${versionResult.vulnerabilities.count} vulnerabilities (${versionResult.vulnerabilities.critical} critical)`
+      if (versionResult.vulnerabilities.critical > 0) {
+        warnings.push(`**${mod.name}**: ${versionResult.vulnerabilities.critical} CRITICAL vulnerabilities!`)
+      }
+    }
+
+    const installedScore = versionResult?.score ?? latestHealth.score
+    const latestScore = versionResult?.isLatest ? installedScore : (versionResult?.latestScore ?? latestHealth.score)
+    const scoreDisplay = installedScore === latestScore
+      ? `${installedScore}`
+      : `${installedScore}→${latestScore}`
+
+    rows.push(`| ${mod.name} | ${cleanVersion} | ${versionResult?.latestVersion ?? mod.npm?.latestVersion ?? '?'} | ${scoreDisplay} | ${action} | ${details} |`)
+  }
+
+  const table = [
+    `| Module | Installed | Latest | Score | Status | Details |`,
+    `|--------|-----------|--------|-------|--------|---------|`,
+    ...rows,
+  ].join('\n')
+
+  const sections: string[] = [
+    `## Project Health Check`,
+    ``,
+    `Found **${matched.length}** Nuxt module${matched.length > 1 ? 's' : ''} out of ${args.modules.length} in config.`,
+    ``,
+    table,
+  ]
+
+  if (warnings.length > 0) {
+    sections.push(``, `### ⚠️ Critical Warnings`, ``, ...warnings.map(w => `- ${w}`))
+  }
+
+  const okCount = rows.filter(r => r.includes('✅')).length
+  const upgradeCount = rows.filter(r => r.includes('⚠️') || r.includes('🔴') || r.includes('🔄')).length
+
+  sections.push(``, `---`, `${okCount} module${okCount !== 1 ? 's' : ''} healthy, ${upgradeCount} need${upgradeCount === 1 ? 's' : ''} attention.`)
+
+  return { content: [{ type: 'text', text: sections.join('\n') }] }
 }
 
 async function handleModuleContext(args: { module: string }) {

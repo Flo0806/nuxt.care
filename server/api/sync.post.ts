@@ -111,11 +111,18 @@ async function runSync(startedAt: string): Promise<void> {
     // Crawl context for new modules immediately
     if (newModules.length > 0) {
       console.log(`[sync] Crawling context for ${newModules.length} new module(s)...`)
+      let crawled = 0
       for (const mod of newModules) {
-        await crawlAndSaveContext(mod, githubToken).catch(err =>
-          console.warn(`[sync] Failed to crawl context for ${mod.name}:`, err),
-        )
+        try {
+          await crawlAndSaveContext(mod, githubToken)
+          crawled++
+          if (crawled % 25 === 0) console.log(`[sync] Crawl progress: ${crawled}/${newModules.length}`)
+        }
+        catch (err) {
+          console.warn(`[sync] Failed to crawl context for ${mod.name}:`, err)
+        }
       }
+      console.log(`[sync] Crawl done: ${crawled}/${newModules.length}`)
     }
 
     await kv.set('sync:meta', {
