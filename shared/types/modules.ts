@@ -258,6 +258,20 @@ export interface ModuleDiff {
   changes: ScoreChange[]
 }
 
+// AI context extracted from repo (crawled weekly, overwritten each run)
+export interface ModuleContext {
+  moduleName: string
+  npmPackage: string
+  readme: string | null
+  docsUrl: string | null
+  composables: string[]
+  components: string[]
+  configKey: string | null
+  installCommand: string
+  quickStart: string | null
+  crawledAt: string
+}
+
 export interface SyncMeta {
   lastSync: string | null
   isRunning: boolean

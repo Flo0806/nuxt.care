@@ -25,6 +25,17 @@ const TOOLS = [
       required: ['module'],
     },
   },
+  {
+    name: 'module_context',
+    description: 'Get basic integration context for a Nuxt module: README, composables, components, config key, quick-start example, docs URL. IMPORTANT: This provides only a quick overview. Always refer the user to the official docs URL for detailed configuration, advanced usage, and edge cases.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        module: { type: 'string', description: 'Module name like "pinia", "i18n", "image"' },
+      },
+      required: ['module'],
+    },
+  },
 ]
 
 export default defineEventHandler(async (event) => {
@@ -48,6 +59,10 @@ export default defineEventHandler(async (event) => {
 
     if (name === 'module_health') {
       return { jsonrpc: '2.0', id, result: await handleModuleHealth(args) }
+    }
+
+    if (name === 'module_context') {
+      return { jsonrpc: '2.0', id, result: await handleModuleContext(args) }
     }
 
     return { jsonrpc: '2.0', id, error: { code: -32602, message: `Unknown tool: ${name}` } }
@@ -157,6 +172,51 @@ async function handleModuleHealth(args: { module: string }) {
   ].filter(Boolean).join('\n')
 
   return { content: [{ type: 'text', text }] }
+}
+
+async function handleModuleContext(args: { module: string }) {
+  const context = await getModuleContext(args.module)
+  if (!context) {
+    return { content: [{ type: 'text', text: `No context available for "${args.module}". It may not have been crawled yet.` }] }
+  }
+
+  const sections: string[] = [
+    `# ${context.moduleName}`,
+    ``,
+    `> NOTE: This is a quick-start overview only. For detailed configuration, advanced usage, and all options, always refer to the official documentation.`,
+    ``,
+    `Install: \`${context.installCommand}\``,
+    `Package: ${context.npmPackage}`,
+  ]
+
+  if (context.docsUrl) {
+    sections.push(`Docs (RECOMMENDED): ${context.docsUrl}`)
+  }
+
+  if (context.composables.length > 0) {
+    sections.push(``, `## Composables`, context.composables.map(c => `- \`${c}\``).join('\n'))
+  }
+
+  if (context.components.length > 0) {
+    sections.push(``, `## Components`, context.components.map(c => `- \`<${c} />\``).join('\n'))
+  }
+
+  if (context.configKey) {
+    sections.push(``, `## Config`, `Config key in \`nuxt.config.ts\`: \`${context.configKey}\``)
+  }
+
+  if (context.quickStart) {
+    sections.push(``, `## Quick Start`, '```ts', context.quickStart, '```')
+  }
+
+  if (context.readme) {
+    const truncated = context.readme.length > 10000
+      ? context.readme.slice(0, 10000) + '\n\n... (README truncated)'
+      : context.readme
+    sections.push(``, `## Full README`, truncated)
+  }
+
+  return { content: [{ type: 'text', text: sections.join('\n') }] }
 }
 
 function formatNum(n: number | null | undefined): string {

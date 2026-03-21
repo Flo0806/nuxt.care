@@ -97,11 +97,26 @@ async function runSync(startedAt: string): Promise<void> {
     // Sorting happens in modules.get.ts (score calculated on-the-fly)
     const duration = Date.now() - new Date(startedAt).getTime()
 
+    // Detect new modules before overwriting
+    const previousModules = await kv.get<ModuleData[]>('modules:all')
+    const previousNames = new Set(previousModules?.map((m: ModuleData) => m.name) || [])
+    const newModules = results.filter(m => !previousNames.has(m.name))
+
     await kv.set('modules:all', results)
 
     // Save daily history snapshots (max 1 per day)
     const { saved, skipped } = await saveSnapshots(results)
     console.log(`[sync] History: ${saved} snapshots saved, ${skipped} skipped (already today)`)
+
+    // Crawl context for new modules immediately
+    if (newModules.length > 0) {
+      console.log(`[sync] Crawling context for ${newModules.length} new module(s)...`)
+      for (const mod of newModules) {
+        await crawlAndSaveContext(mod, githubToken).catch(err =>
+          console.warn(`[sync] Failed to crawl context for ${mod.name}:`, err),
+        )
+      }
+    }
 
     await kv.set('sync:meta', {
       lastSync: new Date().toISOString(),
