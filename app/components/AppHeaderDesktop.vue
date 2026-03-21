@@ -86,6 +86,19 @@
       >
         Syncing {{ syncStatus.syncedModules }}/{{ syncStatus.totalModules }}
       </UBadge>
+      <UTooltip text="Connect your AI via MCP">
+        <button
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors cursor-pointer"
+          @click="mcpOpen = true"
+        >
+          <UIcon
+            name="i-lucide-bot"
+            class="w-3.5 h-3.5"
+          />
+          MCP
+        </button>
+      </UTooltip>
+      <McpConnectDialog v-model:open="mcpOpen" />
       <UTooltip text="Sponsor this project">
         <a
           href="https://github.com/sponsors/Flo0806"
@@ -122,6 +135,8 @@ defineEmits<{
   'show-critical': []
   'star': []
 }>()
+
+const mcpOpen = ref(false)
 
 function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr)
