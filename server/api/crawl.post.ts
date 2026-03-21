@@ -1,9 +1,15 @@
 // POST /api/crawl - Crawl README + repo structure for all modules
 // Stores AI context in KV as context:{moduleName} (overwritten each run)
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const token = config.github?.token as string | undefined
+
+  // Only allow internal calls (cron) or requests with the GitHub token as auth
+  const authHeader = getHeader(event, 'authorization')
+  if (authHeader !== `Bearer ${token}` && !event.path.includes('_nitro')) {
+    throw createError({ statusCode: 401, message: 'Unauthorized' })
+  }
 
   const modules = await kv.get<ModuleData[]>('modules:all')
   if (!modules?.length) {
