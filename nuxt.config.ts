@@ -60,6 +60,8 @@ export default defineNuxtConfig({
     scheduledTasks: {
       // Every 8 hours: 0:00, 8:00, 16:00
       '0 */8 * * *': ['sync:modules'],
+      // Every Sunday at 4:00 AM
+      '0 4 * * 0': ['crawl:readme'],
     },
     prerender: {
       crawlLinks: false,

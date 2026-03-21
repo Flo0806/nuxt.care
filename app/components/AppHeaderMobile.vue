@@ -90,6 +90,18 @@
           />
         </a>
       </UTooltip>
+      <UTooltip text="Connect your AI via MCP">
+        <button
+          class="inline-flex items-center justify-center w-8 h-8 rounded-md text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors cursor-pointer"
+          @click="mcpOpen = true"
+        >
+          <UIcon
+            name="i-lucide-bot"
+            class="w-5 h-5"
+          />
+        </button>
+      </UTooltip>
+      <McpConnectDialog v-model:open="mcpOpen" />
       <AuthButton />
       <UColorModeButton />
     </div>
@@ -97,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SyncMeta } from '~~/shared/types/modules'
+const mcpOpen = ref(false)
 
 defineProps<{
   version: string

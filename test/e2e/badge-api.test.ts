@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { setup, $fetch } from '@nuxt/test-utils/e2e'
 import type { ModuleData } from '../../shared/types/modules'
 
@@ -78,16 +78,6 @@ describe('Badge API Integration', async () => {
     })
   })
 
-  afterAll(async () => {
-    // Restore original modules
-    if (originalModules?.length) {
-      await $fetch('/api/_test/seed', {
-        method: 'POST',
-        body: { modules: originalModules },
-      })
-    }
-  })
-
   it('returns 400 without package or module param', async () => {
     try {
       await $fetch('/api/v1/badge')
@@ -143,6 +133,15 @@ describe('Badge API Integration', async () => {
     }
     catch (error) {
       expect((error as { statusCode: number }).statusCode).toBe(404)
+    }
+  })
+
+  it('restores original modules', async () => {
+    if (originalModules?.length) {
+      await $fetch('/api/_test/seed', {
+        method: 'POST',
+        body: { modules: originalModules },
+      })
     }
   })
 })
