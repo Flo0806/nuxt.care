@@ -79,12 +79,17 @@ describe('Badge API Integration', async () => {
   })
 
   afterAll(async () => {
-    // Restore original modules
-    if (originalModules?.length) {
-      await $fetch('/api/_test/seed', {
-        method: 'POST',
-        body: { modules: originalModules },
-      })
+    // Restore original modules (context may already be torn down)
+    try {
+      if (originalModules?.length) {
+        await $fetch('/api/_test/seed', {
+          method: 'POST',
+          body: { modules: originalModules },
+        })
+      }
+    }
+    catch {
+      // Context already closed, modules will be restored on next sync
     }
   })
 

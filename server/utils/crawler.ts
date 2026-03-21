@@ -1,6 +1,8 @@
 // Crawl module README and repo structure for AI context
 // Each module gets one KV entry: context:{moduleName} (overwritten on each crawl)
 
+import { cleanRepoPath, ghFetch } from './fetchers'
+
 const README_MAX_LENGTH = 50000 // Cap README at 50KB
 
 export async function crawlModuleContext(mod: ModuleData, token?: string): Promise<ModuleContext | null> {
