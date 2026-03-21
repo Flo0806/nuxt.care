@@ -79,7 +79,7 @@ export default defineEventHandler(async (event) => {
       result: {
         protocolVersion: '2025-03-26',
         capabilities: { tools: {} },
-        serverInfo: { name: 'nuxt-care', version: '1.2.1' },
+        serverInfo: { name: 'nuxt-care', version: '1.2.2' },
       },
     }
   }
