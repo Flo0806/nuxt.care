@@ -71,6 +71,23 @@ export default defineEventHandler(async (event) => {
   // MCP uses JSON-RPC 2.0
   const { method, params, id } = body
 
+  // MCP handshake
+  if (method === 'initialize') {
+    return {
+      jsonrpc: '2.0',
+      id,
+      result: {
+        protocolVersion: '2025-03-26',
+        capabilities: { tools: {} },
+        serverInfo: { name: 'nuxt-care', version: '1.2.0' },
+      },
+    }
+  }
+
+  if (method === 'notifications/initialized') {
+    return { jsonrpc: '2.0', id, result: {} }
+  }
+
   // Discovery: which tools are available?
   if (method === 'tools/list') {
     return { jsonrpc: '2.0', id, result: { tools: TOOLS } }
