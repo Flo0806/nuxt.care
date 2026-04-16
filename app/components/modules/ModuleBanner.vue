@@ -31,8 +31,8 @@
       :items="displayModules"
       :ui="{
         item: 'basis-56 ps-3',
-        prev: 'sm:start-8 sm:invisible sm:group-hover:visible',
-        next: 'sm:end-8 sm:invisible sm:group-hover:visible',
+        prev: 'sm:start-8 sm:invisible sm:group-hover:visible cursor-pointer hover:scale-110 transition-transform',
+        next: 'sm:end-8 sm:invisible sm:group-hover:visible cursor-pointer hover:scale-110 transition-transform',
         container: 'ms-0',
       }"
       class="group"
