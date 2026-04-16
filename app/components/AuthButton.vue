@@ -3,6 +3,11 @@ const { isLoggedIn, user, logout } = useAuth()
 
 const items = [
   [{
+    label: 'My modules',
+    icon: 'i-lucide-layout-dashboard',
+    to: '/maintainer',
+  }],
+  [{
     label: 'Logout',
     icon: 'i-lucide-log-out',
     onSelect: logout,
