@@ -154,17 +154,19 @@ export function getActionHints(data: ModuleData): ActionHint[] {
   const vulnsPenalty = data.health.signals.find(s => s.key === 'vulns-penalty')
   if (vulnsPenalty) {
     const penaltyGap = vulnsPenalty.maxPoints - vulnsPenalty.points
-    const security = hints.find(h => h.key === 'security')
-    if (security) {
-      security.gain += penaltyGap
-    }
-    else {
-      hints.push({
-        key: 'security',
-        title: 'Fix vulnerabilities',
-        description: 'Active vulnerabilities are penalizing your score. Run `pnpm audit --fix` or bump affected dependencies.',
-        gain: penaltyGap,
-      })
+    if (penaltyGap > 0) {
+      const security = hints.find(h => h.key === 'security')
+      if (security) {
+        security.gain += penaltyGap
+      }
+      else {
+        hints.push({
+          key: 'security',
+          title: 'Fix vulnerabilities',
+          description: 'Active vulnerabilities are penalizing your score. Run `pnpm audit --fix` or bump affected dependencies.',
+          gain: penaltyGap,
+        })
+      }
     }
   }
 
