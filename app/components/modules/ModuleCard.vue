@@ -284,13 +284,19 @@
               target="_blank"
               rel="noopener noreferrer"
               :aria-label="`Open ${module.name} on npm`"
-              class="text-neutral-400 hover:text-red-500 transition-colors"
+              class="transition-opacity hover:opacity-80"
               @click.stop
             >
-              <UIcon
-                name="i-lucide-package"
-                class="w-4 h-4"
-              />
+              <img
+                src="/images/npmx-logo-mark-light.svg"
+                alt="npmx"
+                class="w-4 h-4 block dark:hidden"
+              >
+              <img
+                src="/images/npmx-logo-mark.svg"
+                alt="npmx"
+                class="w-4 h-4 hidden dark:block"
+              >
             </a>
           </UTooltip>
           <UTooltip text="Open on Nuxt (Modules)">
