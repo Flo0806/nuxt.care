@@ -7,6 +7,19 @@
         @show-critical="showCriticalOnly = true"
       />
 
+      <!-- TODO: remove this "new feature" banner once users have discovered the maintainer dashboard -->
+      <UAlert
+        v-if="!maintainerBannerDismissed"
+        icon="i-lucide-sparkles"
+        color="primary"
+        variant="subtle"
+        title="New: Maintainer Dashboard"
+        description="Sign in with GitHub and open your avatar menu → “My modules” to see health scores and action hints for modules you own or contribute to."
+        close
+        class="mb-6"
+        @close="dismissMaintainerBanner"
+      />
+
       <!-- Dashboard Charts -->
       <DashboardCharts
         v-if="modules?.length"
@@ -132,6 +145,17 @@ const { data: syncStatus, refresh: refreshSyncStatus } = await useFetch<SyncMeta
 })
 
 const { favorites, toggleFavorite } = useFavorites()
+
+// TODO: remove alongside the banner once users have discovered the maintainer dashboard
+const BANNER_KEY = 'maintainer-banner-dismissed'
+const maintainerBannerDismissed = ref(false)
+onMounted(() => {
+  maintainerBannerDismissed.value = localStorage.getItem(BANNER_KEY) === '1'
+})
+function dismissMaintainerBanner() {
+  maintainerBannerDismissed.value = true
+  localStorage.setItem(BANNER_KEY, '1')
+}
 const { isLoggedIn, user } = useAuth()
 const { loadAllStarred, initialized: starsInitialized, starredRepos } = useStars()
 
