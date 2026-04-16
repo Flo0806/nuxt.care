@@ -3,14 +3,25 @@
     <!-- Top row: Logo + Title + Links | Version -->
     <div class="flex items-start justify-between gap-2 mb-2">
       <div class="flex items-center gap-3">
-        <img
-          src="/images/nuxt.care-logo.svg"
-          alt="nuxt.care Logo"
-          class="h-10 w-10"
+        <NuxtLink
+          to="/"
+          class="shrink-0 transition-opacity hover:opacity-80"
+          aria-label="Go to homepage"
         >
+          <img
+            src="/images/nuxt.care-logo.svg"
+            alt="nuxt.care Logo"
+            class="h-10 w-10"
+          >
+        </NuxtLink>
         <div class="flex items-center gap-2 flex-wrap">
           <h1 class="text-xl font-bold text-neutral-900 dark:text-white">
-            nuxt.care
+            <NuxtLink
+              to="/"
+              class="transition-colors hover:text-primary-500"
+            >
+              nuxt.care
+            </NuxtLink>
           </h1>
           <NuxtLink
             to="/docs"
@@ -77,6 +88,20 @@
         Syncing {{ syncStatus.syncedModules }}/{{ syncStatus.totalModules }}
       </UBadge>
       <div class="flex-1" />
+      <UTooltip text="View source on GitHub">
+        <a
+          href="https://github.com/Flo0806/nuxt.care"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="View source on GitHub"
+          class="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+        >
+          <UIcon
+            name="i-simple-icons-github"
+            class="w-5 h-5"
+          />
+        </a>
+      </UTooltip>
       <UTooltip text="Sponsor this project">
         <a
           href="https://github.com/sponsors/Flo0806"
