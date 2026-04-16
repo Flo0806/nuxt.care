@@ -19,7 +19,7 @@ export default defineEventHandler((event) => {
   // Rate limit /api/v1/ and /api/mcp
   if (!event.path.startsWith('/api/v1') && !event.path.startsWith('/api/mcp')) return
 
-  const ip = getRequestIP(event) || 'unknown'
+  const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
   const now = Date.now()
   const window = 60_000 // 1 minute
   const limit = 60 // 60 requests per minute
