@@ -258,15 +258,12 @@ async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promis
   }
 
   if (mod.npm) {
-    const [npmData, vulns] = await Promise.all([
-      fetchNpmInfo(mod.npm),
-      fetchVulnerabilities(mod.npm),
-    ])
+    const npmData = await fetchNpmInfo(mod.npm)
     if (npmData) {
       data.npm = npmData
       data.keywords = analyzeKeywords(npmData.keywords)
+      data.vulnerabilities = await fetchVulnerabilitiesForVersion(mod.npm, npmData.latestVersion)
     }
-    data.vulnerabilities = vulns
     // bundleSize now comes from npm.unpackedSize, not bundlephobia
   }
 
