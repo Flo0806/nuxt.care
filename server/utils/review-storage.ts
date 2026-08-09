@@ -4,6 +4,8 @@
 // registry cache - no function in here reads or writes `modules:*`, `history:*`
 // or `context:*`. Wiping the review cache can never affect the module list.
 
+import { scoreToStatus } from './health'
+
 /** Bumped whenever the stored shape changes, so a run discards stale entries. */
 export const REVIEW_SCHEMA_VERSION = 1
 
