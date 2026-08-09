@@ -5,6 +5,13 @@
 const STARTUP_COOLDOWN = 5 * 60 * 1000
 
 export default defineNitroPlugin(async () => {
+  // Dev switch: NUXT_SKIP_SYNC=true keeps restarts from pulling modules.
+  // The manual sync button stays usable.
+  if (process.env.NUXT_SKIP_SYNC === 'true') {
+    console.log('[startup] NUXT_SKIP_SYNC is set, skipping sync')
+    return
+  }
+
   const config = useRuntimeConfig()
   if (!config.github?.token) {
     console.log('[startup] No GitHub token configured, skipping sync')
