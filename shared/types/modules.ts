@@ -423,6 +423,19 @@ export interface GitHubWorkflowRunsResponse {
   }>
 }
 
+// Subset of the pull request list response. Fields only present on the single
+// PR endpoint (mergeable_state, mergeable) are deliberately left out.
+export interface GitHubPullRequestResponse {
+  number: number
+  title: string
+  html_url: string
+  created_at: string
+  updated_at: string
+  draft: boolean
+  user: { login: string, avatar_url: string } | null
+  labels: Array<{ name: string }>
+}
+
 export interface GitHubTreeResponse {
   sha: string
   url: string
