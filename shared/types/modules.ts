@@ -436,6 +436,25 @@ export interface GitHubPullRequestResponse {
   labels: Array<{ name: string }>
 }
 
+// One entry of GET /repos/{owner}/{repo}/pulls/{n}/files.
+// `patch` holds the diff hunks and is omitted by GitHub for large or binary
+// files. For an added file it contains the whole content as "+" lines.
+export interface GitHubPullRequestFileResponse {
+  filename: string
+  status: 'added' | 'modified' | 'removed' | 'renamed' | 'copied' | 'changed' | 'unchanged'
+  additions: number
+  deletions: number
+  contents_url: string
+  patch?: string
+}
+
+// GET /repos/{owner}/{repo}/contents/{path}. Needed for modified files, where
+// the patch only holds the changed hunks instead of the whole file.
+export interface GitHubContentResponse {
+  content: string
+  encoding: string
+}
+
 export interface GitHubTreeResponse {
   sha: string
   url: string
