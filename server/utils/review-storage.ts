@@ -8,8 +8,9 @@
  * Bumped whenever the stored shape changes, so a run discards stale entries.
  * 2: ReviewEntry replaced the earlier ReviewModule shape.
  * 3: added headSha, npm and ci. Without headSha the CI pass cannot run.
+ * 4: conversation, and lastAuthorActivity now ignores commits by others.
  */
-export const REVIEW_SCHEMA_VERSION = 3
+export const REVIEW_SCHEMA_VERSION = 4
 
 const KEY_META = 'review:meta'
 const KEY_ALL = 'review:all'

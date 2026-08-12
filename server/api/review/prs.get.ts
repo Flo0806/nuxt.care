@@ -1,6 +1,7 @@
 // Open submissions to nuxt/modules, served from the review cache.
 // No GitHub call here: the cache is filled by POST /api/review/run.
 
+import { deriveWaitingOn, detectHold } from '../../utils/review-conversation'
 import { getReviewEntries, getReviewMeta } from '../../utils/review-storage'
 
 export default defineEventHandler(async () => {
@@ -9,6 +10,10 @@ export default defineEventHandler(async () => {
   return {
     total: entries.length,
     meta,
-    entries,
+    entries: entries.map((entry): ReviewEntryView => ({
+      ...entry,
+      waitingOn: deriveWaitingOn(entry.conversation),
+      hold: detectHold(entry.conversation),
+    })),
   }
 })

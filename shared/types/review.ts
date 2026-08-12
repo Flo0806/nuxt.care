@@ -64,6 +64,20 @@ export interface ReviewCi {
   fetchedAt: string
 }
 
+/** Null when no maintainer ever said anything, so nobody was asked for a move. */
+export type ReviewWaitingOn = 'author' | 'maintainer' | null
+
+/**
+ * A maintainer parked the PR on purpose. Never suggest merging or closing it.
+ * The quote is part of the flag: the wording is what a human judges, and the
+ * matcher is deliberately generous, so it has to show its evidence.
+ */
+export interface ReviewHold {
+  by: string
+  at: string
+  quote: string
+}
+
 export interface ReviewComment {
   user: string
   at: string
@@ -145,6 +159,18 @@ export interface ReviewHistorySnapshot {
 export interface ReviewHistory {
   number: number
   snapshots: ReviewHistorySnapshot[]
+}
+
+/**
+ * An entry plus everything derived from it on read.
+ *
+ * These are not cached on purpose: they are pure functions of the stored
+ * facts, and the hold wording will keep changing. Storing them would mean
+ * throwing the cache away on every tweak.
+ */
+export interface ReviewEntryView extends ReviewEntry {
+  waitingOn: ReviewWaitingOn
+  hold: ReviewHold | null
 }
 
 export interface ReviewSyncMeta {

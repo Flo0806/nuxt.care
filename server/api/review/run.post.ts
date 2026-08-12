@@ -4,6 +4,7 @@
 // moved since the last run. Everything else is reused from the cache, so a
 // normal run costs a handful of requests instead of one per PR.
 
+import { sleep } from '../../utils/fetchers'
 import {
   fetchOpenPullRequests,
   fetchSubmission,
@@ -51,10 +52,18 @@ export default defineEventHandler(async (event) => {
   }
   catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    await patchReviewMeta({ isRunning: false, error: message })
+    await patchReviewMeta({ isRunning: false, startedAt: null, error: message })
     throw createError({ statusCode: 500, statusMessage: message })
   }
 })
+
+/**
+ * Pause between two PRs that cost GitHub calls, same as the module sync does
+ * between modules (server/api/sync.post.ts). GitHub's secondary limit reacts
+ * to request rate, not to the total, which is why 1900 paced calls go through
+ * while a few hundred unpaced ones get refused.
+ */
+const THROTTLE_MS = 200
 
 async function run(token: string) {
   const startedAt = Date.now()
@@ -62,7 +71,7 @@ async function run(token: string) {
 
   const prs = await fetchOpenPullRequests(token)
   if (!prs) {
-    await patchReviewMeta({ isRunning: false, error: 'Could not load the PR list' })
+    await patchReviewMeta({ isRunning: false, startedAt: null, error: 'Could not load the PR list' })
     throw new Error('Could not load the PR list')
   }
   // One call per page of 100.
@@ -81,6 +90,8 @@ async function run(token: string) {
     }
 
     const submission = await fetchSubmission(pr.number, token)
+    await sleep(THROTTLE_MS)
+
     if (!submission) {
       // Transient GitHub error. Keep the previous state rather than dropping
       // the PR, and let the next run try again.
@@ -117,10 +128,15 @@ async function run(token: string) {
 
     // Check runs are settled once every run on a fixed commit has completed,
     // so most entries keep what they already have.
+    // Only the GitHub calls need pacing. npm above is a different service with
+    // a different limit, and its own latency spaces the requests out anyway.
+    let usedGitHub = false
+
     let ci = entry.ci
     if (needsCiRefresh(ci, entry.headSha) && entry.headSha) {
       apiCalls++
       ciFetched++
+      usedGitHub = true
       ci = (await fetchReviewCi(entry.headSha, fetchedAt, token)) ?? ci
     }
 
@@ -130,8 +146,11 @@ async function run(token: string) {
     if (!conversation) {
       apiCalls += CONVERSATION_CALLS
       conversationFetched++
+      usedGitHub = true
       conversation = await fetchReviewConversation(entry.number, entry.author, fetchedAt, token)
     }
+
+    if (usedGitHub) await sleep(THROTTLE_MS)
 
     // A failed request must not erase what we already knew.
     if (npm.status === 'error' && entry.npm) {
