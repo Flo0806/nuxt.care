@@ -439,6 +439,23 @@ export interface GitHubPullRequestResponse {
   head: { sha: string } | null
 }
 
+// GET /repos/{owner}/{repo}/issues/{n}/comments
+export interface GitHubIssueCommentResponse {
+  user: { login: string, type: string } | null
+  /** OWNER / MEMBER / COLLABORATOR / CONTRIBUTOR / NONE. */
+  author_association: string
+  created_at: string
+  body: string
+}
+
+// GET /repos/{owner}/{repo}/pulls/{n}/reviews
+export interface GitHubReviewResponse {
+  user: { login: string } | null
+  state: string
+  submitted_at: string | null
+  author_association: string
+}
+
 // GET /repos/{owner}/{repo}/commits/{sha}/check-runs
 export interface GitHubCheckRunsResponse {
   total_count: number

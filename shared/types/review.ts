@@ -64,6 +64,29 @@ export interface ReviewCi {
   fetchedAt: string
 }
 
+export interface ReviewComment {
+  user: string
+  at: string
+  /** Kept in full. Maintainer comments are short, and a hold hides in wording. */
+  body: string
+}
+
+/**
+ * Who said what on the PR. Bots are excluded: their comments are long, they
+ * are not maintainers, and agent-scan already shows up as a label.
+ */
+export interface ReviewConversation {
+  /** Comments by a maintainer of nuxt/modules, never by the PR author. */
+  maintainerComments: ReviewComment[]
+  authorReplies: number
+  changesRequested: number
+  /** Latest maintainer comment or requested change. */
+  lastMaintainerActivity: string | null
+  /** Latest author comment or push, whichever is newer. */
+  lastAuthorActivity: string | null
+  fetchedAt: string
+}
+
 /** One open pull request, as cached. */
 export interface ReviewEntry {
   number: number
@@ -93,6 +116,9 @@ export interface ReviewEntry {
 
   /** Checks on the head commit. Null until they were looked up once. */
   ci: ReviewCi | null
+
+  /** Comments and reviews. Null until they were looked up once. */
+  conversation: ReviewConversation | null
 
   /** When the files of this PR were last read. */
   fetchedAt: string

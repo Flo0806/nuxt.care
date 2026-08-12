@@ -12,6 +12,7 @@ import {
 } from '../../utils/review-fetch'
 import { appendReviewHistory } from '../../utils/review-history'
 import { fetchReviewCi, needsCiRefresh } from '../../utils/review-ci'
+import { CONVERSATION_CALLS, fetchReviewConversation } from '../../utils/review-conversation'
 import { fetchReviewNpm } from '../../utils/review-npm'
 import {
   getReviewEntries,
@@ -110,6 +111,7 @@ async function run(token: string) {
   const withNpm: ReviewEntry[] = []
   let npmChanged = 0
   let ciFetched = 0
+  let conversationFetched = 0
   for (const entry of entries) {
     const npm = await fetchReviewNpm(entry.yaml, fetchedAt)
 
@@ -122,9 +124,18 @@ async function run(token: string) {
       ci = (await fetchReviewCi(entry.headSha, fetchedAt, token)) ?? ci
     }
 
+    // Null means either "never looked up" or "the PR moved", because a new
+    // comment, a review and a push all bump `updated_at` and rebuild the entry.
+    let conversation = entry.conversation
+    if (!conversation) {
+      apiCalls += CONVERSATION_CALLS
+      conversationFetched++
+      conversation = await fetchReviewConversation(entry.number, entry.author, fetchedAt, token)
+    }
+
     // A failed request must not erase what we already knew.
     if (npm.status === 'error' && entry.npm) {
-      withNpm.push({ ...entry, ci })
+      withNpm.push({ ...entry, ci, conversation })
       continue
     }
 
@@ -134,7 +145,7 @@ async function run(token: string) {
       npmChanged++
     }
 
-    withNpm.push({ ...entry, npm, ci })
+    withNpm.push({ ...entry, npm, ci, conversation })
   }
 
   await setReviewEntries(withNpm)
@@ -150,5 +161,5 @@ async function run(token: string) {
     error: null,
   })
 
-  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, meta }
+  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, conversationFetched, meta }
 }
