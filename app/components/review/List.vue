@@ -9,13 +9,13 @@
         <h2 class="text-sm font-semibold text-neutral-900 dark:text-white">
           {{ group.label }}
         </h2>
-        <span class="text-xs text-neutral-500">{{ group.prs.length }}</span>
+        <span class="text-xs text-neutral-500">{{ group.entries.length }}</span>
       </header>
 
       <ReviewItem
-        v-for="pr in group.prs"
-        :key="pr.number"
-        :pr="pr"
+        v-for="entry in group.entries"
+        :key="entry.number"
+        :entry="entry"
       />
     </section>
   </div>
@@ -23,18 +23,18 @@
 
 <script setup lang="ts">
 const props = defineProps<{
-  prs: GitHubPullRequestResponse[]
+  entries: ReviewEntry[]
 }>()
 
 interface ReviewGroup {
   key: string
   label: string
-  prs: GitHubPullRequestResponse[]
+  entries: ReviewEntry[]
 }
 
-// Single group for now. This is the seam where the triage buckets go once a PR
-// carries a verdict, so the markup below does not have to change.
+// Single group for now. This is the seam where the triage buckets go once an
+// entry carries a verdict, so the markup below does not have to change.
 const groups = computed<ReviewGroup[]>(() => [
-  { key: 'all', label: 'Open submissions', prs: props.prs },
+  { key: 'all', label: 'Open submissions', entries: props.entries },
 ])
 </script>

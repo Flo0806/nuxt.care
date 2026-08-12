@@ -21,23 +21,42 @@
         </p>
       </div>
 
+      <p
+        v-if="data?.meta.lastRun"
+        class="text-xs text-neutral-400 mb-4"
+      >
+        {{ data.total }} submissions, last checked {{ formatRelative(data.meta.lastRun) }}
+      </p>
+
       <div
         v-if="status === 'pending'"
         class="py-16 text-center text-sm text-neutral-500"
       >
-        Loading open pull requests...
+        Loading...
       </div>
 
       <div
         v-else-if="error"
         class="py-16 text-center text-sm text-red-500"
       >
-        Could not load pull requests.
+        Could not load the submissions.
+      </div>
+
+      <div
+        v-else-if="!data?.entries.length"
+        class="rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 py-16 text-center"
+      >
+        <p class="text-neutral-600 dark:text-neutral-400">
+          The cache is empty.
+        </p>
+        <p class="text-sm text-neutral-500 mt-1">
+          Fill it with <code class="font-mono">POST /api/review/run</code>.
+        </p>
       </div>
 
       <ReviewList
         v-else
-        :prs="data?.prs ?? []"
+        :entries="data.entries"
       />
 
       <AppFooter />
