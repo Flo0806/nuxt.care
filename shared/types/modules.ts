@@ -351,6 +351,7 @@ export interface NpmPackument {
   'dist-tags': Record<string, string>
   'versions': Record<string, NpmVersionInfo>
   'time': Record<string, string>
+  'maintainers'?: Array<{ name?: string }>
 }
 
 export interface NpmVersionInfo {

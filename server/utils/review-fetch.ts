@@ -107,6 +107,8 @@ export function toReviewEntry(
     otherFiles: submission.otherFiles,
     yaml: submission.yaml,
     yamlError: submission.yamlError,
+    // Filled by the npm pass of the run, which has its own schedule.
+    npm: null,
     fetchedAt,
   }
 }

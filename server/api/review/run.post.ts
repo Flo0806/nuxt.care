@@ -11,6 +11,7 @@ import {
   toReviewEntry,
 } from '../../utils/review-fetch'
 import { appendReviewHistory } from '../../utils/review-history'
+import { fetchReviewNpm } from '../../utils/review-npm'
 import {
   getReviewEntries,
   getReviewMeta,
@@ -102,18 +103,41 @@ async function run(token: string) {
     await appendReviewHistory(entry, 'closed', fetchedAt)
   }
 
-  await setReviewEntries(entries)
+  // npm changes without the PR changing: a package can be deprecated or get a
+  // release while the submission sits untouched. So this pass covers every
+  // entry, not only the ones GitHub reported as moved.
+  const withNpm: ReviewEntry[] = []
+  let npmChanged = 0
+  for (const entry of entries) {
+    const npm = await fetchReviewNpm(entry.yaml, fetchedAt)
+
+    // A failed request must not erase what we already knew.
+    if (npm.status === 'error' && entry.npm) {
+      withNpm.push(entry)
+      continue
+    }
+
+    const before = entry.npm
+    if (before && (before.latestVersion !== npm.latestVersion || before.deprecated !== npm.deprecated)) {
+      await appendReviewHistory(entry, 'npm-changed', fetchedAt)
+      npmChanged++
+    }
+
+    withNpm.push({ ...entry, npm })
+  }
+
+  await setReviewEntries(withNpm)
 
   const meta = await patchReviewMeta({
     isRunning: false,
     startedAt: null,
     lastRun: new Date().toISOString(),
-    totalPrs: entries.length,
+    totalPrs: withNpm.length,
     changedPrs: changed,
     apiCalls,
     duration: Date.now() - startedAt,
     error: null,
   })
 
-  return { changed, reused: entries.length - changed, failed, dropped: gone.length, meta }
+  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, meta }
 }

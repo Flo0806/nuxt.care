@@ -19,6 +19,33 @@ export interface ReviewCandidate {
   source: 'patch' | 'blob'
 }
 
+/**
+ * Why an npm lookup did or did not produce data.
+ *
+ * `error` is kept apart from `not_found` on purpose: a package that does not
+ * exist is a defect of the submission, a failed request is a defect of ours.
+ */
+export type ReviewNpmStatus = 'ok' | 'not_found' | 'invalid_name' | 'no_package' | 'error'
+
+export interface ReviewNpm {
+  status: ReviewNpmStatus
+  /** The raw `npm` field from the yaml, kept even when it is unusable. */
+  raw: string | null
+  latestVersion: string | null
+  lastPublish: string | null
+  daysSincePublish: number | null
+  /** Deprecation message, read from the latest version where npm stores it. */
+  deprecated: string | null
+  releaseCount: number
+  maintainers: string[]
+  /** Raw nuxt range from the package's peer dependencies. */
+  nuxtRange: string | null
+  hasTypes: boolean
+  hasTests: boolean
+  /** npm changes without the PR changing, so this has its own timestamp. */
+  fetchedAt: string
+}
+
 /** One open pull request, as cached. */
 export interface ReviewEntry {
   number: number
@@ -41,12 +68,15 @@ export interface ReviewEntry {
   yaml: Record<string, unknown> | null
   yamlError: string | null
 
+  /** The npm package the yaml points at. Null until it was looked up once. */
+  npm: ReviewNpm | null
+
   /** When the files of this PR were last read. */
   fetchedAt: string
 }
 
 /** Why a state stopped being current. */
-export type ReviewHistoryReason = 'updated' | 'closed'
+export type ReviewHistoryReason = 'updated' | 'closed' | 'npm-changed'
 
 /**
  * A state a PR used to be in. Append-only.
