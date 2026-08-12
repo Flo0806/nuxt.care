@@ -45,6 +45,29 @@ export interface ReviewEntry {
   fetchedAt: string
 }
 
+/** Why a state stopped being current. */
+export type ReviewHistoryReason = 'updated' | 'closed'
+
+/**
+ * A state a PR used to be in. Append-only.
+ *
+ * The version is stamped per snapshot and is never used to discard anything:
+ * an old shape stays readable, because unlike the cache this cannot be
+ * refetched. Whoever changes `ReviewEntry` has to keep reading old snapshots.
+ */
+export interface ReviewHistorySnapshot {
+  schemaVersion: number
+  entry: ReviewEntry
+  /** When this state was replaced. */
+  replacedAt: string
+  reason: ReviewHistoryReason
+}
+
+export interface ReviewHistory {
+  number: number
+  snapshots: ReviewHistorySnapshot[]
+}
+
 export interface ReviewSyncMeta {
   schemaVersion: number
   lastRun: string | null

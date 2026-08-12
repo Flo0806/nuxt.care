@@ -10,6 +10,7 @@ import {
   submissionCallCount,
   toReviewEntry,
 } from '../../utils/review-fetch'
+import { appendReviewHistory } from '../../utils/review-history'
 import {
   getReviewEntries,
   getReviewMeta,
@@ -88,12 +89,19 @@ async function run(token: string) {
 
     apiCalls += submissionCallCount(submission)
     changed++
+    // Keep the state that is about to be overwritten.
+    if (known) await appendReviewHistory(known, 'updated', fetchedAt)
     entries.push(toReviewEntry(pr, submission, fetchedAt))
   }
 
-  // PRs that are no longer open simply do not make it into the new array.
+  // PRs that are no longer open simply do not make it into the new array. This
+  // is the last moment their state exists anywhere, so it has to be kept now.
   const open = new Set(prs.map(pr => pr.number))
-  const dropped = [...cached.keys()].filter(number => !open.has(number)).length
+  const gone = [...cached.values()].filter(entry => !open.has(entry.number))
+  for (const entry of gone) {
+    await appendReviewHistory(entry, 'closed', fetchedAt)
+  }
+
   await setReviewEntries(entries)
 
   const meta = await patchReviewMeta({
@@ -107,5 +115,5 @@ async function run(token: string) {
     error: null,
   })
 
-  return { changed, reused: entries.length - changed, failed, dropped, meta }
+  return { changed, reused: entries.length - changed, failed, dropped: gone.length, meta }
 }
