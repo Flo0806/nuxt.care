@@ -62,6 +62,8 @@ export default defineNuxtConfig({
       '0 */8 * * *': ['sync:modules'],
       // Every Sunday at 4:00 AM
       '0 4 * * 0': ['crawl:readme'],
+      // Every 30 minutes, throttled by REVIEW_INTERVAL_MS inside the endpoint
+      '*/30 * * * *': ['review:run'],
     },
     prerender: {
       crawlLinks: false,
