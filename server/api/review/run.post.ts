@@ -11,6 +11,7 @@ import {
   toReviewEntry,
 } from '../../utils/review-fetch'
 import { appendReviewHistory } from '../../utils/review-history'
+import { fetchReviewCi, needsCiRefresh } from '../../utils/review-ci'
 import { fetchReviewNpm } from '../../utils/review-npm'
 import {
   getReviewEntries,
@@ -108,12 +109,22 @@ async function run(token: string) {
   // entry, not only the ones GitHub reported as moved.
   const withNpm: ReviewEntry[] = []
   let npmChanged = 0
+  let ciFetched = 0
   for (const entry of entries) {
     const npm = await fetchReviewNpm(entry.yaml, fetchedAt)
 
+    // Check runs are settled once every run on a fixed commit has completed,
+    // so most entries keep what they already have.
+    let ci = entry.ci
+    if (needsCiRefresh(ci, entry.headSha) && entry.headSha) {
+      apiCalls++
+      ciFetched++
+      ci = (await fetchReviewCi(entry.headSha, fetchedAt, token)) ?? ci
+    }
+
     // A failed request must not erase what we already knew.
     if (npm.status === 'error' && entry.npm) {
-      withNpm.push(entry)
+      withNpm.push({ ...entry, ci })
       continue
     }
 
@@ -123,7 +134,7 @@ async function run(token: string) {
       npmChanged++
     }
 
-    withNpm.push({ ...entry, npm })
+    withNpm.push({ ...entry, npm, ci })
   }
 
   await setReviewEntries(withNpm)
@@ -139,5 +150,5 @@ async function run(token: string) {
     error: null,
   })
 
-  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, meta }
+  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, meta }
 }

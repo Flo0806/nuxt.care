@@ -46,6 +46,24 @@ export interface ReviewNpm {
   fetchedAt: string
 }
 
+/**
+ * Outcome of the checks nuxt/modules runs on the PR itself, mainly autofix.ci.
+ *
+ * `none` is not `success`: a PR older than the current workflows has no checks
+ * at all, which means we know nothing, not that everything is fine.
+ */
+export type ReviewCiConclusion = 'success' | 'failure' | 'pending' | 'none'
+
+export interface ReviewCi {
+  /** The commit these checks belong to. */
+  sha: string
+  conclusion: ReviewCiConclusion
+  total: number
+  failed: number
+  failedNames: string[]
+  fetchedAt: string
+}
+
 /** One open pull request, as cached. */
 export interface ReviewEntry {
   number: number
@@ -57,6 +75,8 @@ export interface ReviewEntry {
   updatedAt: string
   draft: boolean
   labels: string[]
+  /** Head commit of the PR. A push moves it, which is how we spot new checks. */
+  headSha: string | null
 
   candidate: ReviewCandidate | null
   /** Further files touched by the PR, e.g. the module icon. */
@@ -70,6 +90,9 @@ export interface ReviewEntry {
 
   /** The npm package the yaml points at. Null until it was looked up once. */
   npm: ReviewNpm | null
+
+  /** Checks on the head commit. Null until they were looked up once. */
+  ci: ReviewCi | null
 
   /** When the files of this PR were last read. */
   fetchedAt: string

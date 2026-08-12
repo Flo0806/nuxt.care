@@ -435,6 +435,18 @@ export interface GitHubPullRequestResponse {
   draft: boolean
   user: { login: string, avatar_url: string } | null
   labels: Array<{ name: string }>
+  /** Check runs hang off the head commit, not off the PR. */
+  head: { sha: string } | null
+}
+
+// GET /repos/{owner}/{repo}/commits/{sha}/check-runs
+export interface GitHubCheckRunsResponse {
+  total_count: number
+  check_runs: Array<{
+    name: string
+    status: 'queued' | 'in_progress' | 'completed'
+    conclusion: string | null
+  }>
 }
 
 // One entry of GET /repos/{owner}/{repo}/pulls/{n}/files.

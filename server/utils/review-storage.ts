@@ -7,8 +7,9 @@
 /**
  * Bumped whenever the stored shape changes, so a run discards stale entries.
  * 2: ReviewEntry replaced the earlier ReviewModule shape.
+ * 3: added headSha, npm and ci. Without headSha the CI pass cannot run.
  */
-export const REVIEW_SCHEMA_VERSION = 2
+export const REVIEW_SCHEMA_VERSION = 3
 
 const KEY_META = 'review:meta'
 const KEY_ALL = 'review:all'

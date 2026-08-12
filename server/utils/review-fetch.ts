@@ -103,12 +103,14 @@ export function toReviewEntry(
     updatedAt: pr.updated_at,
     draft: pr.draft,
     labels: (pr.labels ?? []).map(l => l.name),
+    headSha: pr.head?.sha ?? null,
     candidate: submission.candidate,
     otherFiles: submission.otherFiles,
     yaml: submission.yaml,
     yamlError: submission.yamlError,
-    // Filled by the npm pass of the run, which has its own schedule.
+    // Filled by the later passes of the run, which have their own schedules.
     npm: null,
+    ci: null,
     fetchedAt,
   }
 }
