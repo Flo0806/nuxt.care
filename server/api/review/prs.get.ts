@@ -10,10 +10,10 @@ export default defineEventHandler(async () => {
   return {
     total: entries.length,
     meta,
-    entries: entries.map((entry): ReviewEntryView => ({
-      ...entry,
-      waitingOn: deriveWaitingOn(entry.conversation),
-      hold: detectHold(entry.conversation),
-    })),
+    entries: entries.map((entry): ReviewEntryView => {
+      const waitingOn = deriveWaitingOn(entry.conversation)
+      const hold = detectHold(entry.conversation)
+      return { ...entry, waitingOn, hold, bucket: deriveBucket(entry, waitingOn, hold) }
+    }),
   }
 })

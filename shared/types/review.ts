@@ -64,6 +64,22 @@ export interface ReviewCi {
   fetchedAt: string
 }
 
+/**
+ * Where a submission stands. The order of the union is the order of the
+ * decision chain in deriveBucket(): the first match wins, so a PR that is both
+ * broken and red lands in `broken`, where the useful action is.
+ */
+export type ReviewBucket
+  = | 'hold' // a maintainer parked it on purpose
+    | 'broken' // the file has no effect, or the yaml does not parse
+    | 'dead' // package deprecated, missing, or the npm field is unusable
+    | 'ci-red' // autofix failed, one comment to the author would fix it
+    | 'waiting-author' // a maintainer asked something and got no answer
+    | 'waiting-maintainer' // the author delivered and nobody looked
+    | 'rotten' // module alive on paper, no npm release in over a year
+    | 'unchecked' // nothing against it, but no check ever ran either
+    | 'ready' // checks green, package alive, nothing pending
+
 /** Null when no maintainer ever said anything, so nobody was asked for a move. */
 export type ReviewWaitingOn = 'author' | 'maintainer' | null
 
@@ -171,6 +187,7 @@ export interface ReviewHistory {
 export interface ReviewEntryView extends ReviewEntry {
   waitingOn: ReviewWaitingOn
   hold: ReviewHold | null
+  bucket: ReviewBucket
 }
 
 export interface ReviewSyncMeta {

@@ -1,40 +1,62 @@
 <template>
-  <div class="space-y-6">
-    <section
-      v-for="group in groups"
-      :key="group.key"
-      class="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden"
-    >
-      <header class="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
-        <h2 class="text-sm font-semibold text-neutral-900 dark:text-white">
-          {{ group.label }}
-        </h2>
-        <span class="text-xs text-neutral-500">{{ group.entries.length }}</span>
-      </header>
+  <UAccordion
+    v-model="expanded"
+    type="multiple"
+    :items="groups"
+    :ui="{
+      root: 'space-y-3',
+      item: 'border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden border-b',
+      trigger: 'px-4 py-3 gap-3 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800',
+      body: 'p-0',
+    }"
+  >
+    <template #default="{ item }">
+      <span class="flex items-center gap-2 min-w-0">
+        <span class="font-semibold text-neutral-900 dark:text-white truncate">{{ item.label }}</span>
+        <UBadge
+          :color="item.entries.length ? 'primary' : 'neutral'"
+          variant="subtle"
+          size="sm"
+        >
+          {{ item.entries.length }}
+        </UBadge>
+      </span>
+    </template>
+
+    <template #body="{ item }">
+      <p class="px-4 py-2 text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
+        {{ item.hint }}
+      </p>
 
       <ReviewItem
-        v-for="entry in group.entries"
+        v-for="entry in item.entries"
         :key="entry.number"
         :entry="entry"
+        :marked="entry.number === marked"
+        @mark="mark"
       />
-    </section>
-  </div>
+    </template>
+  </UAccordion>
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
-  entries: ReviewEntry[]
+  entries: ReviewEntryView[]
 }>()
 
-interface ReviewGroup {
-  key: string
-  label: string
-  entries: ReviewEntry[]
-}
+const { expanded, marked, mark } = useReviewViewState()
 
-// Single group for now. This is the seam where the triage buckets go once an
-// entry carries a verdict, so the markup below does not have to change.
-const groups = computed<ReviewGroup[]>(() => [
-  { key: 'all', label: 'Open submissions', entries: props.entries },
-])
+// REVIEW_BUCKETS carries the order, so the list cannot drift from the chain
+// that assigns the buckets. Empty groups are dropped: a heading with a zero
+// next to it is noise, not information.
+const groups = computed(() =>
+  REVIEW_BUCKETS
+    .map(bucket => ({
+      value: bucket.key,
+      label: bucket.label,
+      hint: bucket.hint,
+      entries: props.entries.filter(entry => entry.bucket === bucket.key),
+    }))
+    .filter(group => group.entries.length > 0),
+)
 </script>
