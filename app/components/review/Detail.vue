@@ -141,10 +141,7 @@
           </p>
         </header>
 
-        <section
-          v-if="entry.analysis"
-          class="p-6"
-        >
+        <section class="p-6">
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
             Estimated score
           </h3>
@@ -152,7 +149,24 @@
             Calculated with the same rules as a listed module, so the number is
             directly comparable. Only produced when every source could be read.
           </ReviewHint>
-          <ReviewScore :analysis="entry.analysis" />
+
+          <ReviewScore
+            v-if="entry.analysis"
+            :analysis="entry.analysis"
+          />
+
+          <!-- An absent score used to be an absent section, which reads as an
+               oversight. It is a decision, so it says so. -->
+          <div
+            v-else
+            class="flex items-start gap-2 p-3 rounded-lg bg-neutral-100 dark:bg-neutral-800/60 text-sm text-neutral-600 dark:text-neutral-400"
+          >
+            <UIcon
+              name="i-lucide-circle-slash"
+              class="w-4 h-4 shrink-0 mt-0.5 text-neutral-400"
+            />
+            <span>{{ noScoreReason }}</span>
+          </div>
         </section>
 
         <!-- Why it sits in this group -->
@@ -310,8 +324,11 @@
           </dl>
         </section>
 
+        <!-- Merge state does not depend on a head commit, checks do. Tied to
+             `ci` alone the merge rows would vanish for an entry that has no
+             head sha. -->
         <section
-          v-if="entry.ci"
+          v-if="entry.ci || entry.merge"
           class="p-6"
         >
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
@@ -328,6 +345,7 @@
               :value="ciResultText"
             />
             <ReviewDetailRow
+              v-if="entry.ci"
               label="Commit"
               :value="entry.ci.sha.slice(0, 12)"
               mono
@@ -536,6 +554,27 @@ const title = computed(() =>
 
 const description = computed(() =>
   (props.entry ? yamlText(props.entry.yaml, 'description') : null) ?? undefined)
+
+/**
+ * Why there is no number, in the words that fit the case.
+ *
+ * Three of them: something else is wrong with the submission and a score would
+ * not change that, a source could not be read, or nothing has run yet.
+ */
+const noScoreReason = computed(() => {
+  const entry = props.entry
+  if (!entry) return ''
+
+  if (entry.analysisError) {
+    return `Cannot be calculated: ${entry.analysisError}. The next run tries again.`
+  }
+
+  if (entry.bucket !== 'ready') {
+    return `Not calculated. A score is only worked out once nothing else stands in the way, and this submission sits in "${bucketLabel.value}" first.`
+  }
+
+  return 'Not calculated yet. The next run will.'
+})
 
 /** Same source as the list row and the module page, so it looks alike. */
 const category = computed(() => {

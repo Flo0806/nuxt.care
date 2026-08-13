@@ -10,6 +10,7 @@ import { analyseSubmission, needsAnalysis } from './review-analysis'
 import { invalidateReviewChecks } from './review-checks'
 import { fetchReviewCi } from './review-ci'
 import { deriveWaitingOn, detectHold, fetchReviewConversation } from './review-conversation'
+import { fetchBaseSha } from './review-merge'
 import { fetchPullRequest, fetchSubmission, toReviewEntry } from './review-fetch'
 import { appendReviewHistory } from './review-history'
 import { fetchReviewNpm } from './review-npm'
@@ -50,13 +51,16 @@ export async function refreshSubmission(prNumber: number, token: string): Promis
     fetchReviewConversation(prNumber, pr.user?.login ?? 'unknown', fetchedAt, token),
   ])
 
-  // The pull request we already hold carries the merge fields, so this needs no
-  // second call. The base commit is whatever GitHub judged against just now.
+  // The pull request we already hold carries the merge fields themselves. The
+  // base commit costs one call and has to be the current head of the target
+  // branch: carrying the old one over would label a fresh verdict with the
+  // commit a previous one was judged against, and needsMergeRefresh() reads
+  // exactly that field to decide whether to look again.
   const merge: ReviewMerge = {
     maintainerCanModify: pr.maintainer_can_modify ?? null,
     mergeable: pr.mergeable ?? null,
     state: pr.mergeable_state ?? null,
-    baseSha: known?.merge?.baseSha ?? null,
+    baseSha: await fetchBaseSha(token),
     fetchedAt,
   }
 
@@ -68,12 +72,15 @@ export async function refreshSubmission(prNumber: number, token: string): Promis
     conversation,
     // Carried over so a refresh does not throw away a score it may not redo.
     analysis: known?.analysis ?? null,
+    analysisError: known?.analysisError ?? null,
   }
 
   // A forced refresh redoes the score too, but only where one belongs at all.
   const bucket = deriveBucket(entry, deriveWaitingOn(conversation), detectHold(conversation))
   if (needsAnalysis({ ...entry, analysis: null }, bucket)) {
-    entry.analysis = (await analyseSubmission(entry, token)) ?? entry.analysis
+    const result = await analyseSubmission(entry, token)
+    entry.analysis = result.analysis
+    entry.analysisError = result.error
   }
 
   await upsertReviewEntry(entry)

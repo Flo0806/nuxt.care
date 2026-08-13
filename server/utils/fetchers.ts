@@ -19,7 +19,7 @@ const NETWORK_TIMEOUT_MS = 20_000
  * silently read as "no vulnerability data" - fifteen points off a stranger's
  * module because of our own connection.
  */
-async function fetchWithRetry(url: string, init: RequestInit = {}): Promise<Response> {
+export async function fetchWithRetry(url: string, init: RequestInit = {}): Promise<Response> {
   let lastError: unknown
 
   for (let attempt = 1; attempt <= NETWORK_ATTEMPTS; attempt++) {

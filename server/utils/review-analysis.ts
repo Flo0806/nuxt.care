@@ -69,32 +69,46 @@ function isComplete(data: ModuleData): boolean {
   return !!data.npm && !!data.github && !!data.vulnerabilities
 }
 
+export interface AnalysisResult {
+  analysis: ReviewAnalysis | null
+  /** Said out loud rather than left blank, so the page can explain the gap. */
+  error: string | null
+}
+
 /**
- * Returns null when the analysis came back incomplete. The caller keeps
- * whatever it had and tries again next time; no score is better than a wrong
- * one, because a wrong one gets read as a verdict on somebody's work.
+ * No score is better than a wrong one, because a wrong one gets read as a
+ * verdict on somebody's work. When it does not work out, the reason travels
+ * with the empty result instead of vanishing into a log nobody reads.
  */
-export async function analyseSubmission(entry: ReviewEntry, token?: string): Promise<ReviewAnalysis | null> {
+export async function analyseSubmission(entry: ReviewEntry, token?: string): Promise<AnalysisResult> {
   const descriptor = descriptorFromSubmission(entry)
-  if (!descriptor) return null
+  if (!descriptor) {
+    return { analysis: null, error: 'The yaml does not name a module, a package and a repository' }
+  }
 
   const data = await analyzeModule(descriptor, token)
   if (!isComplete(data)) {
-    console.warn(
-      `[review] ${descriptor.npm}: incomplete analysis, no score`
-      + ` (npm ${data.npm ? 'ok' : 'missing'},`
-      + ` repo ${data.github ? 'ok' : 'missing'},`
-      + ` vulnerabilities ${data.vulnerabilities ? 'ok' : 'missing'})`,
-    )
-    return null
+    const missing = [
+      !data.npm && 'the npm package',
+      !data.github && 'the repository',
+      !data.vulnerabilities && 'the vulnerability check',
+    ].filter(Boolean) as string[]
+
+    const error = `${missing.join(' and ')} could not be read`
+    console.warn(`[review] ${descriptor.npm}: no score, ${error}`)
+
+    return { analysis: null, error }
   }
 
   const health = calculateHealth(data)
 
   return {
-    score: health.score,
-    signals: health.signals,
-    github: data.github,
-    analysedAt: new Date().toISOString(),
+    analysis: {
+      score: health.score,
+      signals: health.signals,
+      github: data.github,
+      analysedAt: new Date().toISOString(),
+    },
+    error: null,
   }
 }

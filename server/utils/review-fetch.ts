@@ -57,11 +57,23 @@ export async function fetchPullRequest(prNumber: number, token?: string): Promis
  * is distinguishable from a PR that touches no module file at all.
  */
 export async function fetchSubmission(prNumber: number, token?: string): Promise<PrSubmission | null> {
-  const files = await ghFetch<GitHubPullRequestFileResponse[]>(
-    `https://api.github.com/repos/${REVIEW_REPO}/pulls/${prNumber}/files?per_page=100`,
-    token,
-  )
-  if (!files) return null
+  // Paged, because a single page holds 100 files and the module yaml could sit
+  // behind them. Rare, but a truncated list would silently report "no module
+  // file" for a pull request that has one.
+  const files: GitHubPullRequestFileResponse[] = []
+
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const batch = await ghFetch<GitHubPullRequestFileResponse[]>(
+      `https://api.github.com/repos/${REVIEW_REPO}/pulls/${prNumber}/files?per_page=${PER_PAGE}&page=${page}`,
+      token,
+    )
+    // A failed first page means we know nothing; a later one would leave a
+    // half list, which is worse than saying so.
+    if (!batch) return null
+    if (!batch.length) break
+    files.push(...batch)
+    if (batch.length < PER_PAGE) break
+  }
 
   const candidates = files.filter(isCandidate)
   const file = candidates.find(f => f.status === 'added') ?? candidates[0] ?? null
@@ -124,6 +136,7 @@ export function toReviewEntry(
     ci: null,
     merge: null,
     analysis: null,
+    analysisError: null,
     conversation: null,
     fetchedAt,
   }

@@ -200,7 +200,9 @@ async function run(token: string, force: boolean) {
     if (force ? SCORED_BUCKETS.has(bucket) : needsAnalysis(next, bucket)) {
       apiCalls += ANALYSIS_CALLS
       analysed++
-      next.analysis = (await analyseSubmission(next, token)) ?? next.analysis
+      const result = await analyseSubmission(next, token)
+      next.analysis = result.analysis
+      next.analysisError = result.error
       await sleep(THROTTLE_MS)
     }
 

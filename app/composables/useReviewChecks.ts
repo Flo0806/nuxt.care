@@ -10,6 +10,13 @@
 
 const cache = new Map<string, ReviewChecks | null>()
 
+/**
+ * Counts every load, so a slow answer can tell whether it is still wanted.
+ * Clicking quickly through submissions otherwise shows the checks of the one
+ * before, because the older request finishes last.
+ */
+let requestId = 0
+
 /** Drops what we remember for a commit, after a forced refresh replaced it. */
 export function invalidateCheckCache(sha: string | null) {
   if (sha) cache.delete(sha)
@@ -21,7 +28,18 @@ export function useReviewChecks() {
   const failed = ref(false)
 
   async function load(prNumber: number, headSha: string | null) {
-    if (import.meta.server || !headSha) return
+    if (import.meta.server) return
+
+    const mine = ++requestId
+
+    // No commit means nothing to show, and the previous entry's checks would
+    // sit there looking like this one's.
+    if (!headSha) {
+      checks.value = null
+      pending.value = false
+      failed.value = false
+      return
+    }
 
     const known = cache.get(headSha)
     if (known !== undefined) {
@@ -38,13 +56,13 @@ export function useReviewChecks() {
       // Keyed by the commit the answer is about, not by the one we asked for.
       // A forced refresh can move the head between the two.
       cache.set(data.checks?.sha ?? headSha, data.checks)
-      checks.value = data.checks
+      if (mine === requestId) checks.value = data.checks
     }
     catch {
-      failed.value = true
+      if (mine === requestId) failed.value = true
     }
     finally {
-      pending.value = false
+      if (mine === requestId) pending.value = false
     }
   }
 

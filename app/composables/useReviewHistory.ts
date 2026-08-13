@@ -12,6 +12,9 @@
 
 const cache = new Map<number, ReviewHistorySnapshot[]>()
 
+/** Same guard as the checks: a slow answer must not land on another entry. */
+let requestId = 0
+
 /** Drops what we remember, after a forced refresh may have added a snapshot. */
 export function invalidateHistoryCache(prNumber: number) {
   cache.delete(prNumber)
@@ -33,19 +36,20 @@ export function useReviewHistory() {
       return
     }
 
+    const mine = ++requestId
     snapshots.value = []
     pending.value = true
     failed.value = false
     try {
       const data = await $fetch(`/api/review/prs/${prNumber}/history`)
       cache.set(prNumber, data.snapshots)
-      snapshots.value = data.snapshots
+      if (mine === requestId) snapshots.value = data.snapshots
     }
     catch {
-      failed.value = true
+      if (mine === requestId) failed.value = true
     }
     finally {
-      pending.value = false
+      if (mine === requestId) pending.value = false
     }
   }
 

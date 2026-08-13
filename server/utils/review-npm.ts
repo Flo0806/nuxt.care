@@ -6,7 +6,7 @@
 // exist" apart from "the request failed", and the shared fetchers return null
 // for both.
 
-import { extractVersionInfo } from './fetchers'
+import { extractVersionInfo, fetchWithRetry } from './fetchers'
 
 /** https://docs.npmjs.com/package-name-guidelines */
 const PACKAGE_NAME = /^(@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
@@ -65,7 +65,9 @@ type PackumentResult
 
 async function fetchPackument(pkg: string): Promise<PackumentResult> {
   try {
-    const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`)
+    // Same retry and timeout as everywhere else: without one a hung
+    // request blocks the scheduled run instead of failing.
+    const res = await fetchWithRetry(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`)
     if (res.status === 404) return { status: 'not_found' }
     if (!res.ok) return { status: 'error' }
     return { status: 'ok', packument: await res.json() as NpmPackument }

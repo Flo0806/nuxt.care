@@ -106,8 +106,10 @@ export function reviewFacts(entry: ReviewEntryView): ReviewFact[] {
 export function reviewIconUrl(entry: ReviewEntryView): string | null {
   const icon = yamlText(entry.yaml, 'icon')
   if (!icon || !entry.headSha) return null
-  // Guard against a path escaping the icons folder.
+  // The name comes from a stranger's yaml. Rejected outright when it tries to
+  // leave the folder; everything else is encoded, so a space or a question
+  // mark cannot break the URL either.
   if (icon.includes('/') || icon.includes('..')) return null
 
-  return `https://raw.githubusercontent.com/nuxt/modules/${entry.headSha}/icons/${icon}`
+  return `https://raw.githubusercontent.com/nuxt/modules/${entry.headSha}/icons/${encodeURIComponent(icon)}`
 }

@@ -241,6 +241,11 @@ export interface ReviewEntry {
 
   /** Full analysis and score. Only filled while the submission is a candidate. */
   analysis: ReviewAnalysis | null
+  /**
+   * Why there is no score, when one was attempted and did not come out.
+   * Null both when a score exists and when none was ever tried.
+   */
+  analysisError: string | null
 
   /** Comments and reviews. Null until they were looked up once. */
   conversation: ReviewConversation | null
