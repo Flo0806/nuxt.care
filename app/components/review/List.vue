@@ -74,7 +74,10 @@ const groups = computed(() =>
       value: bucket.key,
       label: bucket.label,
       hint: bucket.hint,
-      entries: props.entries.filter(entry => entry.bucket === bucket.key),
+      entries: sortBucketEntries(
+        props.entries.filter(entry => entry.bucket === bucket.key),
+        bucket.sort,
+      ),
     }))
     .filter(group => group.entries.length > 0),
 )

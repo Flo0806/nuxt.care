@@ -10,7 +10,12 @@
       class="flex flex-1 gap-3 min-w-0 text-left cursor-pointer"
       @click="$emit('select', entry)"
     >
-      <span class="text-xs font-mono text-neutral-400 pt-0.5 w-12 shrink-0">#{{ entry.number }}</span>
+      <ReviewIcon
+        :entry="entry"
+        size="sm"
+      />
+
+      <span class="text-xs font-mono text-neutral-400 pt-1 w-12 shrink-0">#{{ entry.number }}</span>
 
       <span class="flex-1 min-w-0">
         <span class="flex items-center gap-2 flex-wrap">

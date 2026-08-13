@@ -24,14 +24,10 @@
           </button>
 
           <div class="flex items-start gap-4">
-            <img
-              v-if="iconUrl && !iconFailed"
-              :src="iconUrl"
-              :alt="`${title} icon`"
-              class="w-12 h-12 rounded-lg object-contain shrink-0 bg-white dark:bg-neutral-800 p-1.5 border border-neutral-200 dark:border-neutral-700"
-              loading="lazy"
-              @error="iconFailed = true"
-            >
+            <ReviewIcon
+              :entry="entry"
+              size="lg"
+            />
 
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-3">
@@ -419,8 +415,6 @@ const title = computed(() =>
 const description = computed(() =>
   (props.entry ? yamlText(props.entry.yaml, 'description') : null) ?? undefined)
 
-const iconUrl = computed(() => props.entry ? reviewIconUrl(props.entry) : null)
-
 const conversationSummary = computed(() => {
   const conversation = props.entry?.conversation
   const replies = conversation?.authorReplies ?? 0
@@ -489,13 +483,6 @@ watch(
   },
   { immediate: true },
 )
-
-// The icon is read from an unmerged commit, so a missing file is normal rather
-// than an error. Reset whenever another submission is shown.
-const iconFailed = ref(false)
-watch(() => props.entry?.number, () => {
-  iconFailed.value = false
-})
 
 const bucket = computed(() =>
   REVIEW_BUCKETS.find(definition => definition.key === props.entry?.bucket))
