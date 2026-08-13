@@ -1,0 +1,97 @@
+// Individual checks of a submission, loaded when a detail is opened.
+//
+// Third layer of the same cache: this map spares repeated clicks in one tab,
+// the KV key behind the endpoint spares every other visitor, and only a real
+// miss reaches GitHub. Keyed by commit, so a push shows fresh results.
+//
+// Module scope means one map per JavaScript context. On the server that would
+// be one map for every request and every visitor, so nothing here may run
+// while rendering.
+
+const cache = new Map<string, ReviewChecks | null>()
+
+/**
+ * Counts every load, so a slow answer can tell whether it is still wanted.
+ * Clicking quickly through submissions otherwise shows the checks of the one
+ * before, because the older request finishes last.
+ */
+let requestId = 0
+
+/** Drops what we remember for a commit, after a forced refresh replaced it. */
+export function invalidateCheckCache(sha: string | null) {
+  if (sha) cache.delete(sha)
+}
+
+export function useReviewChecks() {
+  const checks = ref<ReviewChecks | null>(null)
+  const pending = ref(false)
+  const failed = ref(false)
+
+  async function load(prNumber: number, headSha: string | null) {
+    if (import.meta.server) return
+
+    const mine = ++requestId
+
+    // No commit means nothing to show, and the previous entry's checks would
+    // sit there looking like this one's.
+    if (!headSha) {
+      checks.value = null
+      pending.value = false
+      failed.value = false
+      return
+    }
+
+    const known = cache.get(headSha)
+    if (known !== undefined) {
+      checks.value = known
+      failed.value = false
+      return
+    }
+
+    checks.value = null
+    pending.value = true
+    failed.value = false
+    try {
+      const data = await $fetch(`/api/review/prs/${prNumber}/checks`)
+      // Keyed by the commit the answer is about, not by the one we asked for.
+      // A forced refresh can move the head between the two.
+      cache.set(data.checks?.sha ?? headSha, data.checks)
+      if (mine === requestId) checks.value = data.checks
+    }
+    catch {
+      if (mine === requestId) failed.value = true
+    }
+    finally {
+      if (mine === requestId) pending.value = false
+    }
+  }
+
+  return { checks, pending, failed, load }
+}
+
+/** Colour for a single run, from its own conclusion rather than the total. */
+export function reviewRunTone(run: ReviewCheckRun): string {
+  if (run.status !== 'completed') return 'text-neutral-400'
+  switch (run.conclusion) {
+    case 'success':
+      return 'text-green-600 dark:text-green-400'
+    case 'skipped':
+    case 'neutral':
+      return 'text-neutral-400'
+    default:
+      return 'text-red-600 dark:text-red-400'
+  }
+}
+
+export function reviewRunIcon(run: ReviewCheckRun): string {
+  if (run.status !== 'completed') return 'i-lucide-loader-circle'
+  switch (run.conclusion) {
+    case 'success':
+      return 'i-lucide-circle-check'
+    case 'skipped':
+    case 'neutral':
+      return 'i-lucide-circle-minus'
+    default:
+      return 'i-lucide-circle-x'
+  }
+}

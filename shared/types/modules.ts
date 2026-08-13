@@ -351,6 +351,7 @@ export interface NpmPackument {
   'dist-tags': Record<string, string>
   'versions': Record<string, NpmVersionInfo>
   'time': Record<string, string>
+  'maintainers'?: Array<{ name?: string }>
 }
 
 export interface NpmVersionInfo {
@@ -421,6 +422,85 @@ export interface GitHubWorkflowRunsResponse {
     conclusion: string | null
     updated_at: string
   }>
+}
+
+// Subset of the pull request list response. Fields only present on the single
+// PR endpoint (mergeable_state, mergeable) are deliberately left out.
+export interface GitHubPullRequestResponse {
+  number: number
+  title: string
+  html_url: string
+  created_at: string
+  updated_at: string
+  draft: boolean
+  user: { login: string, avatar_url: string } | null
+  labels: Array<{ name: string }>
+  /** Check runs hang off the head commit, not off the PR. */
+  head: { sha: string } | null
+
+  // The three below are absent from the list response and only arrive when a
+  // single pull request is requested, which is why they are optional.
+
+  /** False means autofix cannot push into the branch and the PR needs its author. */
+  maintainer_can_modify?: boolean
+  /** Null while GitHub is still working the answer out. */
+  mergeable?: boolean | null
+  /** clean | dirty | blocked | unstable | behind | draft | unknown */
+  mergeable_state?: string
+}
+
+// GET /repos/{owner}/{repo}/issues/{n}/comments
+export interface GitHubIssueCommentResponse {
+  user: { login: string, type: string } | null
+  /** OWNER / MEMBER / COLLABORATOR / CONTRIBUTOR / NONE. */
+  author_association: string
+  created_at: string
+  body: string
+}
+
+// GET /repos/{owner}/{repo}/pulls/{n}/reviews
+export interface GitHubReviewResponse {
+  user: { login: string } | null
+  state: string
+  submitted_at: string | null
+  author_association: string
+}
+
+// GET /repos/{owner}/{repo}/commits/{sha}/check-runs
+export interface GitHubCheckRunsResponse {
+  total_count: number
+  check_runs: Array<{
+    name: string
+    status: 'queued' | 'in_progress' | 'completed'
+    conclusion: string | null
+    html_url?: string | null
+    details_url?: string | null
+    started_at?: string | null
+    completed_at?: string | null
+    output?: {
+      title?: string | null
+      summary?: string | null
+    }
+  }>
+}
+
+// One entry of GET /repos/{owner}/{repo}/pulls/{n}/files.
+// `patch` holds the diff hunks and is omitted by GitHub for large or binary
+// files. For an added file it contains the whole content as "+" lines.
+export interface GitHubPullRequestFileResponse {
+  filename: string
+  status: 'added' | 'modified' | 'removed' | 'renamed' | 'copied' | 'changed' | 'unchanged'
+  additions: number
+  deletions: number
+  contents_url: string
+  patch?: string
+}
+
+// GET /repos/{owner}/{repo}/contents/{path}. Needed for modified files, where
+// the patch only holds the changed hunks instead of the whole file.
+export interface GitHubContentResponse {
+  content: string
+  encoding: string
 }
 
 export interface GitHubTreeResponse {

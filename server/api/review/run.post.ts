@@ -1,0 +1,229 @@
+// Fills the review cache.
+//
+// One call for the PR list, then the files only for PRs whose `updated_at`
+// moved since the last run. Everything else is reused from the cache, so a
+// normal run costs a handful of requests instead of one per PR.
+
+import { sleep } from '../../utils/fetchers'
+import {
+  fetchOpenPullRequests,
+  fetchSubmission,
+  submissionCallCount,
+  toReviewEntry,
+} from '../../utils/review-fetch'
+import { ANALYSIS_CALLS, SCORED_BUCKETS, analyseSubmission, needsAnalysis } from '../../utils/review-analysis'
+import { appendReviewHistory } from '../../utils/review-history'
+import { fetchReviewCi, needsCiRefresh } from '../../utils/review-ci'
+import { fetchBaseSha, fetchReviewMerge, needsMergeRefresh } from '../../utils/review-merge'
+import { CONVERSATION_CALLS, deriveWaitingOn, detectHold, fetchReviewConversation } from '../../utils/review-conversation'
+import { fetchReviewNpm } from '../../utils/review-npm'
+import {
+  getReviewEntries,
+  getReviewMeta,
+  patchReviewMeta,
+  setReviewEntries,
+  REVIEW_INTERVAL_MS,
+  REVIEW_STALE_LOCK_MS,
+} from '../../utils/review-storage'
+
+export default defineEventHandler(async (event) => {
+  const force = getQuery(event).force === 'true'
+  const meta = await getReviewMeta()
+  const now = Date.now()
+
+  const lockAge = meta.startedAt ? now - new Date(meta.startedAt).getTime() : Infinity
+  if (meta.isRunning && lockAge < REVIEW_STALE_LOCK_MS) {
+    return { started: false, reason: 'A run is already in progress', meta }
+  }
+
+  const sinceLastRun = meta.lastRun ? now - new Date(meta.lastRun).getTime() : Infinity
+  if (!force && sinceLastRun < REVIEW_INTERVAL_MS) {
+    return { started: false, reason: 'Last run is too recent', meta }
+  }
+
+  const token = useRuntimeConfig().github?.token
+  if (!token) {
+    return { started: false, reason: 'No GitHub token configured', meta }
+  }
+
+  await patchReviewMeta({ isRunning: true, startedAt: new Date().toISOString(), error: null })
+
+  try {
+    const result = await run(token, force)
+    return { started: true, ...result }
+  }
+  catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    await patchReviewMeta({ isRunning: false, startedAt: null, phase: null, error: message })
+    throw createError({ statusCode: 500, statusMessage: message })
+  }
+})
+
+/**
+ * Pause between two PRs that cost GitHub calls, same as the module sync does
+ * between modules (server/api/sync.post.ts). GitHub's secondary limit reacts
+ * to request rate, not to the total, which is why 1900 paced calls go through
+ * while a few hundred unpaced ones get refused.
+ */
+const THROTTLE_MS = 200
+
+async function run(token: string, force: boolean) {
+  const startedAt = Date.now()
+  const fetchedAt = new Date().toISOString()
+
+  const prs = await fetchOpenPullRequests(token)
+  if (!prs) {
+    await patchReviewMeta({ isRunning: false, startedAt: null, phase: null, error: 'Could not load the PR list' })
+    throw new Error('Could not load the PR list')
+  }
+  // One call per page of 100.
+  let apiCalls = Math.max(1, Math.ceil(prs.length / 100))
+
+  // One call, and it decides whether every merge verdict is still worth
+  // anything: merging something else can put a conflict into a pull request
+  // nobody touched.
+  const baseSha = await fetchBaseSha(token)
+  apiCalls++
+
+  const cached = new Map((await getReviewEntries()).map(e => [e.number, e]))
+  const entries: ReviewEntry[] = []
+  let changed = 0
+  let failed = 0
+
+  // The count is known now, so the page can show a bar rather than a spinner.
+  await patchReviewMeta({ phase: 'files', processed: 0, totalPrs: prs.length })
+
+  for (const pr of prs) {
+    const known = cached.get(pr.number)
+    if (known && known.updatedAt === pr.updated_at) {
+      entries.push(known)
+      continue
+    }
+
+    const submission = await fetchSubmission(pr.number, token)
+    await sleep(THROTTLE_MS)
+
+    if (!submission) {
+      // Transient GitHub error. Keep the previous state rather than dropping
+      // the PR, and let the next run try again.
+      failed++
+      apiCalls++
+      if (known) entries.push(known)
+      continue
+    }
+
+    apiCalls += submissionCallCount(submission)
+    changed++
+    // Keep the state that is about to be overwritten.
+    if (known) await appendReviewHistory(known, 'updated', fetchedAt)
+    entries.push(toReviewEntry(pr, submission, fetchedAt))
+    await patchReviewMeta({ processed: entries.length })
+  }
+
+  // PRs that are no longer open simply do not make it into the new array. This
+  // is the last moment their state exists anywhere, so it has to be kept now.
+  const open = new Set(prs.map(pr => pr.number))
+  const gone = [...cached.values()].filter(entry => !open.has(entry.number))
+  for (const entry of gone) {
+    await appendReviewHistory(entry, 'closed', fetchedAt)
+  }
+
+  // npm changes without the PR changing: a package can be deprecated or get a
+  // release while the submission sits untouched. So this pass covers every
+  // entry, not only the ones GitHub reported as moved.
+  await patchReviewMeta({ phase: 'details', processed: 0 })
+
+  const withNpm: ReviewEntry[] = []
+  let npmChanged = 0
+  let ciFetched = 0
+  let conversationFetched = 0
+  let mergeFetched = 0
+  let analysed = 0
+  for (const entry of entries) {
+    const npm = await fetchReviewNpm(entry.yaml, fetchedAt)
+
+    // Only the GitHub calls need pacing. npm above is a different service with
+    // a different limit, and its own latency spaces the requests out anyway.
+    let usedGitHub = false
+
+    // Check runs are settled once every run on a fixed commit has completed,
+    // so most entries keep what they already have.
+    let ci = entry.ci
+    if (needsCiRefresh(ci, entry.headSha) && entry.headSha) {
+      apiCalls++
+      ciFetched++
+      usedGitHub = true
+      ci = (await fetchReviewCi(entry.headSha, fetchedAt, token)) ?? ci
+    }
+
+    // Stale only when the pull request moved, when the target branch moved, or
+    // when GitHub had not finished computing the answer last time.
+    let merge = entry.merge
+    if (needsMergeRefresh(merge, baseSha)) {
+      apiCalls++
+      mergeFetched++
+      usedGitHub = true
+      merge = (await fetchReviewMerge(entry.number, baseSha, fetchedAt, token)) ?? merge
+    }
+
+    // Null means either "never looked up" or "the PR moved", because a new
+    // comment, a review and a push all bump `updated_at` and rebuild the entry.
+    let conversation = entry.conversation
+    if (!conversation) {
+      apiCalls += CONVERSATION_CALLS
+      conversationFetched++
+      usedGitHub = true
+      conversation = await fetchReviewConversation(entry.number, entry.author, fetchedAt, token)
+    }
+
+    if (usedGitHub) await sleep(THROTTLE_MS)
+
+    // A failed request must not erase what we already knew.
+    const keepNpm = npm.status === 'error' && entry.npm
+    const next: ReviewEntry = keepNpm
+      ? { ...entry, ci, conversation, merge }
+      : { ...entry, npm, ci, conversation, merge }
+
+    if (!keepNpm) {
+      const before = entry.npm
+      if (before && (before.latestVersion !== npm.latestVersion || before.deprecated !== npm.deprecated)) {
+        await appendReviewHistory(entry, 'npm-changed', fetchedAt)
+        npmChanged++
+      }
+    }
+
+    // The score is worth its eight calls only where the submission is still a
+    // candidate, so the bucket has to be known first. It is derived, never
+    // stored, which is why it is computed here rather than read.
+    const bucket = deriveBucket(next, deriveWaitingOn(next.conversation), detectHold(next.conversation))
+    // A forced run means every cache is ignored, the analysis included.
+    if (force ? SCORED_BUCKETS.has(bucket) : needsAnalysis(next, bucket)) {
+      apiCalls += ANALYSIS_CALLS
+      analysed++
+      const result = await analyseSubmission(next, token)
+      next.analysis = result.analysis
+      next.analysisError = result.error
+      await sleep(THROTTLE_MS)
+    }
+
+    withNpm.push(next)
+    await patchReviewMeta({ processed: withNpm.length })
+  }
+
+  await setReviewEntries(withNpm)
+
+  const meta = await patchReviewMeta({
+    isRunning: false,
+    startedAt: null,
+    phase: null,
+    processed: 0,
+    lastRun: new Date().toISOString(),
+    totalPrs: withNpm.length,
+    changedPrs: changed,
+    apiCalls,
+    duration: Date.now() - startedAt,
+    error: null,
+  })
+
+  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, conversationFetched, mergeFetched, analysed, meta }
+}

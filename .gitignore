@@ -28,6 +28,8 @@ coverage/
 
 # Claude
 CLAUDE.md
+.claude/
+HANDOVER.md
 
 #Scripts
 /scripts/

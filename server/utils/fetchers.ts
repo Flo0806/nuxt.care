@@ -1,3 +1,44 @@
+/** Attempts per request, including the first one. */
+const NETWORK_ATTEMPTS = 3
+
+/**
+ * Cap per attempt. Without one a wedged connection sits for Node's default of
+ * five minutes, which is how a run once hung for over an hour.
+ */
+const NETWORK_TIMEOUT_MS = 20_000
+
+/**
+ * A request that never got an answer, tried again.
+ *
+ * Only thrown errors are retried, never HTTP statuses: a 403 or a 404 is an
+ * answer about the resource and belongs to the caller, while a connection that
+ * failed to establish says nothing at all.
+ *
+ * This matters more than it looks. Measured on a bad line, four of six OSV
+ * calls only succeeded on the second or third attempt, and each lost one was
+ * silently read as "no vulnerability data" - fifteen points off a stranger's
+ * module because of our own connection.
+ */
+export async function fetchWithRetry(url: string, init: RequestInit = {}): Promise<Response> {
+  let lastError: unknown
+
+  for (let attempt = 1; attempt <= NETWORK_ATTEMPTS; attempt++) {
+    try {
+      return await fetch(url, { ...init, signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS) })
+    }
+    catch (err) {
+      lastError = err
+      // A second apart, not milliseconds: what fails here is the first
+      // connection to a host after an idle spell, and that takes a few seconds
+      // to come up on a weak line. Once one is open, undici keeps it and the
+      // rest of the run is fast.
+      if (attempt < NETWORK_ATTEMPTS) await sleep(attempt * 1000)
+    }
+  }
+
+  throw lastError
+}
+
 /**
  * Generic GitHub API fetch with auth and error handling
  */
@@ -11,7 +52,7 @@ export async function ghFetch<T>(url: string, token?: string): Promise<T | null>
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const res = await fetch(url, { headers })
+    const res = await fetchWithRetry(url, { headers })
     if (!res.ok) {
       const body = await res.text()
       console.warn(`GitHub fetch failed: ${url} - ${res.status} ${res.statusText}`)
@@ -155,18 +196,31 @@ export async function fetchPendingCommits(repoPath: string, lastReleaseDate: str
  */
 export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
   try {
-    // Fetch registry info and downloads in parallel
+    // Registry and downloads in parallel, but not tied together: they are two
+    // different hosts, and the download count is an info signal worth zero
+    // points. Inside a plain Promise.all one hiccup on api.npmjs.org rejects
+    // the whole thing, and the module loses its publish date, its types and
+    // its tests - 42 points - over a number nobody scores.
     const [registryRes, downloadsRes] = await Promise.all([
-      fetch(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`),
-      fetch(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(pkg)}`),
+      fetchWithRetry(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`),
+      fetchWithRetry(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(pkg)}`)
+        .catch((err) => {
+          console.warn(`[npm] ${pkg}: downloads unavailable (${err instanceof Error ? err.message : String(err)})`)
+          return null
+        }),
     ])
 
-    if (!registryRes.ok) return null
+    if (!registryRes.ok) {
+      console.warn(`[npm] ${pkg}: registry answered ${registryRes.status}`)
+      return null
+    }
 
     const data = await registryRes.json() as {
       'name': string
       'dist-tags'?: { latest?: string }
       'versions'?: Record<string, {
+        /** Where npm actually records a deprecation. */
+        deprecated?: string
         peerDependencies?: Record<string, string>
         devDependencies?: Record<string, string>
         keywords?: string[]
@@ -185,7 +239,7 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
 
     // Parse downloads (weekly)
     let downloads: number | null = null
-    if (downloadsRes.ok) {
+    if (downloadsRes?.ok) {
       const dlData = await downloadsRes.json() as { downloads?: number }
       downloads = dlData.downloads ?? null
     }
@@ -226,14 +280,18 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
       daysSincePublish: latest && time[latest] ? daysSince(time[latest]) : null,
       peerDeps: latestInfo?.peerDependencies || null,
       keywords: latestInfo?.keywords || [],
-      deprecated: data.deprecated || null,
+      // npm records a deprecation on the version, not on the package: the
+      // top level field is empty in every real case we checked, which is why
+      // the -50 penalty in calculateHealth() had never once fired.
+      deprecated: latestInfo?.deprecated || data.deprecated || null,
       hasTypes,
       hasTests,
       unpackedSize: latestInfo?.dist?.unpackedSize || null,
       downloads,
     }
   }
-  catch {
+  catch (err) {
+    console.warn(`[npm] ${pkg}: ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }
@@ -292,7 +350,7 @@ export function detectHasTests(
  */
 export async function fetchNpmPackument(pkg: string): Promise<NpmPackument | null> {
   try {
-    const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`)
+    const res = await fetchWithRetry(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`)
     if (!res.ok) return null
     return res.json() as Promise<NpmPackument>
   }
@@ -361,7 +419,7 @@ export function extractVersionInfo(packument: NpmPackument, version: string): Ve
  */
 export async function fetchVulnerabilitiesForVersion(pkg: string, version: string): Promise<VulnerabilityInfo | null> {
   try {
-    const res = await fetch('https://api.osv.dev/v1/query', {
+    const res = await fetchWithRetry('https://api.osv.dev/v1/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -370,7 +428,10 @@ export async function fetchVulnerabilitiesForVersion(pkg: string, version: strin
       }),
     })
 
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.warn(`[osv] ${pkg}@${version}: answered ${res.status}`)
+      return null
+    }
 
     const data = await res.json() as OsvResponse
     const vulns = data.vulns || []
@@ -420,7 +481,8 @@ export async function fetchVulnerabilitiesForVersion(pkg: string, version: strin
       vulnerabilities: mapped,
     }
   }
-  catch {
+  catch (err) {
+    console.warn(`[osv] ${pkg}@${version}: ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }

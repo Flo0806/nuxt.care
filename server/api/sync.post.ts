@@ -82,13 +82,14 @@ async function runSync(startedAt: string): Promise<void> {
       }
 
       if (!mod) continue
+      const descriptor = descriptorFromNuxtApi(mod)
       try {
-        const moduleData = await fetchModuleData(mod, githubToken)
+        const moduleData = await analyzeModule(descriptor, githubToken)
         results.push(moduleData)
       }
       catch (err) {
         console.error(`[sync] Failed ${mod.name}:`, err)
-        results.push(createErrorModule(mod, err))
+        results.push(createErrorModule(descriptor, err))
       }
 
       await sleep(200)
@@ -146,132 +147,6 @@ async function updateProgress(startedAt: string, total: number, current: number)
     error: null,
     serverId: SERVER_ID,
   })
-}
-
-function createErrorModule(mod: NuxtApiModule, err: unknown): ModuleData {
-  return {
-    name: mod.name,
-    npmPackage: mod.npm,
-    repo: mod.repo,
-    description: mod.description,
-    category: mod.category,
-    type: mod.type,
-    maintainers: [],
-    nuxtApiCompat: null,
-    nuxtApiStats: null,
-    github: null,
-    topics: null,
-    nuxt4Issues: null,
-    release: null,
-    oldestIssue: null,
-    contributors: null,
-    testFiles: null,
-    readme: null,
-    ciStatus: null,
-    pendingCommits: null,
-    npm: null,
-    keywords: null,
-    nodeEngine: null,
-    deps: null,
-    moduleJson: null,
-    vulnerabilities: null,
-    health: {
-      score: 0,
-      signals: [{ key: 'error', type: 'negative', msg: `Fetch failed: ${String(err)}`, points: 0, maxPoints: 100 }],
-    },
-  }
-}
-
-async function fetchModuleData(mod: NuxtApiModule, githubToken?: string): Promise<ModuleData> {
-  const data: ModuleData = {
-    name: mod.name,
-    npmPackage: mod.npm,
-    repo: mod.repo,
-    description: mod.description,
-    category: mod.category,
-    type: mod.type,
-    icon: mod.icon,
-    maintainers: mod.maintainers?.map(m => m.name) || [],
-    nuxtApiCompat: analyzeCompatString(mod.compatibility?.nuxt),
-    nuxtApiStats: mod.stats || null,
-    github: null,
-    topics: null,
-    nuxt4Issues: null,
-    release: null,
-    oldestIssue: null,
-    contributors: null,
-    testFiles: null,
-    readme: null,
-    ciStatus: null,
-    pendingCommits: null,
-    npm: null,
-    keywords: null,
-    nodeEngine: null,
-    deps: null,
-    moduleJson: null,
-    vulnerabilities: null,
-    health: { score: 0, signals: [] },
-  }
-
-  if (mod.repo) {
-    const repoPath = cleanRepoPath(mod.repo)
-    if (repoPath) {
-      const [github, releases, contributors] = await Promise.all([
-        fetchGitHubRepo(repoPath, githubToken),
-        fetchGitHubReleases(repoPath, githubToken),
-        fetchContributors(repoPath, githubToken),
-      ])
-
-      if (github) {
-        data.github = github
-        data.topics = analyzeTopics(github.topics)
-
-        // Fetch CI status (needs default branch)
-        const ciStatus = await fetchCIStatus(repoPath, github.defaultBranch, githubToken)
-        if (ciStatus) {
-          data.ciStatus = ciStatus
-        }
-      }
-
-      if (releases) {
-        data.release = releases
-
-        // Fetch pending commits since last release
-        const pendingCommits = await fetchPendingCommits(repoPath, releases.date, githubToken)
-        if (pendingCommits) {
-          data.pendingCommits = pendingCommits
-        }
-      }
-
-      if (contributors) {
-        data.contributors = contributors
-      }
-
-      // Check for actual test files in repo
-      if (github) {
-        const testFiles = await fetchHasTestFiles(repoPath, github.defaultBranch, githubToken)
-        if (testFiles) {
-          data.testFiles = testFiles
-        }
-      }
-    }
-  }
-
-  if (mod.npm) {
-    const npmData = await fetchNpmInfo(mod.npm)
-    if (npmData) {
-      data.npm = npmData
-      data.keywords = analyzeKeywords(npmData.keywords)
-      data.vulnerabilities = await fetchVulnerabilitiesForVersion(mod.npm, npmData.latestVersion)
-    }
-    // bundleSize now comes from npm.unpackedSize, not bundlephobia
-  }
-
-  // Health score is calculated on-the-fly in modules.get.ts, not during sync
-  // This allows changing scoring logic without re-syncing all modules
-  data.health = { score: 0, signals: [] }
-
-  return data
 }
 
 function crawlNewModulesInBackground(modules: ModuleData[], token?: string) {

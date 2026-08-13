@@ -7,6 +7,8 @@
         @show-critical="showCriticalOnly = true"
       />
 
+      <ViewSwitch />
+
       <!-- TODO: remove this "new feature" banner once users have discovered the maintainer dashboard -->
       <UAlert
         v-if="!maintainerBannerDismissed"
