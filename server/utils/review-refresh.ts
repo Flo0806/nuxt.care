@@ -49,10 +49,21 @@ export async function refreshSubmission(prNumber: number, token: string): Promis
     fetchReviewConversation(prNumber, pr.user?.login ?? 'unknown', fetchedAt, token),
   ])
 
+  // The pull request we already hold carries the merge fields, so this needs no
+  // second call. The base commit is whatever GitHub judged against just now.
+  const merge: ReviewMerge = {
+    maintainerCanModify: pr.maintainer_can_modify ?? null,
+    mergeable: pr.mergeable ?? null,
+    state: pr.mergeable_state ?? null,
+    baseSha: known?.merge?.baseSha ?? null,
+    fetchedAt,
+  }
+
   const entry: ReviewEntry = {
     ...toReviewEntry(pr, submission, fetchedAt),
     npm,
     ci,
+    merge,
     conversation,
   }
 

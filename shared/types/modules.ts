@@ -437,6 +437,16 @@ export interface GitHubPullRequestResponse {
   labels: Array<{ name: string }>
   /** Check runs hang off the head commit, not off the PR. */
   head: { sha: string } | null
+
+  // The three below are absent from the list response and only arrive when a
+  // single pull request is requested, which is why they are optional.
+
+  /** False means autofix cannot push into the branch and the PR needs its author. */
+  maintainer_can_modify?: boolean
+  /** Null while GitHub is still working the answer out. */
+  mergeable?: boolean | null
+  /** clean | dirty | blocked | unstable | behind | draft | unknown */
+  mergeable_state?: string
 }
 
 // GET /repos/{owner}/{repo}/issues/{n}/comments

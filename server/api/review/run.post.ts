@@ -13,6 +13,7 @@ import {
 } from '../../utils/review-fetch'
 import { appendReviewHistory } from '../../utils/review-history'
 import { fetchReviewCi, needsCiRefresh } from '../../utils/review-ci'
+import { fetchBaseSha, fetchReviewMerge, needsMergeRefresh } from '../../utils/review-merge'
 import { CONVERSATION_CALLS, fetchReviewConversation } from '../../utils/review-conversation'
 import { fetchReviewNpm } from '../../utils/review-npm'
 import {
@@ -77,6 +78,12 @@ async function run(token: string) {
   // One call per page of 100.
   let apiCalls = Math.max(1, Math.ceil(prs.length / 100))
 
+  // One call, and it decides whether every merge verdict is still worth
+  // anything: merging something else can put a conflict into a pull request
+  // nobody touched.
+  const baseSha = await fetchBaseSha(token)
+  apiCalls++
+
   const cached = new Map((await getReviewEntries()).map(e => [e.number, e]))
   const entries: ReviewEntry[] = []
   let changed = 0
@@ -123,21 +130,32 @@ async function run(token: string) {
   let npmChanged = 0
   let ciFetched = 0
   let conversationFetched = 0
+  let mergeFetched = 0
   for (const entry of entries) {
     const npm = await fetchReviewNpm(entry.yaml, fetchedAt)
 
-    // Check runs are settled once every run on a fixed commit has completed,
-    // so most entries keep what they already have.
     // Only the GitHub calls need pacing. npm above is a different service with
     // a different limit, and its own latency spaces the requests out anyway.
     let usedGitHub = false
 
+    // Check runs are settled once every run on a fixed commit has completed,
+    // so most entries keep what they already have.
     let ci = entry.ci
     if (needsCiRefresh(ci, entry.headSha) && entry.headSha) {
       apiCalls++
       ciFetched++
       usedGitHub = true
       ci = (await fetchReviewCi(entry.headSha, fetchedAt, token)) ?? ci
+    }
+
+    // Stale only when the pull request moved, when the target branch moved, or
+    // when GitHub had not finished computing the answer last time.
+    let merge = entry.merge
+    if (needsMergeRefresh(merge, baseSha)) {
+      apiCalls++
+      mergeFetched++
+      usedGitHub = true
+      merge = (await fetchReviewMerge(entry.number, baseSha, fetchedAt, token)) ?? merge
     }
 
     // Null means either "never looked up" or "the PR moved", because a new
@@ -154,7 +172,7 @@ async function run(token: string) {
 
     // A failed request must not erase what we already knew.
     if (npm.status === 'error' && entry.npm) {
-      withNpm.push({ ...entry, ci, conversation })
+      withNpm.push({ ...entry, ci, conversation, merge })
       continue
     }
 
@@ -164,7 +182,7 @@ async function run(token: string) {
       npmChanged++
     }
 
-    withNpm.push({ ...entry, npm, ci, conversation })
+    withNpm.push({ ...entry, npm, ci, conversation, merge })
   }
 
   await setReviewEntries(withNpm)
@@ -180,5 +198,5 @@ async function run(token: string) {
     error: null,
   })
 
-  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, conversationFetched, meta }
+  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, conversationFetched, mergeFetched, meta }
 }

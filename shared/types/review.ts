@@ -145,6 +145,30 @@ export interface ReviewConversation {
   fetchedAt: string
 }
 
+/**
+ * Whether the pull request could be merged, and by whom it can be fixed.
+ *
+ * These two travel together because one GitHub call answers both, but they age
+ * very differently. `maintainerCanModify` is set when the branch is created and
+ * barely ever changes. Mergeability also depends on the target branch: merging
+ * something else can put a conflict into a pull request nobody touched. Which
+ * is why `baseSha` records what the judgement was made against.
+ */
+export interface ReviewMerge {
+  /**
+   * False means autofix cannot push its fix, so the pull request can never go
+   * green on its own and the author has to act.
+   */
+  maintainerCanModify: boolean | null
+  /** Null while GitHub is still computing it, not "no". */
+  mergeable: boolean | null
+  /** GitHub's own word: clean, dirty, blocked, unstable, behind, unknown. */
+  state: string | null
+  /** Head of the target branch this was judged against. */
+  baseSha: string | null
+  fetchedAt: string
+}
+
 /** A single check on the head commit, loaded when a detail is opened. */
 export interface ReviewCheckRun {
   name: string
@@ -193,6 +217,9 @@ export interface ReviewEntry {
 
   /** Checks on the head commit. Null until they were looked up once. */
   ci: ReviewCi | null
+
+  /** Mergeability and who may push. Null until looked up once. */
+  merge: ReviewMerge | null
 
   /** Comments and reviews. Null until they were looked up once. */
   conversation: ReviewConversation | null

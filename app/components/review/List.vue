@@ -42,6 +42,7 @@
   <ReviewDetail
     v-model:open="isDetailOpen"
     :entry="selected"
+    :last-run="lastRun"
     @refreshed="$emit('refreshed')"
   />
 </template>
@@ -49,6 +50,8 @@
 <script setup lang="ts">
 const props = defineProps<{
   entries: ReviewEntryView[]
+  /** Passed through so a detail can tell an individual refresh apart. */
+  lastRun?: string | null
 }>()
 
 defineEmits<{

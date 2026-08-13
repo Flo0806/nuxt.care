@@ -122,6 +122,7 @@ export function toReviewEntry(
     // Filled by the later passes of the run, which have their own schedules.
     npm: null,
     ci: null,
+    merge: null,
     conversation: null,
     fetchedAt,
   }

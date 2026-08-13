@@ -81,6 +81,16 @@
             </span>
             <span>opened {{ formatRelative(entry.createdAt) }}</span>
             <span>updated {{ formatRelative(entry.updatedAt) }}</span>
+            <span
+              v-if="refreshedIndividually"
+              class="flex items-center gap-1 text-primary-600 dark:text-primary-400"
+            >
+              <UIcon
+                name="i-lucide-refresh-cw"
+                class="w-3.5 h-3.5"
+              />
+              refreshed {{ formatRelative(entry.fetchedAt) }}, newer than the list
+            </span>
             <UButton
               v-if="isAdmin"
               size="xs"
@@ -284,6 +294,16 @@
               :value="entry.ci.sha.slice(0, 12)"
               mono
             />
+            <ReviewDetailRow
+              v-if="entry.merge"
+              label="Mergeable"
+              :value="mergeText"
+            />
+            <ReviewDetailRow
+              v-if="entry.merge"
+              label="Who can push"
+              :value="pushText"
+            />
           </dl>
 
           <p
@@ -424,6 +444,8 @@
 <script setup lang="ts">
 const props = defineProps<{
   entry: ReviewEntryView | null
+  /** When the last full run finished, to tell an individual refresh apart. */
+  lastRun?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -486,6 +508,17 @@ const conversationSummary = computed(() => {
   return parts.join(', ')
 })
 
+/**
+ * True when this entry was read after the last full run, which only happens
+ * through the force refresh. Worth saying out loud: the line above the list
+ * then reports an older state than this one submission is in.
+ */
+const refreshedIndividually = computed(() => {
+  const entry = props.entry
+  if (!entry || !props.lastRun) return false
+  return Date.parse(entry.fetchedAt) > Date.parse(props.lastRun)
+})
+
 /** Each source is read on its own schedule, so each carries its own age. */
 const freshness = computed(() => {
   const entry = props.entry
@@ -497,6 +530,24 @@ const freshness = computed(() => {
   if (entry.conversation) parts.push(`comments ${formatRelative(entry.conversation.fetchedAt)}`)
 
   return `Data read: ${parts.join(', ')}`
+})
+
+/** Spells the null out: GitHub not having decided is not the same as "no". */
+const mergeText = computed(() => {
+  const merge = props.entry?.merge
+  if (!merge) return 'unknown'
+  if (merge.mergeable === null) return 'GitHub has not worked it out yet'
+
+  const state = merge.state ? ` (${merge.state})` : ''
+  return `${merge.mergeable ? 'yes' : 'no, conflicts with main'}${state}`
+})
+
+const pushText = computed(() => {
+  const canModify = props.entry?.merge?.maintainerCanModify
+  if (canModify === null || canModify === undefined) return 'unknown'
+  return canModify
+    ? 'the author and any nuxt/modules maintainer'
+    : 'only the author, maintainers are locked out'
 })
 
 const ciResultText = computed(() => {

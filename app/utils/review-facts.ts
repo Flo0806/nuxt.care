@@ -16,8 +16,14 @@ const DANGER = 'text-red-600 dark:text-red-400'
 const WARN = 'text-amber-600 dark:text-amber-400'
 
 export function reviewFacts(entry: ReviewEntryView): ReviewFact[] {
-  const { candidate, yamlError, npm, ci, conversation, waitingOn, duplicate, ownership } = entry
+  const { candidate, yamlError, npm, ci, conversation, waitingOn, duplicate, ownership, merge } = entry
   const facts: ReviewFact[] = []
+
+  // Only a definite no is worth saying. Null means GitHub had not worked the
+  // answer out yet, which is not the same as mergeable.
+  if (merge?.mergeable === false) {
+    facts.push({ icon: 'i-lucide-git-merge', text: 'merge conflict with main', tone: DANGER })
+  }
 
   if (duplicate) {
     facts.push({
@@ -45,6 +51,15 @@ export function reviewFacts(entry: ReviewEntryView): ReviewFact[] {
 
   if (ci?.conclusion === 'failure') {
     facts.push({ icon: 'i-lucide-circle-x', text: ci.failedNames.join(', ') || 'checks failed', tone: DANGER })
+
+    // The point of the whole group: for most of these the fix does not need
+    // the author at all.
+    if (entry.merge?.maintainerCanModify === true) {
+      facts.push({ icon: 'i-lucide-wrench', text: 'maintainers can push the fix themselves' })
+    }
+    else if (entry.merge?.maintainerCanModify === false) {
+      facts.push({ icon: 'i-lucide-lock', text: 'only the author can push here', tone: WARN })
+    }
   }
   else if (ci?.conclusion === 'success') {
     facts.push({ icon: 'i-lucide-circle-check', text: 'checks green' })

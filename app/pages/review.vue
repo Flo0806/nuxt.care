@@ -62,6 +62,7 @@
       <ReviewList
         v-else
         :entries="data.entries"
+        :last-run="data.meta.lastRun"
         @refreshed="refresh"
       />
 
