@@ -288,11 +288,22 @@ export interface ReviewEntryView extends ReviewEntry {
   duplicate: ReviewDuplicate | null
 }
 
+/**
+ * What a run is busy with. Two passes, each walking every submission: first
+ * the changed pull requests get their files read, then every entry gets npm,
+ * checks, merge state and possibly a score.
+ */
+export type ReviewRunPhase = 'files' | 'details'
+
 export interface ReviewSyncMeta {
   schemaVersion: number
   lastRun: string | null
   isRunning: boolean
   startedAt: string | null
+  /** Null while idle. */
+  phase: ReviewRunPhase | null
+  /** Entries done in the current phase, against totalPrs. */
+  processed: number
   /** Open PRs seen in the last run. */
   totalPrs: number
   /** Of those, the ones whose `updated_at` had moved. */

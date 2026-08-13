@@ -28,6 +28,11 @@
         {{ data.total }} submissions, last checked {{ formatRelative(data.meta.lastRun) }}
       </p>
 
+      <ReviewProgress
+        v-if="runStatus?.isRunning"
+        :meta="runStatus"
+      />
+
       <!--
         Only the very first load empties the page. `status` is pending while
         reloading too, and swapping the list out then would tear down the open
@@ -73,6 +78,34 @@
 
 <script setup lang="ts">
 const { data, status, error, refresh } = await useFetch('/api/review/prs')
+
+// Small endpoint on purpose: the list is around 190 KB, and polling that every
+// five seconds to read two numbers would be wasteful. It also resets a lock
+// left behind by a run whose process died.
+const { data: runStatus, refresh: refreshStatus } = await useFetch('/api/review/status', {
+  key: 'review-status',
+})
+
+// Same shape as the module page: poll while a run is going, and read the
+// entries once more when it finishes.
+const wasRunning = ref(runStatus.value?.isRunning ?? false)
+let interval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  interval = setInterval(async () => {
+    const before = wasRunning.value
+    await refreshStatus()
+
+    const running = runStatus.value?.isRunning ?? false
+    if (before && !running) await refresh()
+
+    wasRunning.value = running
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (interval) clearInterval(interval)
+})
 
 useHead({
   title: 'Modules in review - nuxt.care',

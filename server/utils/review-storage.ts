@@ -27,6 +27,8 @@ export function emptyReviewMeta(): ReviewSyncMeta {
     lastRun: null,
     isRunning: false,
     startedAt: null,
+    phase: null,
+    processed: 0,
     totalPrs: 0,
     changedPrs: 0,
     apiCalls: 0,
@@ -35,11 +37,17 @@ export function emptyReviewMeta(): ReviewSyncMeta {
   }
 }
 
-/** Falls back to a fresh meta when the stored one predates the current shape. */
+/**
+ * Falls back to a fresh meta when the stored one predates the current shape.
+ *
+ * Fields added since it was written are filled from the empty meta rather than
+ * discarding it. Meta is small and purely descriptive, so a new counter is not
+ * worth a schema bump that would throw away every cached entry as well.
+ */
 export async function getReviewMeta(): Promise<ReviewSyncMeta> {
   const meta = await kv.get<ReviewSyncMeta>(KEY_META)
   if (!meta || meta.schemaVersion !== REVIEW_SCHEMA_VERSION) return emptyReviewMeta()
-  return meta
+  return { ...emptyReviewMeta(), ...meta }
 }
 
 export async function setReviewMeta(meta: ReviewSyncMeta): Promise<void> {

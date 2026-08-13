@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
   }
   catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    await patchReviewMeta({ isRunning: false, startedAt: null, error: message })
+    await patchReviewMeta({ isRunning: false, startedAt: null, phase: null, error: message })
     throw createError({ statusCode: 500, statusMessage: message })
   }
 })
@@ -73,7 +73,7 @@ async function run(token: string, force: boolean) {
 
   const prs = await fetchOpenPullRequests(token)
   if (!prs) {
-    await patchReviewMeta({ isRunning: false, startedAt: null, error: 'Could not load the PR list' })
+    await patchReviewMeta({ isRunning: false, startedAt: null, phase: null, error: 'Could not load the PR list' })
     throw new Error('Could not load the PR list')
   }
   // One call per page of 100.
@@ -89,6 +89,9 @@ async function run(token: string, force: boolean) {
   const entries: ReviewEntry[] = []
   let changed = 0
   let failed = 0
+
+  // The count is known now, so the page can show a bar rather than a spinner.
+  await patchReviewMeta({ phase: 'files', processed: 0, totalPrs: prs.length })
 
   for (const pr of prs) {
     const known = cached.get(pr.number)
@@ -114,6 +117,7 @@ async function run(token: string, force: boolean) {
     // Keep the state that is about to be overwritten.
     if (known) await appendReviewHistory(known, 'updated', fetchedAt)
     entries.push(toReviewEntry(pr, submission, fetchedAt))
+    await patchReviewMeta({ processed: entries.length })
   }
 
   // PRs that are no longer open simply do not make it into the new array. This
@@ -127,6 +131,8 @@ async function run(token: string, force: boolean) {
   // npm changes without the PR changing: a package can be deprecated or get a
   // release while the submission sits untouched. So this pass covers every
   // entry, not only the ones GitHub reported as moved.
+  await patchReviewMeta({ phase: 'details', processed: 0 })
+
   const withNpm: ReviewEntry[] = []
   let npmChanged = 0
   let ciFetched = 0
@@ -199,6 +205,7 @@ async function run(token: string, force: boolean) {
     }
 
     withNpm.push(next)
+    await patchReviewMeta({ processed: withNpm.length })
   }
 
   await setReviewEntries(withNpm)
@@ -206,6 +213,8 @@ async function run(token: string, force: boolean) {
   const meta = await patchReviewMeta({
     isRunning: false,
     startedAt: null,
+    phase: null,
+    processed: 0,
     lastRun: new Date().toISOString(),
     totalPrs: withNpm.length,
     changedPrs: changed,
