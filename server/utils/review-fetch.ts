@@ -41,6 +41,17 @@ export async function fetchOpenPullRequests(token?: string): Promise<GitHubPullR
 }
 
 /**
+ * A single pull request. The response is a superset of what the list gives,
+ * so the same type fits.
+ */
+export async function fetchPullRequest(prNumber: number, token?: string): Promise<GitHubPullRequestResponse | null> {
+  return await ghFetch<GitHubPullRequestResponse>(
+    `https://api.github.com/repos/${REVIEW_REPO}/pulls/${prNumber}`,
+    token,
+  )
+}
+
+/**
  * The module file a PR submits, plus its parsed yaml.
  * Returns null when the files could not be read, so a transient GitHub error
  * is distinguishable from a PR that touches no module file at all.

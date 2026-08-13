@@ -81,6 +81,18 @@
             </span>
             <span>opened {{ formatRelative(entry.createdAt) }}</span>
             <span>updated {{ formatRelative(entry.updatedAt) }}</span>
+            <UButton
+              v-if="isAdmin"
+              size="xs"
+              color="neutral"
+              variant="subtle"
+              icon="i-lucide-refresh-cw"
+              :loading="refreshing"
+              :disabled="refreshing"
+              @click="refresh"
+            >
+              {{ refreshing ? 'Reading GitHub...' : 'Force refresh' }}
+            </UButton>
             <UBadge
               v-if="entry.draft"
               color="neutral"
@@ -99,6 +111,13 @@
               {{ label }}
             </UBadge>
           </div>
+
+          <p
+            v-if="refreshError"
+            class="mt-2 text-xs text-red-600 dark:text-red-400"
+          >
+            {{ refreshError }}
+          </p>
         </header>
 
         <!-- Why it sits in this group -->
@@ -407,7 +426,46 @@ const props = defineProps<{
   entry: ReviewEntryView | null
 }>()
 
+const emit = defineEmits<{
+  /** The stored entry changed, so whoever owns the list should read it again. */
+  refreshed: []
+}>()
+
 const isOpen = defineModel<boolean>('open', { default: false })
+
+const { isAdmin } = useReviewAdmin()
+const refreshing = ref(false)
+const refreshError = ref<string | null>(null)
+
+/**
+ * Reads this submission from GitHub again, ignoring every cache.
+ *
+ * Afterwards the local caches for exactly this entry are dropped and the list
+ * is asked to reload, so the page cannot keep showing what we just replaced.
+ */
+async function refresh() {
+  const entry = props.entry
+  if (!entry || refreshing.value) return
+
+  refreshing.value = true
+  refreshError.value = null
+  try {
+    await $fetch(`/api/review/prs/${entry.number}/refresh`, { method: 'POST' })
+    invalidateCheckCache(entry.headSha)
+    invalidateHistoryCache(entry.number)
+    emit('refreshed')
+    await Promise.all([
+      loadHistory(entry.number),
+      loadChecks(entry.number, entry.headSha),
+    ])
+  }
+  catch (error) {
+    refreshError.value = error instanceof Error ? error.message : 'Refresh failed'
+  }
+  finally {
+    refreshing.value = false
+  }
+}
 
 const title = computed(() =>
   props.entry ? yamlText(props.entry.yaml, 'name') ?? props.entry.title : 'Submission')
@@ -474,12 +532,14 @@ function ownershipText(value: string | null, isAuthor: boolean | null): string {
 const reversedSnapshots = computed(() => [...snapshots.value].reverse())
 
 // Only while the slideover is actually open, so the list never triggers it.
+// The head commit is part of the key: a push moves it, and the checks that
+// belong to the old one say nothing about the new one.
 watch(
-  () => [isOpen.value, props.entry?.number] as const,
-  ([open, number]) => {
+  () => [isOpen.value, props.entry?.number, props.entry?.headSha] as const,
+  ([open, number, headSha]) => {
     if (!open || typeof number !== 'number') return
     loadHistory(number)
-    loadChecks(number, props.entry?.headSha ?? null)
+    loadChecks(number, headSha ?? null)
   },
   { immediate: true },
 )

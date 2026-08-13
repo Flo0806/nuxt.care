@@ -17,6 +17,16 @@ const key = (sha: string) => `review:checks:${sha}`
  */
 const SETTLED_TTL_SECONDS = 30 * 24 * 60 * 60
 
+/**
+ * Drops the stored checks for a commit.
+ *
+ * The only reason they can be wrong for an unchanged commit is somebody
+ * re-running a check by hand, which is exactly what a forced refresh is for.
+ */
+export async function invalidateReviewChecks(sha: string): Promise<void> {
+  await kv.remove(key(sha))
+}
+
 export async function getReviewChecks(sha: string, token?: string): Promise<ReviewChecks | null> {
   const cached = await kv.get<ReviewChecks>(key(sha))
   if (cached) return cached

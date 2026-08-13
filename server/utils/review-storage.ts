@@ -80,6 +80,22 @@ export async function getReviewEntry(prNumber: number): Promise<ReviewEntry | nu
   return all.find(e => e.number === prNumber) ?? null
 }
 
+/**
+ * Replaces one entry, leaving the rest untouched.
+ *
+ * KV rewrites the whole value, so this reads and writes the full array. Only
+ * safe while no run is in progress, which the caller has to make sure of.
+ */
+export async function upsertReviewEntry(entry: ReviewEntry): Promise<void> {
+  const all = await getReviewEntries()
+  const index = all.findIndex(candidate => candidate.number === entry.number)
+
+  if (index === -1) all.push(entry)
+  else all[index] = entry
+
+  await setReviewEntries(all)
+}
+
 /** Drops the review cache. Registry data is untouched by design. */
 export async function clearReviewCache(): Promise<void> {
   await kv.remove(KEY_ALL)

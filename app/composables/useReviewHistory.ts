@@ -12,6 +12,11 @@
 
 const cache = new Map<number, ReviewHistorySnapshot[]>()
 
+/** Drops what we remember, after a forced refresh may have added a snapshot. */
+export function invalidateHistoryCache(prNumber: number) {
+  cache.delete(prNumber)
+}
+
 export function useReviewHistory() {
   const snapshots = ref<ReviewHistorySnapshot[]>([])
   const pending = ref(false)

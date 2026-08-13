@@ -42,6 +42,7 @@
   <ReviewDetail
     v-model:open="isDetailOpen"
     :entry="selected"
+    @refreshed="$emit('refreshed')"
   />
 </template>
 
@@ -50,17 +51,28 @@ const props = defineProps<{
   entries: ReviewEntryView[]
 }>()
 
+defineEmits<{
+  /** A detail replaced its stored entry, so the page has to read them again. */
+  refreshed: []
+}>()
+
 // The view state lives here rather than in the page, so the accordion and the
 // detail share one owner instead of two copies of the same refs.
 const { expanded, marked, mark } = useReviewViewState()
 
-const selected = ref<ReviewEntryView | null>(null)
+const selectedNumber = ref<number | null>(null)
 const isDetailOpen = ref(false)
+
+// Held as a number rather than as the object: when the list is read again,
+// after a forced refresh for instance, the open detail follows along instead
+// of showing what we just replaced.
+const selected = computed(() =>
+  props.entries.find(entry => entry.number === selectedNumber.value) ?? null)
 
 // The entry comes straight from the list, so opening a detail costs no
 // request and going back and forth stays instant.
 function open(entry: ReviewEntryView) {
-  selected.value = entry
+  selectedNumber.value = entry.number
   isDetailOpen.value = true
   mark(entry.number)
 }

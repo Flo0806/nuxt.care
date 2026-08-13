@@ -28,8 +28,13 @@
         {{ data.total }} submissions, last checked {{ formatRelative(data.meta.lastRun) }}
       </p>
 
+      <!--
+        Only the very first load empties the page. `status` is pending while
+        reloading too, and swapping the list out then would tear down the open
+        detail and build it again, which reads as the slideover flickering.
+      -->
       <div
-        v-if="status === 'pending'"
+        v-if="status === 'pending' && !data"
         class="py-16 text-center text-sm text-neutral-500"
       >
         Loading...
@@ -57,6 +62,7 @@
       <ReviewList
         v-else
         :entries="data.entries"
+        @refreshed="refresh"
       />
 
       <AppFooter />
@@ -65,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-const { data, status, error } = await useFetch('/api/review/prs')
+const { data, status, error, refresh } = await useFetch('/api/review/prs')
 
 useHead({
   title: 'Modules in review - nuxt.care',

@@ -10,6 +10,11 @@
 
 const cache = new Map<string, ReviewChecks | null>()
 
+/** Drops what we remember for a commit, after a forced refresh replaced it. */
+export function invalidateCheckCache(sha: string | null) {
+  if (sha) cache.delete(sha)
+}
+
 export function useReviewChecks() {
   const checks = ref<ReviewChecks | null>(null)
   const pending = ref(false)
@@ -30,7 +35,9 @@ export function useReviewChecks() {
     failed.value = false
     try {
       const data = await $fetch(`/api/review/prs/${prNumber}/checks`)
-      cache.set(headSha, data.checks)
+      // Keyed by the commit the answer is about, not by the one we asked for.
+      // A forced refresh can move the head between the two.
+      cache.set(data.checks?.sha ?? headSha, data.checks)
       checks.value = data.checks
     }
     catch {

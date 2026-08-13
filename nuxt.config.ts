@@ -45,6 +45,10 @@ export default defineNuxtConfig({
     },
     public: {
       version: pkg.version,
+      // Comma separated GitHub logins allowed to force a refresh of a single
+      // submission. Public on purpose: these are public logins, and the check
+      // that matters happens on the server. Set NUXT_PUBLIC_REVIEW_ADMINS.
+      reviewAdmins: '',
     },
   },
 
