@@ -1,0 +1,104 @@
+// The short facts behind a submission's grouping.
+//
+// Shared by the list row and the detail view so both say the same thing. Only
+// what is actually known lands in here: an entry that was never looked up
+// stays silent rather than claiming a defect.
+
+import { formatRelative } from './format'
+
+export interface ReviewFact {
+  icon: string
+  text: string
+  tone?: string
+}
+
+const DANGER = 'text-red-600 dark:text-red-400'
+const WARN = 'text-amber-600 dark:text-amber-400'
+
+export function reviewFacts(entry: ReviewEntryView): ReviewFact[] {
+  const { candidate, yamlError, npm, ci, conversation, waitingOn, duplicate, ownership } = entry
+  const facts: ReviewFact[] = []
+
+  if (duplicate) {
+    facts.push({
+      icon: 'i-lucide-copy',
+      text: `already listed as ${duplicate.name}`,
+      tone: DANGER,
+    })
+  }
+
+  if (!candidate) facts.push({ icon: 'i-lucide-file-x', text: 'no module file', tone: DANGER })
+  else if (!candidate.isModulePath) facts.push({ icon: 'i-lucide-folder-x', text: candidate.filename, tone: DANGER })
+  if (yamlError) facts.push({ icon: 'i-lucide-file-warning', text: 'yaml does not parse', tone: DANGER })
+
+  if (npm?.deprecated) facts.push({ icon: 'i-lucide-ban', text: 'deprecated on npm', tone: DANGER })
+  else if (npm?.status === 'not_found') facts.push({ icon: 'i-lucide-package-x', text: 'package not on npm', tone: DANGER })
+  else if (npm?.status === 'invalid_name') facts.push({ icon: 'i-lucide-package-x', text: 'npm field is not a package name', tone: DANGER })
+  else if (npm?.status === 'error') facts.push({ icon: 'i-lucide-package-search', text: 'npm could not be read', tone: WARN })
+  else if (npm?.lastPublish) {
+    facts.push({
+      icon: 'i-lucide-package',
+      text: `published ${formatRelative(npm.lastPublish)}`,
+      tone: (npm.daysSincePublish ?? 0) > 365 ? WARN : undefined,
+    })
+  }
+
+  if (ci?.conclusion === 'failure') {
+    facts.push({ icon: 'i-lucide-circle-x', text: ci.failedNames.join(', ') || 'checks failed', tone: DANGER })
+  }
+  else if (ci?.conclusion === 'success') {
+    facts.push({ icon: 'i-lucide-circle-check', text: 'checks green' })
+  }
+  else if (ci?.conclusion === 'none') {
+    facts.push({ icon: 'i-lucide-circle-dashed', text: 'no checks ran', tone: WARN })
+  }
+
+  const since = waitingOn === 'author'
+    ? conversation?.lastMaintainerActivity
+    : waitingOn === 'maintainer' ? conversation?.lastAuthorActivity : null
+
+  if (waitingOn && since) {
+    facts.push({
+      icon: 'i-lucide-clock',
+      text: `${waitingOn === 'author' ? 'author' : 'we'} owe a reply since ${formatRelative(since)}`,
+      tone: WARN,
+    })
+  }
+
+  // Worth a look rather than an objection: submitting somebody else's module
+  // is allowed, it just deserves a second thought.
+  if (ownership.unrelated) {
+    facts.push({
+      icon: 'i-lucide-user-round-x',
+      text: `${ownership.prAuthor} owns neither the repo nor the package`,
+      tone: WARN,
+    })
+  }
+
+  return facts
+}
+
+/** The yaml is stored unfiltered, so every read has to prove its own type. */
+export function yamlText(yaml: Record<string, unknown> | null, key: string): string | null {
+  const value = yaml?.[key]
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+/**
+ * Where the module icon of a submission can be read.
+ *
+ * Icons live in `icons/` of nuxt/modules, and the file usually only exists in
+ * the pull request. GitHub serves a PR head commit from the base repository,
+ * so addressing nuxt/modules by that sha reaches both the file a PR adds and
+ * one that was already there. No fork name needed.
+ *
+ * Returns null when the yaml names no icon or the head commit is unknown.
+ */
+export function reviewIconUrl(entry: ReviewEntryView): string | null {
+  const icon = yamlText(entry.yaml, 'icon')
+  if (!icon || !entry.headSha) return null
+  // Guard against a path escaping the icons folder.
+  if (icon.includes('/') || icon.includes('..')) return null
+
+  return `https://raw.githubusercontent.com/nuxt/modules/${entry.headSha}/icons/${icon}`
+}

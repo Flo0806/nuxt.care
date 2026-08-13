@@ -10,6 +10,21 @@ import { REVIEW_REPO } from './review-fetch'
 /** Conclusions that make the whole set red. */
 const FAILED = new Set(['failure', 'timed_out', 'cancelled', 'action_required', 'startup_failure'])
 
+export function isFailedRun(run: { conclusion: string | null }): boolean {
+  return !!run.conclusion && FAILED.has(run.conclusion)
+}
+
+/**
+ * One verdict over a set of runs. Shared with the detail view, so the summary
+ * on the card and the list of individual checks can never disagree.
+ */
+export function ciConclusion(runs: Array<{ status: string, conclusion: string | null }>): ReviewCiConclusion {
+  if (!runs.length) return 'none'
+  if (runs.some(isFailedRun)) return 'failure'
+  if (runs.some(run => run.status !== 'completed')) return 'pending'
+  return 'success'
+}
+
 /** True when the stored result cannot tell us about the current commit. */
 export function needsCiRefresh(ci: ReviewCi | null, headSha: string | null): boolean {
   if (!headSha) return false
@@ -27,17 +42,11 @@ export async function fetchReviewCi(headSha: string, fetchedAt: string, token?: 
   if (!data) return null
 
   const runs = data.check_runs ?? []
-  const failedRuns = runs.filter(run => run.conclusion && FAILED.has(run.conclusion))
-
-  let conclusion: ReviewCiConclusion
-  if (!runs.length) conclusion = 'none'
-  else if (failedRuns.length) conclusion = 'failure'
-  else if (runs.some(run => run.status !== 'completed')) conclusion = 'pending'
-  else conclusion = 'success'
+  const failedRuns = runs.filter(isFailedRun)
 
   return {
     sha: headSha,
-    conclusion,
+    conclusion: ciConclusion(runs),
     total: runs.length,
     failed: failedRuns.length,
     failedNames: failedRuns.map(run => run.name),

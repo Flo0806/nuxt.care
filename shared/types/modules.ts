@@ -463,6 +463,14 @@ export interface GitHubCheckRunsResponse {
     name: string
     status: 'queued' | 'in_progress' | 'completed'
     conclusion: string | null
+    html_url?: string | null
+    details_url?: string | null
+    started_at?: string | null
+    completed_at?: string | null
+    output?: {
+      title?: string | null
+      summary?: string | null
+    }
   }>
 }
 

@@ -34,9 +34,15 @@
         :entry="entry"
         :marked="entry.number === marked"
         @mark="mark"
+        @select="open"
       />
     </template>
   </UAccordion>
+
+  <ReviewDetail
+    v-model:open="isDetailOpen"
+    :entry="selected"
+  />
 </template>
 
 <script setup lang="ts">
@@ -44,7 +50,20 @@ const props = defineProps<{
   entries: ReviewEntryView[]
 }>()
 
+// The view state lives here rather than in the page, so the accordion and the
+// detail share one owner instead of two copies of the same refs.
 const { expanded, marked, mark } = useReviewViewState()
+
+const selected = ref<ReviewEntryView | null>(null)
+const isDetailOpen = ref(false)
+
+// The entry comes straight from the list, so opening a detail costs no
+// request and going back and forth stays instant.
+function open(entry: ReviewEntryView) {
+  selected.value = entry
+  isDetailOpen.value = true
+  mark(entry.number)
+}
 
 // REVIEW_BUCKETS carries the order, so the list cannot drift from the chain
 // that assigns the buckets. Empty groups are dropped: a heading with a zero

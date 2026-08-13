@@ -3,8 +3,11 @@
 // Storage is fully separated from the synced registry: everything lives under
 // the `review:` KV prefix, nothing here reads or writes `modules:*`.
 //
-// These types describe what is actually fetched today. Triage buckets, health
-// scores and ownership are not in here because nothing computes them yet.
+// These types describe what is fetched, plus what is derived from it on read.
+// Anything derived carries its type here rather than next to its function, so
+// nothing in `shared` ever has to reach into `server`.
+
+import type { GitHubPullRequestFileResponse } from './modules'
 
 /** The module file a PR adds or changes. */
 export interface ReviewCandidate {
@@ -80,6 +83,31 @@ export type ReviewBucket
     | 'unchecked' // nothing against it, but no check ever ran either
     | 'ready' // checks green, package alive, nothing pending
 
+/**
+ * Does the person submitting the module actually own it?
+ *
+ * Null means unknown, never "no": a package we could not read tells us nothing
+ * about who maintains it.
+ */
+export interface ReviewOwnership {
+  prAuthor: string
+  repoOwner: string | null
+  npmMaintainers: string[]
+  authorIsRepoOwner: boolean | null
+  authorIsNpmMaintainer: boolean | null
+  /** True only when both checks ran and both said no. */
+  unrelated: boolean
+}
+
+/** A listed module a submission collides with. */
+export interface ReviewDuplicate {
+  /** Which field matched: the package name, or the repository. */
+  match: 'npm' | 'repo'
+  /** Name of the module that is already listed. */
+  name: string
+  npmPackage: string
+}
+
 /** Null when no maintainer ever said anything, so nobody was asked for a move. */
 export type ReviewWaitingOn = 'author' | 'maintainer' | null
 
@@ -114,6 +142,25 @@ export interface ReviewConversation {
   lastMaintainerActivity: string | null
   /** Latest author comment or push, whichever is newer. */
   lastAuthorActivity: string | null
+  fetchedAt: string
+}
+
+/** A single check on the head commit, loaded when a detail is opened. */
+export interface ReviewCheckRun {
+  name: string
+  status: 'queued' | 'in_progress' | 'completed'
+  conclusion: string | null
+  url: string | null
+  completedAt: string | null
+  /** What the check itself reports, which is where autofix says what it wants. */
+  title: string | null
+  summary: string | null
+}
+
+export interface ReviewChecks {
+  sha: string
+  conclusion: ReviewCiConclusion
+  runs: ReviewCheckRun[]
   fetchedAt: string
 }
 
@@ -188,6 +235,9 @@ export interface ReviewEntryView extends ReviewEntry {
   waitingOn: ReviewWaitingOn
   hold: ReviewHold | null
   bucket: ReviewBucket
+  ownership: ReviewOwnership
+  /** A listed module this submission collides with, if any. */
+  duplicate: ReviewDuplicate | null
 }
 
 export interface ReviewSyncMeta {

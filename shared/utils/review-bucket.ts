@@ -3,6 +3,13 @@
 // Order, labels and sorting live together on purpose. The chain below IS the
 // grouping: if the two ever drift apart, the list lies about itself.
 
+import type {
+  ReviewBucket,
+  ReviewEntry,
+  ReviewHold,
+  ReviewWaitingOn,
+} from '../types/review'
+
 /** No npm release in this long counts as a rotting module. */
 export const STALE_PUBLISH_DAYS = 365
 
