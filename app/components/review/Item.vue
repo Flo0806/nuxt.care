@@ -41,11 +41,25 @@
           </UBadge>
         </span>
 
-        <span
-          v-if="npmPackage"
-          class="block truncate text-xs font-mono text-neutral-500"
-        >
-          {{ npmPackage }}
+        <span class="flex items-center gap-2 min-w-0">
+          <span
+            v-if="npmPackage"
+            class="truncate text-xs font-mono text-neutral-500"
+          >
+            {{ npmPackage }}
+          </span>
+
+          <span
+            v-if="category"
+            class="flex items-center gap-1 text-xs text-neutral-400 shrink-0"
+            :title="`Category: ${category.label}`"
+          >
+            <UIcon
+              :name="category.icon"
+              class="w-3.5 h-3.5"
+            />
+            {{ category.label }}
+          </span>
         </span>
 
         <span class="flex items-center gap-x-3 gap-y-1 flex-wrap mt-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -115,5 +129,12 @@ defineEmits<{
 
 const moduleName = computed(() => yamlText(props.entry.yaml, 'name'))
 const npmPackage = computed(() => yamlText(props.entry.yaml, 'npm'))
+
+// Reuses the icons the module list already uses, so the same category looks
+// the same on both pages.
+const category = computed(() => {
+  const name = yamlText(props.entry.yaml, 'category')
+  return name ? getCategoryConfig(name) : null
+})
 const facts = computed(() => reviewFacts(props.entry))
 </script>

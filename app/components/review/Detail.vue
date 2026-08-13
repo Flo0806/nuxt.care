@@ -49,6 +49,17 @@
               >
                 {{ description }}
               </p>
+
+              <span
+                v-if="category"
+                class="inline-flex items-center gap-1.5 mt-2 text-xs text-neutral-500 dark:text-neutral-400"
+              >
+                <UIcon
+                  :name="category.icon"
+                  class="w-4 h-4 text-neutral-400"
+                />
+                {{ category.label }}
+              </span>
             </div>
           </div>
 
@@ -137,6 +148,10 @@
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
             Estimated score
           </h3>
+          <ReviewHint class="mb-3">
+            Calculated with the same rules as a listed module, so the number is
+            directly comparable. Only produced when every source could be read.
+          </ReviewHint>
           <ReviewScore :analysis="entry.analysis" />
         </section>
 
@@ -145,9 +160,9 @@
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">
             Why here
           </h3>
-          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+          <ReviewHint class="mb-3">
             {{ bucketHint }}
-          </p>
+          </ReviewHint>
           <ul class="space-y-1.5">
             <li
               v-for="fact in facts"
@@ -168,6 +183,10 @@
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
             Submitted record
           </h3>
+          <ReviewHint class="mb-3">
+            The yaml this pull request adds to nuxt/modules, field by field, in
+            the order it was written.
+          </ReviewHint>
 
           <dl class="text-sm space-y-1 mb-4">
             <ReviewDetailRow
@@ -199,6 +218,11 @@
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
             Ownership
           </h3>
+          <ReviewHint class="mb-3">
+            Whether the person submitting the module is the one who maintains
+            it. Submitting somebody else's module is allowed, it just deserves
+            a second look.
+          </ReviewHint>
 
           <div
             v-if="entry.duplicate"
@@ -293,6 +317,10 @@
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
             Checks on nuxt/modules
           </h3>
+          <ReviewHint class="mb-3">
+            These run on the pull request itself, mostly autofix.ci normalising
+            the yaml. They say nothing about the module's own tests.
+          </ReviewHint>
 
           <dl class="text-sm space-y-1 mb-4">
             <ReviewDetailRow
@@ -404,6 +432,10 @@
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
             Since we watch it
           </h3>
+          <ReviewHint class="mb-3">
+            Recorded whenever something changed after this submission entered
+            our cache. Anything older than that we never saw.
+          </ReviewHint>
 
           <p
             v-if="historyPending"
@@ -504,6 +536,12 @@ const title = computed(() =>
 
 const description = computed(() =>
   (props.entry ? yamlText(props.entry.yaml, 'description') : null) ?? undefined)
+
+/** Same source as the list row and the module page, so it looks alike. */
+const category = computed(() => {
+  const name = props.entry ? yamlText(props.entry.yaml, 'category') : null
+  return name ? getCategoryConfig(name) : null
+})
 
 const conversationSummary = computed(() => {
   const conversation = props.entry?.conversation

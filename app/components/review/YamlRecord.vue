@@ -39,6 +39,26 @@
           </UBadge>
         </span>
 
+        <!-- the same icon the module list uses, so a category looks alike everywhere -->
+        <span
+          v-else-if="field.key === 'category' && field.text"
+          class="flex items-center gap-1.5"
+        >
+          <UIcon
+            :name="getCategoryIcon(field.text)"
+            class="w-4 h-4 text-neutral-400 shrink-0"
+          />
+          {{ field.text }}
+          <UBadge
+            v-if="!isKnownCategory(field.text)"
+            color="warning"
+            variant="subtle"
+            size="sm"
+          >
+            not a known category
+          </UBadge>
+        </span>
+
         <!-- repo carries branch and subdirectory on top of the path -->
         <span
           v-else-if="field.key === 'repo' && repo"

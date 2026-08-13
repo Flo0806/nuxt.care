@@ -24,9 +24,9 @@
     </template>
 
     <template #body="{ item }">
-      <p class="px-4 py-2 text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
-        {{ item.hint }}
-      </p>
+      <div class="px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/30">
+        <ReviewHint>{{ item.hint }}</ReviewHint>
+      </div>
 
       <ReviewItem
         v-for="entry in item.entries"
