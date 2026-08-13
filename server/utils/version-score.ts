@@ -1,5 +1,4 @@
 import { fetchNpmPackument, extractVersionInfo, fetchVulnerabilitiesForVersion } from './fetchers'
-import { scoreToStatus } from './health'
 
 /**
  * Calculate health score for a specific npm package version

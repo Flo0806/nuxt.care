@@ -11,10 +11,11 @@ import {
   submissionCallCount,
   toReviewEntry,
 } from '../../utils/review-fetch'
+import { ANALYSIS_CALLS, SCORED_BUCKETS, analyseSubmission, needsAnalysis } from '../../utils/review-analysis'
 import { appendReviewHistory } from '../../utils/review-history'
 import { fetchReviewCi, needsCiRefresh } from '../../utils/review-ci'
 import { fetchBaseSha, fetchReviewMerge, needsMergeRefresh } from '../../utils/review-merge'
-import { CONVERSATION_CALLS, fetchReviewConversation } from '../../utils/review-conversation'
+import { CONVERSATION_CALLS, deriveWaitingOn, detectHold, fetchReviewConversation } from '../../utils/review-conversation'
 import { fetchReviewNpm } from '../../utils/review-npm'
 import {
   getReviewEntries,
@@ -48,7 +49,7 @@ export default defineEventHandler(async (event) => {
   await patchReviewMeta({ isRunning: true, startedAt: new Date().toISOString(), error: null })
 
   try {
-    const result = await run(token)
+    const result = await run(token, force)
     return { started: true, ...result }
   }
   catch (err) {
@@ -66,7 +67,7 @@ export default defineEventHandler(async (event) => {
  */
 const THROTTLE_MS = 200
 
-async function run(token: string) {
+async function run(token: string, force: boolean) {
   const startedAt = Date.now()
   const fetchedAt = new Date().toISOString()
 
@@ -131,6 +132,7 @@ async function run(token: string) {
   let ciFetched = 0
   let conversationFetched = 0
   let mergeFetched = 0
+  let analysed = 0
   for (const entry of entries) {
     const npm = await fetchReviewNpm(entry.yaml, fetchedAt)
 
@@ -171,18 +173,32 @@ async function run(token: string) {
     if (usedGitHub) await sleep(THROTTLE_MS)
 
     // A failed request must not erase what we already knew.
-    if (npm.status === 'error' && entry.npm) {
-      withNpm.push({ ...entry, ci, conversation, merge })
-      continue
+    const keepNpm = npm.status === 'error' && entry.npm
+    const next: ReviewEntry = keepNpm
+      ? { ...entry, ci, conversation, merge }
+      : { ...entry, npm, ci, conversation, merge }
+
+    if (!keepNpm) {
+      const before = entry.npm
+      if (before && (before.latestVersion !== npm.latestVersion || before.deprecated !== npm.deprecated)) {
+        await appendReviewHistory(entry, 'npm-changed', fetchedAt)
+        npmChanged++
+      }
     }
 
-    const before = entry.npm
-    if (before && (before.latestVersion !== npm.latestVersion || before.deprecated !== npm.deprecated)) {
-      await appendReviewHistory(entry, 'npm-changed', fetchedAt)
-      npmChanged++
+    // The score is worth its eight calls only where the submission is still a
+    // candidate, so the bucket has to be known first. It is derived, never
+    // stored, which is why it is computed here rather than read.
+    const bucket = deriveBucket(next, deriveWaitingOn(next.conversation), detectHold(next.conversation))
+    // A forced run means every cache is ignored, the analysis included.
+    if (force ? SCORED_BUCKETS.has(bucket) : needsAnalysis(next, bucket)) {
+      apiCalls += ANALYSIS_CALLS
+      analysed++
+      next.analysis = (await analyseSubmission(next, token)) ?? next.analysis
+      await sleep(THROTTLE_MS)
     }
 
-    withNpm.push({ ...entry, npm, ci, conversation, merge })
+    withNpm.push(next)
   }
 
   await setReviewEntries(withNpm)
@@ -198,5 +214,5 @@ async function run(token: string) {
     error: null,
   })
 
-  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, conversationFetched, mergeFetched, meta }
+  return { changed, reused: entries.length - changed, failed, dropped: gone.length, npmChanged, ciFetched, conversationFetched, mergeFetched, analysed, meta }
 }

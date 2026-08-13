@@ -130,6 +130,16 @@
           </p>
         </header>
 
+        <section
+          v-if="entry.analysis"
+          class="p-6"
+        >
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3">
+            Estimated score
+          </h3>
+          <ReviewScore :analysis="entry.analysis" />
+        </section>
+
         <!-- Why it sits in this group -->
         <section class="p-6">
           <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">

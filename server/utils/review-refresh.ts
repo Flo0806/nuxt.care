@@ -6,9 +6,10 @@
 // path deliberately ignores every cache and asks GitHub again, which is what
 // closes the gap for a check that was re-run by hand.
 
+import { analyseSubmission, needsAnalysis } from './review-analysis'
 import { invalidateReviewChecks } from './review-checks'
 import { fetchReviewCi } from './review-ci'
-import { fetchReviewConversation } from './review-conversation'
+import { deriveWaitingOn, detectHold, fetchReviewConversation } from './review-conversation'
 import { fetchPullRequest, fetchSubmission, toReviewEntry } from './review-fetch'
 import { appendReviewHistory } from './review-history'
 import { fetchReviewNpm } from './review-npm'
@@ -65,6 +66,14 @@ export async function refreshSubmission(prNumber: number, token: string): Promis
     ci,
     merge,
     conversation,
+    // Carried over so a refresh does not throw away a score it may not redo.
+    analysis: known?.analysis ?? null,
+  }
+
+  // A forced refresh redoes the score too, but only where one belongs at all.
+  const bucket = deriveBucket(entry, deriveWaitingOn(conversation), detectHold(conversation))
+  if (needsAnalysis({ ...entry, analysis: null }, bucket)) {
+    entry.analysis = (await analyseSubmission(entry, token)) ?? entry.analysis
   }
 
   await upsertReviewEntry(entry)

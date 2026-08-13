@@ -123,6 +123,7 @@ export function toReviewEntry(
     npm: null,
     ci: null,
     merge: null,
+    analysis: null,
     conversation: null,
     fetchedAt,
   }

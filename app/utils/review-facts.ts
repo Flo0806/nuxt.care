@@ -93,12 +93,6 @@ export function reviewFacts(entry: ReviewEntryView): ReviewFact[] {
   return facts
 }
 
-/** The yaml is stored unfiltered, so every read has to prove its own type. */
-export function yamlText(yaml: Record<string, unknown> | null, key: string): string | null {
-  const value = yaml?.[key]
-  return typeof value === 'string' && value.trim() ? value.trim() : null
-}
-
 /**
  * Where the module icon of a submission can be read.
  *

@@ -2,7 +2,7 @@
 // GET /api/v1/badge?module=moduleName - badge for specific module by module name
 // GET /api/v1/badge?mode=score|status - badge display mode (default: score)
 
-import { calculateHealth, getStatusColor, scoreToStatus } from '../../utils/health'
+import { calculateHealth, getStatusColor } from '../../utils/health'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)

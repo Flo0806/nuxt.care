@@ -155,13 +155,24 @@ export async function fetchPendingCommits(repoPath: string, lastReleaseDate: str
  */
 export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
   try {
-    // Fetch registry info and downloads in parallel
+    // Registry and downloads in parallel, but not tied together: they are two
+    // different hosts, and the download count is an info signal worth zero
+    // points. Inside a plain Promise.all one hiccup on api.npmjs.org rejects
+    // the whole thing, and the module loses its publish date, its types and
+    // its tests - 42 points - over a number nobody scores.
     const [registryRes, downloadsRes] = await Promise.all([
       fetch(`https://registry.npmjs.org/${encodeURIComponent(pkg)}`),
-      fetch(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(pkg)}`),
+      fetch(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(pkg)}`)
+        .catch((err) => {
+          console.warn(`[npm] ${pkg}: downloads unavailable (${err instanceof Error ? err.message : String(err)})`)
+          return null
+        }),
     ])
 
-    if (!registryRes.ok) return null
+    if (!registryRes.ok) {
+      console.warn(`[npm] ${pkg}: registry answered ${registryRes.status}`)
+      return null
+    }
 
     const data = await registryRes.json() as {
       'name': string
@@ -185,7 +196,7 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
 
     // Parse downloads (weekly)
     let downloads: number | null = null
-    if (downloadsRes.ok) {
+    if (downloadsRes?.ok) {
       const dlData = await downloadsRes.json() as { downloads?: number }
       downloads = dlData.downloads ?? null
     }
@@ -233,7 +244,8 @@ export async function fetchNpmInfo(pkg: string): Promise<NpmInfo | null> {
       downloads,
     }
   }
-  catch {
+  catch (err) {
+    console.warn(`[npm] ${pkg}: ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }
@@ -370,7 +382,10 @@ export async function fetchVulnerabilitiesForVersion(pkg: string, version: strin
       }),
     })
 
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.warn(`[osv] ${pkg}@${version}: answered ${res.status}`)
+      return null
+    }
 
     const data = await res.json() as OsvResponse
     const vulns = data.vulns || []
@@ -420,7 +435,8 @@ export async function fetchVulnerabilitiesForVersion(pkg: string, version: strin
       vulnerabilities: mapped,
     }
   }
-  catch {
+  catch (err) {
+    console.warn(`[osv] ${pkg}@${version}: ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }

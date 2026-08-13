@@ -7,7 +7,25 @@
 // Anything derived carries its type here rather than next to its function, so
 // nothing in `shared` ever has to reach into `server`.
 
-import type { GitHubPullRequestFileResponse } from './modules'
+import type { GitHubPullRequestFileResponse, GitHubRepoInfo, HealthSignal } from './modules'
+
+/**
+ * The full analysis of a submitted module, scored exactly like a listed one.
+ *
+ * This runs analyzeModule() and calculateHealth() unchanged: the number next to
+ * a submission means the same thing as the number next to a module in the
+ * registry, and the module side is not touched to make that work.
+ *
+ * Only produced for submissions where the question is live. Scoring a pull
+ * request whose file is in the wrong folder says nothing about anything.
+ */
+export interface ReviewAnalysis {
+  score: number
+  signals: HealthSignal[]
+  /** Repo facts worth showing beside the score: stars, license, archived. */
+  github: GitHubRepoInfo | null
+  analysedAt: string
+}
 
 /** The module file a PR adds or changes. */
 export interface ReviewCandidate {
@@ -220,6 +238,9 @@ export interface ReviewEntry {
 
   /** Mergeability and who may push. Null until looked up once. */
   merge: ReviewMerge | null
+
+  /** Full analysis and score. Only filled while the submission is a candidate. */
+  analysis: ReviewAnalysis | null
 
   /** Comments and reviews. Null until they were looked up once. */
   conversation: ReviewConversation | null

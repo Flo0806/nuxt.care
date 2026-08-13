@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { calculateHealth, scoreToStatus } from '../../utils/health'
+import { calculateHealth } from '../../utils/health'
 
 // GET /api/v1/modules - all modules (sorted by score)
 // GET /api/v1/modules?package=a&package=b - specific modules by npm package

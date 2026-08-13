@@ -1,4 +1,4 @@
-import { calculateHealth, scoreToStatus } from '../utils/health'
+import { calculateHealth } from '../utils/health'
 import { calculateVersionScore } from '../utils/version-score'
 
 // Tool definitions for MCP discovery
